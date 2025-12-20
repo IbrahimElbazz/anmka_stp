@@ -14,7 +14,7 @@ class EducationalApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Anmka lms test',
+      title: 'STP',
       debugShowCheckedModeBanner: false,
 
       // RTL & Localization - Arabic only
