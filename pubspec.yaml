@@ -1,0 +1,57 @@
+name: educational_app
+description: Educational Mobile App - Flutter Native Migration
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  
+  # Navigation
+  go_router: ^14.0.0
+  
+  # State Management
+  shared_preferences: ^2.2.2
+  
+  # UI & Icons
+  google_fonts: ^6.1.0
+  flutter_svg: ^2.0.9
+  
+  # Utilities
+  intl: ^0.20.2
+  path_provider: ^2.1.1
+  
+  # Video Player
+  pod_player: ^0.2.1
+  
+  # URL Launcher
+  url_launcher: ^6.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter_launcher_icons:
+  android: false
+  ios: true
+  image_path: "assets/images/company-logo.jpeg"
+  remove_alpha_ios: true
+
+flutter:
+  uses-material-design: true
+  generate: true
+  
+  assets:
+    - assets/images/
+    - assets/icons/
+  
+  # Cairo font is loaded automatically via google_fonts package
+  # No need to include font files manually
+
