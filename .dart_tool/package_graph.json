@@ -12,6 +12,7 @@
         "flutter_svg",
         "go_router",
         "google_fonts",
+        "http",
         "intl",
         "path_provider",
         "pod_player",
@@ -87,6 +88,16 @@
         "video_player",
         "wakelock_plus",
         "youtube_explode_dart"
+      ]
+    },
+    {
+      "name": "http",
+      "version": "1.6.0",
+      "dependencies": [
+        "async",
+        "http_parser",
+        "meta",
+        "web"
       ]
     },
     {
@@ -424,16 +435,6 @@
       ]
     },
     {
-      "name": "http",
-      "version": "1.6.0",
-      "dependencies": [
-        "async",
-        "http_parser",
-        "meta",
-        "web"
-      ]
-    },
-    {
       "name": "video_player",
       "version": "2.9.5",
       "dependencies": [
@@ -443,6 +444,29 @@
         "video_player_avfoundation",
         "video_player_platform_interface",
         "video_player_web"
+      ]
+    },
+    {
+      "name": "web",
+      "version": "1.1.1",
+      "dependencies": []
+    },
+    {
+      "name": "http_parser",
+      "version": "4.0.2",
+      "dependencies": [
+        "collection",
+        "source_span",
+        "string_scanner",
+        "typed_data"
+      ]
+    },
+    {
+      "name": "async",
+      "version": "2.11.0",
+      "dependencies": [
+        "collection",
+        "meta"
       ]
     },
     {
@@ -646,14 +670,6 @@
       ]
     },
     {
-      "name": "async",
-      "version": "2.11.0",
-      "dependencies": [
-        "collection",
-        "meta"
-      ]
-    },
-    {
       "name": "leak_tracker_testing",
       "version": "3.0.2",
       "dependencies": [
@@ -687,11 +703,6 @@
       ]
     },
     {
-      "name": "web",
-      "version": "1.1.1",
-      "dependencies": []
-    },
-    {
       "name": "plugin_platform_interface",
       "version": "2.1.8",
       "dependencies": [
@@ -704,16 +715,6 @@
       "dependencies": [
         "archive",
         "simple_sparse_list"
-      ]
-    },
-    {
-      "name": "http_parser",
-      "version": "4.0.2",
-      "dependencies": [
-        "collection",
-        "source_span",
-        "string_scanner",
-        "typed_data"
       ]
     },
     {

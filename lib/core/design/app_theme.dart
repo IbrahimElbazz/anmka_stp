@@ -2,25 +2,34 @@ import 'package:flutter/material.dart';
 import 'app_colors.dart';
 import 'app_text_styles.dart';
 import 'app_radius.dart';
+import '../../models/app_config.dart';
 
 /// App Theme Configuration
 class AppTheme {
   AppTheme._();
 
-  static ThemeData get lightTheme {
+  static ThemeData lightTheme([ThemeConfig? themeConfig]) {
+    // Use API config colors if provided, otherwise use default AppColors
+    final primaryColor = themeConfig?.getPrimaryColor() ?? AppColors.primary;
+    final secondaryColor = themeConfig?.getSecondaryColor() ?? AppColors.secondary;
+    final cardColor = themeConfig?.getCardColor() ?? AppColors.card;
+    final backgroundColor = themeConfig?.getBackgroundColor() ?? AppColors.background;
+    final errorColor = themeConfig?.getErrorColor() ?? AppColors.destructive;
+    final textColor = themeConfig?.getTextColor() ?? AppColors.foreground;
+
     return ThemeData(
       useMaterial3: true,
-      colorScheme: const ColorScheme.light(
-        primary: AppColors.primary,
-        secondary: AppColors.secondary,
-        surface: AppColors.card,
+      colorScheme: ColorScheme.light(
+        primary: primaryColor,
+        secondary: secondaryColor,
+        surface: cardColor,
         onPrimary: AppColors.primaryForeground,
         onSecondary: AppColors.secondaryForeground,
-        onSurface: AppColors.cardForeground,
-        error: AppColors.destructive,
+        onSurface: textColor,
+        error: errorColor,
         onError: AppColors.destructiveForeground,
       ),
-      scaffoldBackgroundColor: AppColors.background,
+      scaffoldBackgroundColor: backgroundColor,
       fontFamily: 'Cairo',
       textTheme: TextTheme(
         displayLarge: AppTextStyles.h1(),
@@ -33,9 +42,12 @@ class AppTheme {
         labelLarge: AppTextStyles.labelLarge(),
         labelMedium: AppTextStyles.labelMedium(),
         labelSmall: AppTextStyles.labelSmall(),
+      ).apply(
+        bodyColor: textColor,
+        displayColor: textColor,
       ),
       cardTheme: CardThemeData(
-        color: AppColors.card,
+        color: cardColor,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: AppRadius.cardBorderRadius,
@@ -43,7 +55,7 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
+          backgroundColor: primaryColor,
           foregroundColor: AppColors.primaryForeground,
           shape: RoundedRectangleBorder(
             borderRadius: AppRadius.buttonBorderRadius,
@@ -60,8 +72,8 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: AppRadius.inputBorderRadius,
-          borderSide: const BorderSide(
-            color: AppColors.ring,
+          borderSide: BorderSide(
+            color: primaryColor,
             width: 2,
           ),
         ),

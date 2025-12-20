@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/design/app_colors.dart';
 import '../../core/navigation/route_names.dart';
+import '../../services/auth_service.dart';
 
 /// Login Screen - Clean Design like Account Page
 class LoginScreen extends StatefulWidget {
@@ -24,11 +25,40 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _handleLogin() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
-      await Future.delayed(const Duration(milliseconds: 1500));
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('hasLaunched', true);
-      if (mounted) {
-        context.go(RouteNames.home);
+
+      try {
+        await AuthService.instance.login(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
+
+        if (!mounted) return;
+
+        // Save launch flag
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('hasLaunched', true);
+
+        // Navigate to home
+        if (mounted) {
+          context.go(RouteNames.home);
+        }
+      } catch (e) {
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              e.toString().replaceFirst('Exception: ', ''),
+              style: GoogleFonts.cairo(),
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
       }
     }
   }
@@ -152,9 +182,9 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Transform.translate(
               offset: const Offset(0, -30),
               child: Container(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: AppColors.beige,
-                  borderRadius: const BorderRadius.vertical(
+                  borderRadius: BorderRadius.vertical(
                     top: Radius.circular(32),
                   ),
                 ),
@@ -191,7 +221,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         Align(
                           alignment: Alignment.centerLeft,
                           child: TextButton(
-                            onPressed: () {},
+                            onPressed: () =>
+                                context.push(RouteNames.forgotPassword),
                             style: TextButton.styleFrom(
                               padding: EdgeInsets.zero,
                               minimumSize: Size.zero,
@@ -373,7 +404,18 @@ class _LoginScreenState extends State<LoginScreen> {
           contentPadding:
               const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
         ),
-        validator: (value) => value?.isEmpty ?? true ? 'هذا الحقل مطلوب' : null,
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'هذا الحقل مطلوب';
+          }
+          if (keyboardType == TextInputType.emailAddress) {
+            final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+            if (!emailRegex.hasMatch(value)) {
+              return 'البريد الإلكتروني غير صحيح';
+            }
+          }
+          return null;
+        },
       ),
     );
   }

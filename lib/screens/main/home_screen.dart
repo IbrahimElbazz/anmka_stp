@@ -646,10 +646,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       child: AnimatedBuilder(
         animation: _bannerAnimation,
         builder: (context, child) {
+          // Clamp animation value to ensure it stays within 0.0-1.0 range
+          // Use max/min to ensure safety even if value is NaN or Infinity
+          final rawValue = _bannerAnimation.value;
+          final animationValue = (rawValue.isNaN || rawValue.isInfinite)
+              ? 1.0
+              : rawValue.clamp(0.0, 1.0);
           return Transform.scale(
-            scale: 0.9 + (_bannerAnimation.value * 0.1),
+            scale: 0.9 + (animationValue * 0.1),
             child: Opacity(
-              opacity: _bannerAnimation.value,
+              opacity: animationValue,
               child: child,
             ),
           );

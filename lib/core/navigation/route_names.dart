@@ -8,6 +8,7 @@ class RouteNames {
   static const String onboarding2 = '/onboarding/2';
   static const String login = '/login';
   static const String register = '/register';
+  static const String forgotPassword = '/forgot-password';
 
   // Main app (with bottom nav)
   static const String home = '/home';

@@ -7,16 +7,119 @@ import '../../core/design/app_colors.dart';
 import '../../core/design/app_radius.dart';
 import '../../core/navigation/route_names.dart';
 import '../../widgets/bottom_nav.dart';
+import '../../services/auth_service.dart';
 
 /// Student Dashboard Screen - Simple Modern Design
 class StudentDashboardScreen extends StatelessWidget {
   const StudentDashboardScreen({super.key});
 
   Future<void> _handleLogout(BuildContext context) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('hasLaunched');
-    if (context.mounted) {
-      context.go(RouteNames.splash);
+    // Show confirmation dialog
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Text(
+          'تسجيل الخروج',
+          style: GoogleFonts.cairo(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Text(
+          'هل أنت متأكد من تسجيل الخروج؟',
+          style: GoogleFonts.cairo(fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(
+              'إلغاء',
+              style: GoogleFonts.cairo(
+                color: AppColors.mutedForeground,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(
+              'تسجيل الخروج',
+              style: GoogleFonts.cairo(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldLogout != true || !context.mounted) return;
+
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Center(
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: 16),
+              Text(
+                'جاري تسجيل الخروج...',
+                style: GoogleFonts.cairo(fontSize: 14),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    try {
+      // Call logout API
+      await AuthService.instance.logout();
+
+      if (!context.mounted) return;
+
+      // Clear local preferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('hasLaunched');
+
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Navigate to splash/login screen
+      if (context.mounted) {
+        context.go(RouteNames.splash);
+      }
+    } catch (e) {
+      if (!context.mounted) return;
+
+      // Close loading dialog
+      Navigator.of(context).pop();
+
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'حدث خطأ أثناء تسجيل الخروج: ${e.toString().replaceFirst('Exception: ', '')}',
+            style: GoogleFonts.cairo(),
+          ),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
     }
   }
 
@@ -200,7 +303,7 @@ class StudentDashboardScreen extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [Color(0xFF7C3AED), Color(0xFF5B21B6)],
         ),
-        borderRadius: BorderRadius.only(
+        borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(AppRadius.largeCard),
           bottomRight: Radius.circular(AppRadius.largeCard),
         ),

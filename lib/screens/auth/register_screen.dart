@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/design/app_colors.dart';
 import '../../core/navigation/route_names.dart';
+import '../../services/auth_service.dart';
 
 /// Register Screen - Clean Design like Account Page
 class RegisterScreen extends StatefulWidget {
@@ -20,7 +21,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _passwordConfirmationController = TextEditingController();
   bool _showPassword = false;
+  bool _showPasswordConfirmation = false;
   bool _isLoading = false;
   bool _acceptTerms = false;
 
@@ -35,13 +38,59 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
       return;
     }
+
     if (_formKey.currentState!.validate()) {
+      // Validate password confirmation
+      if (_passwordController.text != _passwordConfirmationController.text) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content:
+                Text('كلمات المرور غير متطابقة', style: GoogleFonts.cairo()),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
       setState(() => _isLoading = true);
-      await Future.delayed(const Duration(milliseconds: 1500));
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('hasLaunched', true);
-      if (mounted) {
-        context.go(RouteNames.home);
+
+      try {
+        await AuthService.instance.register(
+          name: _nameController.text.trim(),
+          email: _emailController.text.trim(),
+          phone: _phoneController.text.trim(),
+          password: _passwordController.text,
+          passwordConfirmation: _passwordConfirmationController.text,
+          acceptTerms: _acceptTerms,
+        );
+
+        if (!mounted) return;
+
+        // Save launch flag
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('hasLaunched', true);
+
+        // Navigate to home
+        if (mounted) {
+          context.go(RouteNames.home);
+        }
+      } catch (e) {
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              e.toString().replaceFirst('Exception: ', ''),
+              style: GoogleFonts.cairo(),
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
       }
     }
   }
@@ -52,6 +101,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _emailController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
+    _passwordConfirmationController.dispose();
     super.dispose();
   }
 
@@ -134,10 +184,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Transform.translate(
               offset: const Offset(0, -20),
               child: Container(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: AppColors.beige,
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(32)),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
                 ),
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(24, 30, 24, 24),
@@ -186,6 +235,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           hint: 'أدخل كلمة المرور',
                           icon: Icons.lock_outline_rounded,
                           isPassword: true,
+                          passwordFieldType: 'password',
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Password Confirmation Field
+                        _buildLabel('تأكيد كلمة المرور'),
+                        const SizedBox(height: 8),
+                        _buildTextField(
+                          controller: _passwordConfirmationController,
+                          hint: 'أدخل كلمة المرور مرة أخرى',
+                          icon: Icons.lock_outline_rounded,
+                          isPassword: true,
+                          passwordFieldType: 'confirmation',
                         ),
                         const SizedBox(height: 16),
 
@@ -339,6 +401,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     required IconData icon,
     bool isPassword = false,
     TextInputType? keyboardType,
+    String passwordFieldType = 'password',
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -353,7 +416,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
       child: TextFormField(
         controller: controller,
-        obscureText: isPassword && !_showPassword,
+        obscureText: isPassword &&
+            (passwordFieldType == 'password'
+                ? !_showPassword
+                : !_showPasswordConfirmation),
         keyboardType: keyboardType,
         style: GoogleFonts.cairo(fontSize: 15),
         decoration: InputDecoration(
@@ -363,10 +429,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
           prefixIcon: Icon(icon, color: AppColors.purple, size: 22),
           suffixIcon: isPassword
               ? IconButton(
-                  onPressed: () =>
-                      setState(() => _showPassword = !_showPassword),
+                  onPressed: () => setState(() {
+                    if (passwordFieldType == 'password') {
+                      _showPassword = !_showPassword;
+                    } else {
+                      _showPasswordConfirmation = !_showPasswordConfirmation;
+                    }
+                  }),
                   icon: Icon(
-                    _showPassword
+                    (passwordFieldType == 'password'
+                            ? _showPassword
+                            : _showPasswordConfirmation)
                         ? Icons.visibility_off_outlined
                         : Icons.visibility_outlined,
                     color: AppColors.mutedForeground,
@@ -380,7 +453,34 @@ class _RegisterScreenState extends State<RegisterScreen> {
           contentPadding:
               const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
         ),
-        validator: (value) => value?.isEmpty ?? true ? 'هذا الحقل مطلوب' : null,
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'هذا الحقل مطلوب';
+          }
+          if (keyboardType == TextInputType.emailAddress) {
+            final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+            if (!emailRegex.hasMatch(value)) {
+              return 'البريد الإلكتروني غير صحيح';
+            }
+          }
+          if (isPassword &&
+              passwordFieldType == 'password' &&
+              value.length < 6) {
+            return 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+          }
+          if (isPassword && passwordFieldType == 'confirmation') {
+            if (value != _passwordController.text) {
+              return 'كلمات المرور غير متطابقة';
+            }
+          }
+          if (keyboardType == TextInputType.phone) {
+            final phoneRegex = RegExp(r'^01[0-2,5]{1}[0-9]{8}$');
+            if (!phoneRegex.hasMatch(value)) {
+              return 'رقم الهاتف غير صحيح';
+            }
+          }
+          return null;
+        },
       ),
     );
   }

@@ -4,6 +4,7 @@ import '../../screens/startup/splash_screen.dart';
 import '../../screens/startup/onboarding_screen.dart';
 import '../../screens/auth/login_screen.dart';
 import '../../screens/auth/register_screen.dart';
+import '../../screens/auth/forgot_password_screen.dart';
 import '../../screens/main/home_screen.dart';
 import '../../screens/main/courses_screen.dart';
 import '../../screens/main/progress_screen.dart';
@@ -112,6 +113,10 @@ class AppRouter {
       GoRoute(
         path: RouteNames.register,
         builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.forgotPassword,
+        builder: (context, state) => const ForgotPasswordScreen(),
       ),
 
       // Main app screens (with bottom nav)
