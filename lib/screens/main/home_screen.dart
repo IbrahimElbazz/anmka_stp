@@ -29,6 +29,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   // API Data
   bool _isLoading = true;
+  String? _errorMessage;
   Map<String, dynamic>? _homeData;
   Map<String, dynamic>? _userProfile;
   int _notificationsCount = 0;
@@ -36,98 +37,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   List<Map<String, dynamic>> _popularCourses = [];
   List<Map<String, dynamic>> _continueLearning = [];
   List<Map<String, dynamic>> _categories = [];
-
-  // Fallback data
-  final _fallbackFeaturedCourses = [
-    {
-      'id': 1,
-      'title': 'أساسيات تصميم واجهات المستخدم',
-      'instructor': 'أحمد محمد',
-      'rating': 4.8,
-      'hours': 72,
-      'price': 0.0,
-      'isFree': true,
-      'lessons': 22,
-      'students': 1250,
-      'image': 'assets/images/motion-graphics-course-in-mumbai.png',
-      'category': 'التصميم',
-      'youtubeVideoId': 'AevtORdu4pc',
-    },
-    {
-      'id': 2,
-      'title': 'البرمجة بلغة بايثون للمبتدئين',
-      'instructor': 'سارة أحمد',
-      'rating': 4.9,
-      'hours': 48,
-      'price': 500.0,
-      'isFree': false,
-      'lessons': 30,
-      'students': 2340,
-      'image': 'assets/images/motion-pro-thumbnail.jpg',
-      'category': 'البرمجة',
-      'youtubeVideoId': 'AevtORdu4pc',
-    },
-    {
-      'id': 3,
-      'title': 'الذكاء الاصطناعي والتعلم الآلي',
-      'instructor': 'محمد علي',
-      'rating': 4.7,
-      'hours': 56,
-      'price': 0.0,
-      'isFree': true,
-      'lessons': 28,
-      'students': 890,
-      'image': 'assets/images/Full_HD_Cover_2d_to_3d.png',
-      'category': 'التقنية',
-      'youtubeVideoId': 'AevtORdu4pc',
-    },
-  ];
-
-  final _fallbackRecommendedCourses = [
-    {
-      'id': 4,
-      'title': 'تطوير تطبيقات الويب',
-      'instructor': 'خالد سعيد',
-      'rating': 4.6,
-      'hours': 40,
-      'price': 750.0,
-      'isFree': false,
-      'lessons': 18,
-      'students': 567,
-      'image': 'assets/images/promo_page_v1.jpg',
-      'category': 'البرمجة',
-      'youtubeVideoId': 'AevtORdu4pc',
-    },
-    {
-      'id': 5,
-      'title': 'التسويق الرقمي',
-      'instructor': 'نورة محمد',
-      'rating': 4.8,
-      'hours': 25,
-      'price': 0.0,
-      'isFree': true,
-      'lessons': 15,
-      'students': 1890,
-      'image':
-          'assets/images/6553876359f5b6249adec0e5_617c40ade6a8b58e1ac21506_SOM_Brand-Manifesto_Featured-Image.png',
-      'category': 'التسويق',
-      'youtubeVideoId': 'AevtORdu4pc',
-    },
-    {
-      'id': 6,
-      'title': 'تحليل البيانات',
-      'instructor': 'أحمد خالد',
-      'rating': 4.7,
-      'hours': 35,
-      'price': 0.0,
-      'isFree': true,
-      'lessons': 20,
-      'students': 756,
-      'image': 'assets/images/motion-graphics-course-in-mumbai.png',
-      'category': 'التقنية',
-      'youtubeVideoId': 'AevtORdu4pc',
-    },
-  ];
 
   @override
   void initState() {
@@ -145,7 +54,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _loadHomeData() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
     try {
       // Load home data
       final homeData = await HomeService.instance.getHomeData();
@@ -186,12 +98,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           homeData['categories'] ?? [],
         );
         _isLoading = false;
+        _errorMessage = null;
       });
     } catch (e) {
-      // Use fallback data on error
+      // Show error message instead of fallback data
       setState(() {
-        _featuredCourses = _fallbackFeaturedCourses;
+        _errorMessage = e.toString().replaceFirst('Exception: ', '');
         _isLoading = false;
+        _featuredCourses = [];
+        _popularCourses = [];
+        _continueLearning = [];
+        _categories = [];
       });
     }
   }
@@ -317,80 +234,107 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 Expanded(
                   child: Transform.translate(
                     offset: const Offset(0, -10),
-                    child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // 3D Banner
-                          _build3DBanner(),
+                    child: _errorMessage != null
+                        ? _buildErrorView()
+                        : SingleChildScrollView(
+                            physics: const BouncingScrollPhysics(),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // 3D Banner
+                                _build3DBanner(),
 
-                          const SizedBox(height: 24),
+                                const SizedBox(height: 24),
 
-                          // Quick Stats Row
-                          _buildQuickStats(),
+                                // Quick Stats Row
+                                _buildQuickStats(),
 
-                          const SizedBox(height: 28),
+                                const SizedBox(height: 28),
 
-                          // Featured Courses
-                          _buildSectionHeader(
-                              AppLocalizations.of(context)!.featuredCourses,
-                              () {
-                            context.push(RouteNames.allCourses);
-                          }),
-                          const SizedBox(height: 16),
-                          _isLoading
-                              ? _buildFeaturedCoursesSkeleton()
-                              : _buildFeaturedCourses(),
+                                // Featured Courses
+                                if (!_isLoading &&
+                                    _featuredCourses.isNotEmpty) ...[
+                                  _buildSectionHeader(
+                                      AppLocalizations.of(context)!
+                                          .featuredCourses, () {
+                                    context.push(RouteNames.allCourses);
+                                  }),
+                                  const SizedBox(height: 16),
+                                  _buildFeaturedCourses(),
+                                  const SizedBox(height: 28),
+                                ],
 
-                          const SizedBox(height: 28),
+                                // Categories
+                                if (!_isLoading && _categories.isNotEmpty) ...[
+                                  _buildSectionHeader(
+                                      AppLocalizations.of(context)!.categories,
+                                      () {
+                                    context.push(RouteNames.categories);
+                                  }),
+                                  const SizedBox(height: 16),
+                                  _buildCategories(),
+                                  const SizedBox(height: 28),
+                                ],
 
-                          // Categories
-                          if (_isLoading || _categories.isNotEmpty) ...[
-                            _buildSectionHeader(
-                                AppLocalizations.of(context)!.categories, () {
-                              context.push(RouteNames.categories);
-                            }),
-                            const SizedBox(height: 16),
-                            _isLoading
-                                ? _buildCategoriesSkeleton()
-                                : _buildCategories(),
-                            const SizedBox(height: 28),
-                          ],
+                                // Continue Learning
+                                if (!_isLoading &&
+                                    _continueLearning.isNotEmpty) ...[
+                                  _buildSectionHeader(
+                                      AppLocalizations.of(context)!
+                                          .continueLearning, () {
+                                    context.push(RouteNames.enrolled);
+                                  }),
+                                  const SizedBox(height: 16),
+                                  _buildContinueLearning(),
+                                  const SizedBox(height: 28),
+                                ],
 
-                          const SizedBox(height: 28),
+                                // Popular Courses
+                                if (!_isLoading &&
+                                    _popularCourses.isNotEmpty) ...[
+                                  _buildSectionHeader(
+                                      AppLocalizations.of(context)!
+                                          .recommendedCourses, () {
+                                    context.push(RouteNames.allCourses);
+                                  }),
+                                  const SizedBox(height: 16),
+                                  _buildRecommendedCourses(),
+                                ],
 
-                          // Continue Learning
-                          if (_isLoading || _continueLearning.isNotEmpty) ...[
-                            _buildSectionHeader(
-                                AppLocalizations.of(context)!.continueLearning,
-                                () {
-                              context.push(RouteNames.enrolled);
-                            }),
-                            const SizedBox(height: 16),
-                            _isLoading
-                                ? _buildContinueLearningSkeleton()
-                                : _buildContinueLearning(),
-                            const SizedBox(height: 28),
-                          ],
+                                // Loading skeletons
+                                if (_isLoading) ...[
+                                  _buildSectionHeader(
+                                      AppLocalizations.of(context)!
+                                          .featuredCourses,
+                                      () {}),
+                                  const SizedBox(height: 16),
+                                  _buildFeaturedCoursesSkeleton(),
+                                  const SizedBox(height: 28),
+                                  _buildSectionHeader(
+                                      AppLocalizations.of(context)!.categories,
+                                      () {}),
+                                  const SizedBox(height: 16),
+                                  _buildCategoriesSkeleton(),
+                                  const SizedBox(height: 28),
+                                  _buildSectionHeader(
+                                      AppLocalizations.of(context)!
+                                          .continueLearning,
+                                      () {}),
+                                  const SizedBox(height: 16),
+                                  _buildContinueLearningSkeleton(),
+                                  const SizedBox(height: 28),
+                                  _buildSectionHeader(
+                                      AppLocalizations.of(context)!
+                                          .recommendedCourses,
+                                      () {}),
+                                  const SizedBox(height: 16),
+                                  _buildRecommendedCoursesSkeleton(),
+                                ],
 
-                          // Popular Courses
-                          if (_isLoading || _popularCourses.isNotEmpty) ...[
-                            _buildSectionHeader(
-                                AppLocalizations.of(context)!
-                                    .recommendedCourses, () {
-                              context.push(RouteNames.allCourses);
-                            }),
-                            const SizedBox(height: 16),
-                            _isLoading
-                                ? _buildRecommendedCoursesSkeleton()
-                                : _buildRecommendedCourses(),
-                          ],
-
-                          const SizedBox(height: 140),
-                        ],
-                      ),
-                    ),
+                                const SizedBox(height: 140),
+                              ],
+                            ),
+                          ),
                   ),
                 ),
               ],
@@ -1042,9 +986,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildFeaturedCourses() {
-    final coursesToShow = _featuredCourses.isNotEmpty
-        ? _featuredCourses
-        : _fallbackFeaturedCourses;
+    if (_featuredCourses.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     return SizedBox(
       height: 285,
@@ -1052,9 +996,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.only(left: 20, right: 8),
-        itemCount: coursesToShow.length,
+        itemCount: _featuredCourses.length,
         itemBuilder: (context, index) {
-          final course = coursesToShow[index];
+          final course = _featuredCourses[index];
           return Padding(
             padding: const EdgeInsets.only(right: 12),
             child: PremiumCourseCard(
@@ -1063,6 +1007,67 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildErrorView() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline_rounded,
+              size: 80,
+              color: Colors.red[300],
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'حدث خطأ',
+              style: GoogleFonts.cairo(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppColors.foreground,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              _errorMessage ?? 'حدث خطأ غير متوقع',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.cairo(
+                fontSize: 14,
+                color: AppColors.mutedForeground,
+              ),
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton.icon(
+              onPressed: () {
+                _loadHomeData();
+              },
+              icon: const Icon(Icons.refresh_rounded),
+              label: Text(
+                'إعادة المحاولة',
+                style: GoogleFonts.cairo(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.purple,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1129,44 +1134,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildCategories() {
-    final categoriesToShow = _categories.isNotEmpty
-        ? _categories
-        : [
-            {
-              'icon': Icons.design_services,
-              'label': 'التصميم',
-              'color': const Color(0xFF6366F1),
-              'courses_count': 45
-            },
-            {
-              'icon': Icons.code,
-              'label': 'البرمجة',
-              'color': const Color(0xFF10B981),
-              'courses_count': 78
-            },
-            {
-              'icon': Icons.trending_up,
-              'label': 'التسويق',
-              'color': const Color(0xFFF59E0B),
-              'courses_count': 32
-            },
-            {
-              'icon': Icons.analytics,
-              'label': 'البيانات',
-              'color': const Color(0xFFEC4899),
-              'courses_count': 28
-            },
-          ];
+    if (_categories.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
-        children: categoriesToShow.take(4).map((cat) {
+        children: _categories.take(4).map((cat) {
           final categoryColor = _parseColor(cat['color']);
           return Expanded(
             child: Padding(
-              padding:
-                  EdgeInsets.only(left: cat == categoriesToShow.last ? 0 : 10),
+              padding: EdgeInsets.only(
+                  left: cat == _categories.take(4).last ? 0 : 10),
               child: GestureDetector(
                 onTap: () => context.push(RouteNames.categories),
                 child: Container(
@@ -1223,14 +1203,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildRecommendedCourses() {
-    final coursesToShow = _popularCourses.isNotEmpty
-        ? _popularCourses
-        : _fallbackRecommendedCourses;
+    if (_popularCourses.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
-        children: coursesToShow.take(4).map((course) {
+        children: _popularCourses.take(4).map((course) {
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: _buildHorizontalCourseCard(course),

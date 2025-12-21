@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../screens/startup/splash_screen.dart';
 import '../../screens/startup/onboarding_screen.dart';
@@ -36,119 +37,229 @@ class AppRouter {
       // Startup flow
       GoRoute(
         path: RouteNames.splash,
-        builder: (context, state) => const SplashScreen(),
+        pageBuilder: (context, state) => _buildPageWithTransition(
+          key: state.pageKey,
+          child: const SplashScreen(),
+        ),
       ),
       GoRoute(
         path: RouteNames.onboarding1,
-        builder: (context, state) => const OnboardingScreen(step: 1),
+        pageBuilder: (context, state) => _buildPageWithTransition(
+          key: state.pageKey,
+          child: const OnboardingScreen(step: 1),
+        ),
       ),
       GoRoute(
         path: RouteNames.onboarding2,
-        builder: (context, state) => const OnboardingScreen(step: 2),
+        pageBuilder: (context, state) => _buildPageWithTransition(
+          key: state.pageKey,
+          child: const OnboardingScreen(step: 2),
+        ),
       ),
       GoRoute(
         path: RouteNames.login,
-        builder: (context, state) => const LoginScreen(),
+        pageBuilder: (context, state) => _buildPageWithTransition(
+          key: state.pageKey,
+          child: const LoginScreen(),
+        ),
       ),
       GoRoute(
         path: RouteNames.register,
-        builder: (context, state) => const RegisterScreen(),
+        pageBuilder: (context, state) => _buildPageWithTransition(
+          key: state.pageKey,
+          child: const RegisterScreen(),
+        ),
       ),
       GoRoute(
         path: RouteNames.forgotPassword,
-        builder: (context, state) => const ForgotPasswordScreen(),
+        pageBuilder: (context, state) => _buildPageWithTransition(
+          key: state.pageKey,
+          child: const ForgotPasswordScreen(),
+        ),
       ),
 
-      // Main app screens (with bottom nav)
+      // Main app screens (with bottom nav) - with smooth transitions
       GoRoute(
         path: RouteNames.home,
-        builder: (context, state) => const HomeScreen(),
+        pageBuilder: (context, state) => _buildPageWithTransition(
+          key: state.pageKey,
+          child: const HomeScreen(),
+        ),
       ),
       GoRoute(
         path: RouteNames.courses,
-        builder: (context, state) => const CoursesScreen(),
+        pageBuilder: (context, state) => _buildPageWithTransition(
+          key: state.pageKey,
+          child: const CoursesScreen(),
+        ),
       ),
       GoRoute(
         path: RouteNames.progress,
-        builder: (context, state) => const ProgressScreen(),
+        pageBuilder: (context, state) => _buildPageWithTransition(
+          key: state.pageKey,
+          child: const ProgressScreen(),
+        ),
       ),
       GoRoute(
         path: RouteNames.dashboard,
-        builder: (context, state) => const StudentDashboardScreen(),
+        pageBuilder: (context, state) => _buildPageWithTransition(
+          key: state.pageKey,
+          child: const StudentDashboardScreen(),
+        ),
+      ),
+      GoRoute(
+        path: RouteNames.allCourses,
+        pageBuilder: (context, state) => _buildPageWithTransition(
+          key: state.pageKey,
+          child: const AllCoursesScreen(),
+        ),
       ),
 
       // Secondary screens
       GoRoute(
         path: RouteNames.categories,
-        builder: (context, state) => const CategoriesScreen(),
+        pageBuilder: (context, state) => _buildPageWithTransition(
+          key: state.pageKey,
+          child: const CategoriesScreen(),
+        ),
       ),
       GoRoute(
         path: RouteNames.courseDetails,
-        builder: (context, state) {
-          final course = state.extra as Map<String, dynamic>?;
-          return CourseDetailsScreen(course: course);
-        },
+        pageBuilder: (context, state) => _buildPageWithTransition(
+          key: state.pageKey,
+          child: CourseDetailsScreen(
+            course: state.extra as Map<String, dynamic>?,
+          ),
+        ),
       ),
       GoRoute(
         path: RouteNames.lessonViewer,
-        builder: (context, state) {
-          final lesson = state.extra as Map<String, dynamic>?;
-          return LessonViewerScreen(lesson: lesson);
-        },
+        pageBuilder: (context, state) => _buildPageWithTransition(
+          key: state.pageKey,
+          child: LessonViewerScreen(
+            lesson: state.extra as Map<String, dynamic>?,
+          ),
+        ),
       ),
       GoRoute(
         path: RouteNames.exams,
-        builder: (context, state) => const ExamsScreen(),
+        pageBuilder: (context, state) => _buildPageWithTransition(
+          key: state.pageKey,
+          child: const ExamsScreen(),
+        ),
       ),
       GoRoute(
         path: RouteNames.myExams,
-        builder: (context, state) => const MyExamsScreen(),
+        pageBuilder: (context, state) => _buildPageWithTransition(
+          key: state.pageKey,
+          child: const MyExamsScreen(),
+        ),
       ),
       GoRoute(
         path: RouteNames.notifications,
-        builder: (context, state) => const NotificationsScreen(),
+        pageBuilder: (context, state) => _buildPageWithTransition(
+          key: state.pageKey,
+          child: const NotificationsScreen(),
+        ),
       ),
       GoRoute(
         path: RouteNames.checkout,
-        builder: (context, state) {
-          final course = state.extra as Map<String, dynamic>?;
-          return CheckoutScreen(course: course);
-        },
+        pageBuilder: (context, state) => _buildPageWithTransition(
+          key: state.pageKey,
+          child: CheckoutScreen(
+            course: state.extra as Map<String, dynamic>?,
+          ),
+        ),
       ),
       GoRoute(
         path: RouteNames.liveCourses,
-        builder: (context, state) => const LiveCoursesScreen(),
+        pageBuilder: (context, state) => _buildPageWithTransition(
+          key: state.pageKey,
+          child: const LiveCoursesScreen(),
+        ),
       ),
       GoRoute(
         path: RouteNames.downloads,
-        builder: (context, state) => const DownloadsScreen(),
+        pageBuilder: (context, state) => _buildPageWithTransition(
+          key: state.pageKey,
+          child: const DownloadsScreen(),
+        ),
       ),
       GoRoute(
         path: RouteNames.certificates,
-        builder: (context, state) => const CertificatesScreen(),
+        pageBuilder: (context, state) => _buildPageWithTransition(
+          key: state.pageKey,
+          child: const CertificatesScreen(),
+        ),
       ),
       GoRoute(
         path: RouteNames.enrolled,
-        builder: (context, state) => const EnrolledScreen(),
+        pageBuilder: (context, state) => _buildPageWithTransition(
+          key: state.pageKey,
+          child: const EnrolledScreen(),
+        ),
       ),
       GoRoute(
         path: RouteNames.settings,
-        builder: (context, state) => const SettingsScreen(),
-      ),
-      GoRoute(
-        path: RouteNames.allCourses,
-        builder: (context, state) => const AllCoursesScreen(),
+        pageBuilder: (context, state) => _buildPageWithTransition(
+          key: state.pageKey,
+          child: const SettingsScreen(),
+        ),
       ),
       GoRoute(
         path: RouteNames.editProfile,
-        builder: (context, state) => EditProfileScreen(
-          initialProfile: state.extra as Map<String, dynamic>?,
+        pageBuilder: (context, state) => _buildPageWithTransition(
+          key: state.pageKey,
+          child: EditProfileScreen(
+            initialProfile: state.extra as Map<String, dynamic>?,
+          ),
         ),
       ),
       GoRoute(
         path: RouteNames.changePassword,
-        builder: (context, state) => const ChangePasswordScreen(),
+        pageBuilder: (context, state) => _buildPageWithTransition(
+          key: state.pageKey,
+          child: const ChangePasswordScreen(),
+        ),
       ),
     ],
   );
+
+  /// Build page with smooth fade and slide transition
+  static Page<void> _buildPageWithTransition({
+    required LocalKey key,
+    required Widget child,
+  }) {
+    return CustomTransitionPage<void>(
+      key: key,
+      child: child,
+      transitionsBuilder: (
+        BuildContext context,
+        Animation<double> animation,
+        Animation<double> secondaryAnimation,
+        Widget child,
+      ) {
+        // Fade and slide transition
+        return FadeTransition(
+          opacity: CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeInOut,
+          ),
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0.0, 0.02),
+              end: Offset.zero,
+            ).animate(
+              CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOutCubic,
+              ),
+            ),
+            child: child,
+          ),
+        );
+      },
+      transitionDuration: const Duration(milliseconds: 300),
+    );
+  }
 }

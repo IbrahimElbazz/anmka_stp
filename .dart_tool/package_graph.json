@@ -18,6 +18,7 @@
         "path_provider",
         "permission_handler",
         "pod_player",
+        "screen_protector",
         "share_plus",
         "shared_preferences",
         "skeletonizer",
@@ -65,6 +66,13 @@
         "stream_channel",
         "test_api",
         "vector_math"
+      ]
+    },
+    {
+      "name": "screen_protector",
+      "version": "1.4.11",
+      "dependencies": [
+        "flutter"
       ]
     },
     {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:screen_protector/screen_protector.dart';
 import 'core/design/app_theme.dart';
 import 'core/navigation/app_router.dart';
 import 'core/config/app_config_provider.dart';
@@ -8,6 +9,15 @@ import 'l10n/app_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize screen protection (prevent screenshots and screen recording)
+  try {
+    await ScreenProtector.protectDataLeakageOn();
+    await ScreenProtector.preventScreenshotOn();
+  } catch (e) {
+    // Log error but don't prevent app from running
+    debugPrint('Screen protection initialization error: $e');
+  }
 
   // Initialize app config provider
   final configProvider = AppConfigProvider();
