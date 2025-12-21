@@ -1,4 +1,4 @@
-package com.example.educational_app
+package com.anmka.stp
 
 import io.flutter.embedding.android.FlutterActivity
 

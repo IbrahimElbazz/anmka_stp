@@ -6,6 +6,7 @@ import '../../core/design/app_colors.dart';
 import '../../core/design/app_text_styles.dart';
 import '../../core/design/app_radius.dart';
 import '../../services/payments_service.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Checkout Screen - Pixel-perfect match to React version
 /// Matches: components/screens/checkout-screen.tsx
@@ -31,27 +32,30 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   double _discountAmount = 0.0;
   double _finalPrice = 0.0;
 
-  // Payment methods matching React exactly
-  final _paymentMethods = [
-    {
-      'id': 'fawry',
-      'name': 'فوري',
-      'icon': Icons.account_balance,
-      'description': 'ادفع في أي فرع فوري',
-    },
-    {
-      'id': 'wallet',
-      'name': 'محفظة إلكترونية',
-      'icon': Icons.account_balance_wallet,
-      'description': 'فودافون كاش - اتصالات كاش - أورانج كاش',
-    },
-    {
-      'id': 'visa',
-      'name': 'فيزا / ماستركارد',
-      'icon': Icons.credit_card,
-      'description': 'بطاقة ائتمان أو خصم',
-    },
-  ];
+  // Payment methods - will be localized in build method
+  List<Map<String, dynamic>> _getPaymentMethods(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return [
+      {
+        'id': 'fawry',
+        'name': l10n.fawry,
+        'icon': Icons.account_balance,
+        'description': l10n.payAtFawryBranch,
+      },
+      {
+        'id': 'wallet',
+        'name': l10n.eWallet,
+        'icon': Icons.account_balance_wallet,
+        'description': l10n.walletDescription,
+      },
+      {
+        'id': 'visa',
+        'name': l10n.visaMastercard,
+        'icon': Icons.credit_card,
+        'description': l10n.creditDebitCard,
+      },
+    ];
+  }
 
   @override
   void initState() {
@@ -109,10 +113,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         });
 
         if (mounted) {
+          final l10n = AppLocalizations.of(context)!;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                result['message']?.toString() ?? 'تم تطبيق الخصم بنجاح',
+                result['message']?.toString() ?? l10n.discountApplied,
                 style: GoogleFonts.cairo(),
               ),
               backgroundColor: const Color(0xFF10B981),
@@ -126,10 +131,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       } else {
         setState(() => _isValidatingCoupon = false);
         if (mounted) {
+          final l10n = AppLocalizations.of(context)!;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'كود الخصم غير صحيح',
+                l10n.invalidCouponCode,
                 style: GoogleFonts.cairo(),
               ),
               backgroundColor: Colors.red,
@@ -149,16 +155,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       setState(() => _isValidatingCoupon = false);
 
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
               e.toString().contains('401') ||
                       e.toString().contains('Unauthorized')
-                  ? 'يجب تسجيل الدخول أولاً'
+                  ? l10n.loginRequired
                   : e.toString().contains('Invalid') ||
                           e.toString().contains('غير صحيح')
-                      ? 'كود الخصم غير صحيح'
-                      : 'حدث خطأ أثناء التحقق من كود الخصم',
+                      ? l10n.invalidCouponCode
+                      : l10n.errorCheckingDiscount,
               style: GoogleFonts.cairo(),
             ),
             backgroundColor: Colors.red,
@@ -243,11 +250,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           setState(() => _isProcessing = false);
 
           if (mounted) {
+            final l10n = AppLocalizations.of(context)!;
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
                   completeData['message']?.toString() ??
-                      'تمت عملية الشراء بنجاح',
+                      l10n.purchaseSuccessful,
                   style: GoogleFonts.cairo(),
                 ),
                 backgroundColor: const Color(0xFF10B981),
@@ -269,10 +277,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           setState(() => _isProcessing = false);
 
           if (mounted) {
+            final l10n = AppLocalizations.of(context)!;
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  'حدث خطأ أثناء إتمام عملية الدفع',
+                  l10n.errorCompletingPayment,
                   style: GoogleFonts.cairo(),
                 ),
                 backgroundColor: Colors.red,
@@ -293,13 +302,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       setState(() => _isProcessing = false);
 
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
               e.toString().contains('401') ||
                       e.toString().contains('Unauthorized')
-                  ? 'يجب تسجيل الدخول أولاً'
-                  : 'حدث خطأ أثناء عملية الدفع',
+                  ? l10n.loginRequired
+                  : l10n.errorProcessingPayment,
               style: GoogleFonts.cairo(),
             ),
             backgroundColor: Colors.red,
@@ -315,11 +325,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final course = widget.course;
     if (course == null) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: AppColors.beige,
-        body: Center(child: Text('لا توجد دورة')),
+        body: Center(child: Text(l10n.noCourse)),
       );
     }
 
@@ -356,7 +367,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
-                        Icons.chevron_right,
+                        Icons.arrow_back_ios_new_rounded,
                         color: Colors.white,
                         size: 20, // w-5 h-5
                       ),
@@ -364,7 +375,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   ),
                   const SizedBox(width: 16), // gap-4
                   Text(
-                    'إتمام الشراء',
+                    l10n.completePurchase,
                     style: AppTextStyles.h3(color: Colors.white),
                   ),
                 ],
@@ -418,7 +429,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 children: [
                                   Text(
                                     course['title']?.toString() ??
-                                        'عنوان الدورة',
+                                        l10n.courseTitle,
                                     style: AppTextStyles.bodyMedium(
                                       color: AppColors.foreground,
                                     ).copyWith(fontWeight: FontWeight.bold),
@@ -430,9 +441,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                     course['instructor'] is Map
                                         ? (course['instructor'] as Map)['name']
                                                 ?.toString() ??
-                                            'المدرب'
+                                            l10n.instructor
                                         : course['instructor']?.toString() ??
-                                            'المدرب',
+                                            l10n.instructor,
                                     style: AppTextStyles.bodySmall(
                                       color: AppColors.purple,
                                     ),
@@ -473,7 +484,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                       ),
                                       const SizedBox(width: 4), // gap-1
                                       Text(
-                                        '${(course['lessons'] as List?)?.length ?? 22} درس',
+                                        l10n.lessonsCount(
+                                            (course['lessons'] as List?)
+                                                    ?.length ??
+                                                22),
                                         style: AppTextStyles.labelSmall(
                                           color: AppColors.mutedForeground,
                                         ),
@@ -515,7 +529,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 ),
                                 const SizedBox(width: 8), // gap-2
                                 Text(
-                                  'كوبون الخصم',
+                                  l10n.discount,
                                   style: AppTextStyles.bodyMedium(
                                     color: AppColors.foreground,
                                   ).copyWith(fontWeight: FontWeight.bold),
@@ -538,12 +552,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                     ),
                                     child: TextField(
                                       enabled: !_couponApplied,
-                                      decoration: const InputDecoration(
-                                        hintText: 'أدخل كود الخصم',
+                                      decoration: InputDecoration(
+                                        hintText: l10n.enterCouponCode,
                                         border: InputBorder.none,
                                         isDense: true,
                                         contentPadding: EdgeInsets.zero,
-                                        hintStyle: TextStyle(
+                                        hintStyle: const TextStyle(
                                           color: AppColors.mutedForeground,
                                         ),
                                       ),
@@ -595,7 +609,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                                 color: Colors.green[600],
                                               )
                                             : Text(
-                                                'تطبيق',
+                                                l10n.apply,
                                                 style: AppTextStyles.bodyMedium(
                                                   color: Colors.white,
                                                 ).copyWith(
@@ -609,7 +623,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             if (_couponApplied) ...[
                               const SizedBox(height: 8), // mt-2
                               Text(
-                                'تم تطبيق الخصم 20%',
+                                l10n.discount20,
                                 style: AppTextStyles.bodySmall(
                                   color: Colors.green[600],
                                 ),
@@ -642,13 +656,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               padding:
                                   const EdgeInsets.only(bottom: 16), // mb-4
                               child: Text(
-                                'طريقة الدفع',
+                                l10n.paymentMethod,
                                 style: AppTextStyles.bodyMedium(
                                   color: AppColors.foreground,
                                 ).copyWith(fontWeight: FontWeight.bold),
                               ),
                             ),
-                            ..._paymentMethods.map((method) {
+                            ..._getPaymentMethods(context).map((method) {
                               final isSelected =
                                   _selectedPayment == method['id'];
                               return GestureDetector(
@@ -772,7 +786,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               padding:
                                   const EdgeInsets.only(bottom: 16), // mb-4
                               child: Text(
-                                'ملخص الطلب',
+                                l10n.orderSummary,
                                 style: AppTextStyles.bodyMedium(
                                   color: AppColors.foreground,
                                 ).copyWith(fontWeight: FontWeight.bold),
@@ -783,13 +797,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  'سعر الدورة',
+                                  l10n.coursePrice,
                                   style: AppTextStyles.bodyMedium(
                                     color: AppColors.mutedForeground,
                                   ),
                                 ),
                                 Text(
-                                  '${_originalPrice.toStringAsFixed(2)} جنيه',
+                                  l10n.egyptianPoundAmount(
+                                      _originalPrice.toStringAsFixed(2)),
                                   style: AppTextStyles.bodyMedium(
                                     color: AppColors.foreground,
                                   ).copyWith(fontWeight: FontWeight.w500),
@@ -803,13 +818,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    'الخصم',
+                                    l10n.discount,
                                     style: AppTextStyles.bodyMedium(
                                       color: Colors.green[600],
                                     ),
                                   ),
                                   Text(
-                                    '-${_discountAmount.toStringAsFixed(2)} جنيه',
+                                    '-${l10n.egyptianPoundAmount(_discountAmount.toStringAsFixed(2))}',
                                     style: AppTextStyles.bodyMedium(
                                       color: Colors.green[600],
                                     ),
@@ -827,13 +842,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  'الإجمالي',
+                                  l10n.total,
                                   style: AppTextStyles.bodyMedium(
                                     color: AppColors.foreground,
                                   ).copyWith(fontWeight: FontWeight.bold),
                                 ),
                                 Text(
-                                  '${_finalPrice.toStringAsFixed(2)} جنيه',
+                                  l10n.egyptianPoundAmount(
+                                      _finalPrice.toStringAsFixed(2)),
                                   style: AppTextStyles.h2(
                                     color: AppColors.purple,
                                   ),
@@ -863,8 +879,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           child: Center(
                             child: Text(
                               _isProcessing
-                                  ? 'جاري المعالجة...'
-                                  : 'تأكيد الدفع',
+                                  ? l10n.processing
+                                  : l10n.confirmPayment,
                               style: AppTextStyles.buttonLarge(
                                 color:
                                     _selectedPayment != null && !_isProcessing
