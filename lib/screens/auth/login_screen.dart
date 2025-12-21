@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/design/app_colors.dart';
 import '../../core/navigation/route_names.dart';
 import '../../services/auth_service.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Login Screen - Clean Design like Account Page
 class LoginScreen extends StatefulWidget {
@@ -111,7 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: const Icon(
-                              Icons.arrow_forward_ios_rounded,
+                              Icons.arrow_back_ios_new_rounded,
                               color: Colors.white,
                               size: 18,
                             ),
@@ -119,7 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const Spacer(),
                         Text(
-                          'تسجيل الدخول',
+                          AppLocalizations.of(context)!.login,
                           style: GoogleFonts.cairo(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -164,7 +165,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'مرحباً بعودتك! 👋',
+                      AppLocalizations.of(context)!.welcomeBack,
                       style: GoogleFonts.cairo(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -196,22 +197,22 @@ class _LoginScreenState extends State<LoginScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Email Field
-                        _buildLabel('البريد الإلكتروني'),
+                        _buildLabel(AppLocalizations.of(context)!.email),
                         const SizedBox(height: 8),
                         _buildTextField(
                           controller: _emailController,
-                          hint: 'أدخل بريدك الإلكتروني',
+                          hint: AppLocalizations.of(context)!.enterEmail,
                           icon: Icons.email_outlined,
                           keyboardType: TextInputType.emailAddress,
                         ),
                         const SizedBox(height: 20),
 
                         // Password Field
-                        _buildLabel('كلمة المرور'),
+                        _buildLabel(AppLocalizations.of(context)!.password),
                         const SizedBox(height: 8),
                         _buildTextField(
                           controller: _passwordController,
-                          hint: 'أدخل كلمة المرور',
+                          hint: AppLocalizations.of(context)!.enterPassword,
                           icon: Icons.lock_outline_rounded,
                           isPassword: true,
                         ),
@@ -228,7 +229,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               minimumSize: Size.zero,
                             ),
                             child: Text(
-                              'نسيت كلمة المرور؟',
+                              AppLocalizations.of(context)!.forgotPassword,
                               style: GoogleFonts.cairo(
                                 fontSize: 13,
                                 color: AppColors.purple,
@@ -263,7 +264,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ),
                                   )
                                 : Text(
-                                    'تسجيل الدخول',
+                                    AppLocalizations.of(context)!.login,
                                     style: GoogleFonts.cairo(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
@@ -281,7 +282,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 16),
                               child: Text(
-                                'أو',
+                                AppLocalizations.of(context)!.or,
                                 style: GoogleFonts.cairo(
                                     color: AppColors.mutedForeground),
                               ),
@@ -296,11 +297,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           children: [
                             Expanded(
                                 child: _buildSocialButton(
-                                    Icons.g_mobiledata_rounded, 'Google')),
+                                    Icons.g_mobiledata_rounded,
+                                    AppLocalizations.of(context)!.google)),
                             const SizedBox(width: 12),
                             Expanded(
-                                child: _buildSocialButton(
-                                    Icons.apple_rounded, 'Apple')),
+                                child: _buildSocialButton(Icons.apple_rounded,
+                                    AppLocalizations.of(context)!.apple)),
                           ],
                         ),
                         const SizedBox(height: 32),
@@ -311,7 +313,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                'ليس لديك حساب؟',
+                                AppLocalizations.of(context)!.noAccount,
                                 style: GoogleFonts.cairo(
                                   fontSize: 14,
                                   color: AppColors.mutedForeground,
@@ -321,7 +323,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 onPressed: () =>
                                     context.go(RouteNames.register),
                                 child: Text(
-                                  'سجل الآن',
+                                  AppLocalizations.of(context)!.registerNow,
                                   style: GoogleFonts.cairo(
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
@@ -406,12 +408,12 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         validator: (value) {
           if (value == null || value.isEmpty) {
-            return 'هذا الحقل مطلوب';
+            return AppLocalizations.of(context)!.fieldRequired;
           }
           if (keyboardType == TextInputType.emailAddress) {
             final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
             if (!emailRegex.hasMatch(value)) {
-              return 'البريد الإلكتروني غير صحيح';
+              return AppLocalizations.of(context)!.invalidEmail;
             }
           }
           return null;

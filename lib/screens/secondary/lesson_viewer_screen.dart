@@ -126,7 +126,7 @@ class _LessonViewerScreenState extends State<LessonViewerScreen> {
                       color: Colors.white.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.arrow_forward_ios_rounded,
+                    child: const Icon(Icons.arrow_back_ios_new_rounded,
                         color: Colors.white, size: 18),
                   ),
                 ),

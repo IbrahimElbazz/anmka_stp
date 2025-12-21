@@ -16,7 +16,19 @@ class PremiumCourseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isFree = course['isFree'] == true;
+    final isFree = course['is_free'] ?? course['isFree'] ?? false;
+    final imagePath = course['thumbnail'] ?? course['image'] ?? '';
+    final categoryName = course['category'] is Map
+        ? (course['category']?['name'] ?? '')
+        : (course['category'] ?? '');
+    final title = course['title'] ?? '';
+    final instructorName = course['instructor'] is Map
+        ? (course['instructor']?['name'] ?? '')
+        : (course['instructor'] ?? '');
+    final rating = course['rating'] ?? 0.0;
+    final hours = course['duration_hours'] ?? course['hours'] ?? 0;
+    final lessons = course['lessons_count'] ?? course['lessons'] ?? 0;
+    final price = course['price'] ?? 0.0;
     
     return GestureDetector(
       onTap: onTap,
@@ -39,28 +51,52 @@ class PremiumCourseCard extends StatelessWidget {
             // Image with overlay
             Stack(
               children: [
-                Container(
-                  height: 130,
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                    image: DecorationImage(
-                      image: AssetImage(course['image'] as String),
-                      fit: BoxFit.cover,
-                      onError: (_, __) {},
-                    ),
-                  ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withOpacity(0.3),
-                        ],
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                  child: Stack(
+                    children: [
+                      Container(
+                        height: 130,
+                        width: double.infinity,
+                        color: AppColors.purple.withOpacity(0.1),
+                        child: imagePath.toString().isNotEmpty
+                            ? (imagePath.toString().startsWith('http') || imagePath.toString().startsWith('https')
+                                ? Image.network(
+                                    imagePath.toString(),
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => Container(
+                                      color: AppColors.purple.withOpacity(0.1),
+                                      child: const Icon(Icons.image, color: AppColors.purple, size: 40),
+                                    ),
+                                  )
+                                : Image.asset(
+                                    imagePath.toString(),
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => Container(
+                                      color: AppColors.purple.withOpacity(0.1),
+                                      child: const Icon(Icons.image, color: AppColors.purple, size: 40),
+                                    ),
+                                  ))
+                            : Container(
+                                color: AppColors.purple.withOpacity(0.1),
+                                child: const Icon(Icons.image, color: AppColors.purple, size: 40),
+                              ),
                       ),
-                    ),
+                      Container(
+                        height: 130,
+                        decoration: BoxDecoration(
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withOpacity(0.3),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 
@@ -80,7 +116,7 @@ class PremiumCourseCard extends StatelessWidget {
                           border: Border.all(color: Colors.white.withOpacity(0.3)),
                         ),
                         child: Text(
-                          course['category'] as String,
+                          categoryName.toString(),
                           style: GoogleFonts.cairo(
                             fontSize: 10,
                             fontWeight: FontWeight.w600,
@@ -112,7 +148,7 @@ class PremiumCourseCard extends StatelessWidget {
                       ],
                     ),
                     child: Text(
-                      isFree ? 'مجاني' : '${(course['price'] as num).toInt()} ج.م',
+                      isFree ? 'مجاني' : '${price is num ? price.toInt() : 0} ج.م',
                       style: GoogleFonts.cairo(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
@@ -155,7 +191,7 @@ class PremiumCourseCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    course['title'] as String,
+                    title.toString(),
                     style: GoogleFonts.cairo(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -181,7 +217,7 @@ class PremiumCourseCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        course['instructor'] as String,
+                        instructorName.toString(),
                         style: GoogleFonts.cairo(
                           fontSize: 12,
                           color: AppColors.mutedForeground,
@@ -206,7 +242,7 @@ class PremiumCourseCard extends StatelessWidget {
                             const Icon(Icons.star_rounded, size: 14, color: Colors.amber),
                             const SizedBox(width: 3),
                             Text(
-                              '${course['rating']}',
+                              rating.toString(),
                               style: GoogleFonts.cairo(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
@@ -221,7 +257,7 @@ class PremiumCourseCard extends StatelessWidget {
                       Icon(Icons.access_time_rounded, size: 14, color: Colors.grey[400]),
                       const SizedBox(width: 3),
                       Text(
-                        '${course['hours']}س',
+                        '$hoursس',
                         style: GoogleFonts.cairo(fontSize: 11, color: AppColors.mutedForeground),
                       ),
                       const SizedBox(width: 8),
@@ -229,7 +265,7 @@ class PremiumCourseCard extends StatelessWidget {
                       Icon(Icons.menu_book_rounded, size: 14, color: Colors.grey[400]),
                       const SizedBox(width: 3),
                       Text(
-                        '${course['lessons']} درس',
+                        '$lessons درس',
                         style: GoogleFonts.cairo(fontSize: 11, color: AppColors.mutedForeground),
                       ),
                     ],

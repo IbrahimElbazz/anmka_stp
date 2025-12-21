@@ -4,6 +4,7 @@ import '../../core/design/app_colors.dart';
 import '../../core/design/app_text_styles.dart';
 import '../../core/design/app_radius.dart';
 import '../../core/navigation/route_names.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Onboarding Screen - Pixel-perfect match to React version
 /// Matches: components/screens/onboarding-screen.tsx
@@ -17,12 +18,13 @@ class OnboardingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isStep1 = step == 1;
-    final title = isStep1 ? 'تعلم بسهولة' : 'تقدم مستمر';
+    final title = isStep1 ? l10n.learnEasily : l10n.continuousProgress;
     final subtitle = isStep1
-        ? 'اكتشف أفضل الدورات التعليمية مع مدرسين محترفين من جميع أنحاء العالم'
-        : 'تابع تقدمك واحصل على شهادات معتمدة عند إتمام الدورات';
-    final buttonText = isStep1 ? 'التالي' : 'ابدأ الآن';
+        ? l10n.discoverBestCourses
+        : l10n.trackProgressAndGetCertificates;
+    final buttonText = isStep1 ? l10n.nextStep : l10n.startNow;
 
     return Scaffold(
       backgroundColor: AppColors.beige,

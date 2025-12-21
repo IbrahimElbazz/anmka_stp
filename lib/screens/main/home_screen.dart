@@ -3,12 +3,16 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import '../../core/design/app_colors.dart';
-import '../../core/design/app_text_styles.dart';
 import '../../core/design/app_radius.dart';
 import '../../core/navigation/route_names.dart';
 import '../../widgets/bottom_nav.dart';
 import '../../widgets/premium_course_card.dart';
+import '../../services/home_service.dart';
+import '../../services/profile_service.dart';
+import '../../services/notifications_service.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Home Screen - Enhanced with 3D Banner & Modern Design
 class HomeScreen extends StatefulWidget {
@@ -20,12 +24,21 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final _searchController = TextEditingController();
-  bool _showSearchResults = false;
-  String _searchQuery = '';
   late AnimationController _bannerController;
   late Animation<double> _bannerAnimation;
 
-  final _featuredCourses = [
+  // API Data
+  bool _isLoading = true;
+  Map<String, dynamic>? _homeData;
+  Map<String, dynamic>? _userProfile;
+  int _notificationsCount = 0;
+  List<Map<String, dynamic>> _featuredCourses = [];
+  List<Map<String, dynamic>> _popularCourses = [];
+  List<Map<String, dynamic>> _continueLearning = [];
+  List<Map<String, dynamic>> _categories = [];
+
+  // Fallback data
+  final _fallbackFeaturedCourses = [
     {
       'id': 1,
       'title': 'أساسيات تصميم واجهات المستخدم',
@@ -70,7 +83,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     },
   ];
 
-  final _recommendedCourses = [
+  final _fallbackRecommendedCourses = [
     {
       'id': 4,
       'title': 'تطوير تطبيقات الويب',
@@ -116,33 +129,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     },
   ];
 
-  final _categories = [
-    {
-      'icon': Icons.design_services,
-      'label': 'التصميم',
-      'color': const Color(0xFF6366F1),
-      'count': 45
-    },
-    {
-      'icon': Icons.code,
-      'label': 'البرمجة',
-      'color': const Color(0xFF10B981),
-      'count': 78
-    },
-    {
-      'icon': Icons.trending_up,
-      'label': 'التسويق',
-      'color': const Color(0xFFF59E0B),
-      'count': 32
-    },
-    {
-      'icon': Icons.analytics,
-      'label': 'البيانات',
-      'color': const Color(0xFFEC4899),
-      'count': 28
-    },
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -155,6 +141,59 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       curve: Curves.easeOutBack,
     );
     _bannerController.forward();
+    _loadHomeData();
+  }
+
+  Future<void> _loadHomeData() async {
+    setState(() => _isLoading = true);
+    try {
+      // Load home data
+      final homeData = await HomeService.instance.getHomeData();
+
+      // Load user profile if logged in
+      try {
+        final profile = await ProfileService.instance.getProfile();
+        setState(() => _userProfile = profile);
+      } catch (e) {
+        // User might not be logged in, continue
+      }
+
+      // Load notifications count if logged in
+      try {
+        final notifications =
+            await NotificationsService.instance.getNotifications(
+          unreadOnly: true,
+          perPage: 1,
+        );
+        setState(() =>
+            _notificationsCount = notifications['meta']?['unread_count'] ?? 0);
+      } catch (e) {
+        // User might not be logged in, continue
+      }
+
+      setState(() {
+        _homeData = homeData;
+        _featuredCourses = List<Map<String, dynamic>>.from(
+          homeData['featured_courses'] ?? [],
+        );
+        _popularCourses = List<Map<String, dynamic>>.from(
+          homeData['popular_courses'] ?? [],
+        );
+        _continueLearning = List<Map<String, dynamic>>.from(
+          homeData['continue_learning'] ?? [],
+        );
+        _categories = List<Map<String, dynamic>>.from(
+          homeData['categories'] ?? [],
+        );
+        _isLoading = false;
+      });
+    } catch (e) {
+      // Use fallback data on error
+      setState(() {
+        _featuredCourses = _fallbackFeaturedCourses;
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -165,16 +204,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   List<Map<String, dynamic>> get _allCourses =>
-      [..._featuredCourses, ..._recommendedCourses];
-
-  List<Map<String, dynamic>> get _filteredCourses {
-    if (_searchQuery.isEmpty) return [];
-    return _allCourses.where((course) {
-      return course['title'].toString().contains(_searchQuery) ||
-          course['instructor'].toString().contains(_searchQuery) ||
-          course['category'].toString().contains(_searchQuery);
-    }).toList();
-  }
+      [..._featuredCourses, ..._popularCourses, ..._continueLearning];
 
   void _handleCourseClick(Map<String, dynamic> course) async {
     final prefs = await SharedPreferences.getInstance();
@@ -183,24 +213,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     if (!isFree && !isLoggedIn) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         final result = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: const Text('تسجيل الدخول مطلوب'),
-            content: const Text('يجب تسجيل الدخول للوصول إلى هذا الكورس'),
+            title: Text(l10n.loginRequired),
+            content: Text(l10n.loginRequired),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('إلغاء'),
+                child: Text(l10n.cancel),
               ),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context, true),
                 style:
                     ElevatedButton.styleFrom(backgroundColor: AppColors.purple),
-                child: const Text('تسجيل الدخول',
-                    style: TextStyle(color: Colors.white)),
+                child: Text(l10n.login,
+                    style: const TextStyle(color: Colors.white)),
               ),
             ],
           ),
@@ -280,18 +311,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               children: [
                 // Enhanced Header
                 _buildHeader(statusBarHeight),
+                const SizedBox(height: 15),
 
                 // Content
                 Expanded(
                   child: Transform.translate(
-                    offset: const Offset(0, -20),
+                    offset: const Offset(0, -10),
                     child: SingleChildScrollView(
                       physics: const BouncingScrollPhysics(),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 28),
-
                           // 3D Banner
                           _build3DBanner(),
 
@@ -303,29 +333,59 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           const SizedBox(height: 28),
 
                           // Featured Courses
-                          _buildSectionHeader('الدورات المميزة', () {
+                          _buildSectionHeader(
+                              AppLocalizations.of(context)!.featuredCourses,
+                              () {
                             context.push(RouteNames.allCourses);
                           }),
                           const SizedBox(height: 16),
-                          _buildFeaturedCourses(),
+                          _isLoading
+                              ? _buildFeaturedCoursesSkeleton()
+                              : _buildFeaturedCourses(),
 
                           const SizedBox(height: 28),
 
                           // Categories
-                          _buildSectionHeader('التصنيفات', () {
-                            context.push(RouteNames.categories);
-                          }),
-                          const SizedBox(height: 16),
-                          _buildCategories(),
+                          if (_isLoading || _categories.isNotEmpty) ...[
+                            _buildSectionHeader(
+                                AppLocalizations.of(context)!.categories, () {
+                              context.push(RouteNames.categories);
+                            }),
+                            const SizedBox(height: 16),
+                            _isLoading
+                                ? _buildCategoriesSkeleton()
+                                : _buildCategories(),
+                            const SizedBox(height: 28),
+                          ],
 
                           const SizedBox(height: 28),
 
-                          // Recommended Courses
-                          _buildSectionHeader('دورات موصى بها', () {
-                            context.push(RouteNames.allCourses);
-                          }),
-                          const SizedBox(height: 16),
-                          _buildRecommendedCourses(),
+                          // Continue Learning
+                          if (_isLoading || _continueLearning.isNotEmpty) ...[
+                            _buildSectionHeader(
+                                AppLocalizations.of(context)!.continueLearning,
+                                () {
+                              context.push(RouteNames.enrolled);
+                            }),
+                            const SizedBox(height: 16),
+                            _isLoading
+                                ? _buildContinueLearningSkeleton()
+                                : _buildContinueLearning(),
+                            const SizedBox(height: 28),
+                          ],
+
+                          // Popular Courses
+                          if (_isLoading || _popularCourses.isNotEmpty) ...[
+                            _buildSectionHeader(
+                                AppLocalizations.of(context)!
+                                    .recommendedCourses, () {
+                              context.push(RouteNames.allCourses);
+                            }),
+                            const SizedBox(height: 16),
+                            _isLoading
+                                ? _buildRecommendedCoursesSkeleton()
+                                : _buildRecommendedCourses(),
+                          ],
 
                           const SizedBox(height: 140),
                         ],
@@ -352,7 +412,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           end: Alignment.bottomRight,
           colors: [Color(0xFF7C3AED), Color(0xFF5B21B6)],
         ),
-        borderRadius: BorderRadius.only(
+        borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(AppRadius.largeCard),
           bottomRight: Radius.circular(AppRadius.largeCard),
         ),
@@ -439,19 +499,39 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             ],
                           ),
                           child: ClipOval(
-                            child: Image.asset(
-                              'assets/images/student-avatar.png',
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  Container(
-                                color: Colors.white,
-                                child: const Icon(
-                                  Icons.person,
-                                  color: AppColors.purple,
-                                  size: 28,
-                                ),
-                              ),
-                            ),
+                            child: _userProfile?['avatar'] != null
+                                ? Image.network(
+                                    _userProfile!['avatar']?.toString() ?? '',
+                                    fit: BoxFit.cover,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            Image.asset(
+                                      'assets/images/student-avatar.png',
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => Container(
+                                        color: Colors.white,
+                                        child: const Icon(
+                                          Icons.person,
+                                          color: AppColors.purple,
+                                          size: 28,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                : Image.asset(
+                                    'assets/images/student-avatar.png',
+                                    fit: BoxFit.cover,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            Container(
+                                      color: Colors.white,
+                                      child: const Icon(
+                                        Icons.person,
+                                        color: AppColors.purple,
+                                        size: 28,
+                                      ),
+                                    ),
+                                  ),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -459,7 +539,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'مرحباً، يعقوب 👋',
+                              AppLocalizations.of(context)!.welcome(
+                                  _userProfile?['name']?.toString() ??
+                                      AppLocalizations.of(context)!.visitor),
                               style: GoogleFonts.cairo(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -482,7 +564,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                           color: Colors.amber, size: 14),
                                       const SizedBox(width: 4),
                                       Text(
-                                        'طالب متميز',
+                                        AppLocalizations.of(context)!
+                                            .excellentStudent,
                                         style: GoogleFonts.cairo(
                                           fontSize: 11,
                                           color: Colors.white.withOpacity(0.9),
@@ -509,7 +592,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         // Notifications with badge
                         _buildHeaderButton(
                           icon: Icons.notifications_none_rounded,
-                          badge: '3',
+                          badge: _notificationsCount > 0
+                              ? _notificationsCount.toString()
+                              : null,
                           onTap: () => context.push(RouteNames.notifications),
                         ),
                       ],
@@ -590,7 +675,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           color: AppColors.foreground,
         ),
         decoration: InputDecoration(
-          hintText: 'ابحث عن دورة، مدرب، أو موضوع...',
+          hintText: AppLocalizations.of(context)!.searchPlaceholder,
           hintStyle: GoogleFonts.cairo(
             fontSize: 14,
             color: AppColors.mutedForeground,
@@ -661,7 +746,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           );
         },
         child: Container(
-          height: 165,
+          // height: 165,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
@@ -761,7 +846,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       color: Colors.orange, size: 14),
                                   const SizedBox(width: 4),
                                   Text(
-                                    'عرض خاص',
+                                    AppLocalizations.of(context)!.specialOffer,
                                     style: GoogleFonts.cairo(
                                       fontSize: 11,
                                       fontWeight: FontWeight.bold,
@@ -773,7 +858,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'ابدأ رحلة التعلم',
+                              _homeData?['hero_banner']?['title'] ??
+                                  AppLocalizations.of(context)!
+                                      .startLearningJourney,
                               style: GoogleFonts.cairo(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -782,7 +869,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               ),
                             ),
                             Text(
-                              'خصم 50% على جميع الدورات',
+                              _homeData?['hero_banner']?['subtitle'] ??
+                                  AppLocalizations.of(context)!.discount50,
                               style: GoogleFonts.cairo(
                                 fontSize: 12,
                                 color: Colors.white.withOpacity(0.85),
@@ -797,7 +885,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
-                                'اشترك الآن',
+                                AppLocalizations.of(context)!
+                                    .subscribeNowButton,
                                 style: GoogleFonts.cairo(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
@@ -820,28 +909,34 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildQuickStats() {
+    // Get user summary from API
+    final userSummary = _homeData?['user_summary'] as Map<String, dynamic>?;
+    final enrolledCourses = userSummary?['enrolled_courses'] ?? 0;
+    final certificates = userSummary?['certificates'] ?? 0;
+    final totalHours = userSummary?['total_hours'] ?? 0;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
         children: [
           _buildStatCard(
             icon: Icons.play_circle_fill_rounded,
-            value: '12',
-            label: 'كورس مشترك',
+            value: enrolledCourses.toString(),
+            label: AppLocalizations.of(context)!.enrolledCourse,
             color: const Color(0xFF10B981),
           ),
           const SizedBox(width: 12),
           _buildStatCard(
             icon: Icons.emoji_events_rounded,
-            value: '5',
-            label: 'شهادة',
+            value: certificates.toString(),
+            label: AppLocalizations.of(context)!.certificates,
             color: const Color(0xFFF59E0B),
           ),
           const SizedBox(width: 12),
           _buildStatCard(
             icon: Icons.access_time_filled_rounded,
-            value: '48',
-            label: 'ساعة تعلم',
+            value: totalHours.toString(),
+            label: AppLocalizations.of(context)!.learningHours,
             color: const Color(0xFF6366F1),
           ),
         ],
@@ -927,7 +1022,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'عرض المزيد',
+                    AppLocalizations.of(context)!.viewMore,
                     style: GoogleFonts.cairo(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -947,15 +1042,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildFeaturedCourses() {
+    final coursesToShow = _featuredCourses.isNotEmpty
+        ? _featuredCourses
+        : _fallbackFeaturedCourses;
+
     return SizedBox(
       height: 285,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.only(left: 20, right: 8),
-        itemCount: _featuredCourses.length,
+        itemCount: coursesToShow.length,
         itemBuilder: (context, index) {
-          final course = _featuredCourses[index];
+          final course = coursesToShow[index];
           return Padding(
             padding: const EdgeInsets.only(right: 12),
             child: PremiumCourseCard(
@@ -968,14 +1067,106 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
+  Color _parseColor(dynamic colorValue) {
+    if (colorValue == null) return const Color(0xFF6366F1);
+    if (colorValue is Color) return colorValue;
+    if (colorValue is String) {
+      // Handle hex color strings like "#7C3AED" or "7C3AED"
+      String hex = colorValue.replaceAll('#', '');
+      if (hex.length == 6) {
+        return Color(int.parse('FF$hex', radix: 16));
+      }
+    }
+    return const Color(0xFF6366F1);
+  }
+
+  Widget _getCategoryIcon(dynamic iconValue, Color color) {
+    if (iconValue == null) {
+      return Icon(Icons.category, color: color, size: 26);
+    }
+
+    // If it's already an IconData, use it directly
+    if (iconValue is IconData) {
+      return Icon(iconValue, color: color, size: 26);
+    }
+
+    // If it's a string, map it to an IconData
+    if (iconValue is String) {
+      final iconMap = {
+        'design_services': Icons.design_services,
+        'code': Icons.code,
+        'trending_up': Icons.trending_up,
+        'analytics': Icons.analytics,
+        'school': Icons.school,
+        'computer': Icons.computer,
+        'business': Icons.business,
+        'science': Icons.science,
+        'palette': Icons.palette,
+        'language': Icons.language,
+        'music_note': Icons.music_note,
+        'fitness_center': Icons.fitness_center,
+        'restaurant': Icons.restaurant,
+        'local_movies': Icons.local_movies,
+        'photo_camera': Icons.photo_camera,
+      };
+
+      // Try to find the icon by name (case-insensitive)
+      final iconName = iconValue.toLowerCase().replaceAll(' ', '_');
+      final iconData = iconMap[iconName];
+
+      if (iconData != null) {
+        return Icon(iconData, color: color, size: 26);
+      }
+
+      // If icon is a URL, show an image icon
+      if (iconValue.startsWith('http://') || iconValue.startsWith('https://')) {
+        return Icon(Icons.image, color: color, size: 26);
+      }
+    }
+
+    // Default fallback
+    return Icon(Icons.category, color: color, size: 26);
+  }
+
   Widget _buildCategories() {
+    final categoriesToShow = _categories.isNotEmpty
+        ? _categories
+        : [
+            {
+              'icon': Icons.design_services,
+              'label': 'التصميم',
+              'color': const Color(0xFF6366F1),
+              'courses_count': 45
+            },
+            {
+              'icon': Icons.code,
+              'label': 'البرمجة',
+              'color': const Color(0xFF10B981),
+              'courses_count': 78
+            },
+            {
+              'icon': Icons.trending_up,
+              'label': 'التسويق',
+              'color': const Color(0xFFF59E0B),
+              'courses_count': 32
+            },
+            {
+              'icon': Icons.analytics,
+              'label': 'البيانات',
+              'color': const Color(0xFFEC4899),
+              'courses_count': 28
+            },
+          ];
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
-        children: _categories.map((cat) {
+        children: categoriesToShow.take(4).map((cat) {
+          final categoryColor = _parseColor(cat['color']);
           return Expanded(
             child: Padding(
-              padding: EdgeInsets.only(left: cat == _categories.last ? 0 : 10),
+              padding:
+                  EdgeInsets.only(left: cat == categoriesToShow.last ? 0 : 10),
               child: GestureDetector(
                 onTap: () => context.push(RouteNames.categories),
                 child: Container(
@@ -997,15 +1188,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         width: 50,
                         height: 50,
                         decoration: BoxDecoration(
-                          color: (cat['color'] as Color).withOpacity(0.12),
+                          color: categoryColor.withOpacity(0.12),
                           borderRadius: BorderRadius.circular(14),
                         ),
-                        child: Icon(cat['icon'] as IconData,
-                            color: cat['color'] as Color, size: 26),
+                        child: _getCategoryIcon(cat['icon'], categoryColor),
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        cat['label'] as String,
+                        cat['name'] ?? cat['label'] ?? '',
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.cairo(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -1013,7 +1205,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ),
                       ),
                       Text(
-                        '${cat['count']} دورة',
+                        '${cat['courses_count'] ?? cat['count'] ?? 0} دورة',
                         style: GoogleFonts.cairo(
                           fontSize: 10,
                           color: AppColors.mutedForeground,
@@ -1031,10 +1223,28 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildRecommendedCourses() {
+    final coursesToShow = _popularCourses.isNotEmpty
+        ? _popularCourses
+        : _fallbackRecommendedCourses;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
-        children: _recommendedCourses.take(4).map((course) {
+        children: coursesToShow.take(4).map((course) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _buildHorizontalCourseCard(course),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildContinueLearning() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        children: _continueLearning.take(4).map((course) {
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: _buildHorizontalCourseCard(course),
@@ -1078,15 +1288,41 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(14),
-                child: Image.asset(
-                  course['image'] as String,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
-                    color: AppColors.purple.withOpacity(0.1),
-                    child: const Icon(Icons.image,
-                        color: AppColors.purple, size: 30),
-                  ),
-                ),
+                child: course['thumbnail'] != null
+                    ? Image.network(
+                        course['thumbnail']?.toString() ?? '',
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => course['image'] != null
+                            ? Image.asset(
+                                course['image']?.toString() ?? '',
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Container(
+                                  color: AppColors.purple.withOpacity(0.1),
+                                  child: const Icon(Icons.image,
+                                      color: AppColors.purple, size: 30),
+                                ),
+                              )
+                            : Container(
+                                color: AppColors.purple.withOpacity(0.1),
+                                child: const Icon(Icons.image,
+                                    color: AppColors.purple, size: 30),
+                              ),
+                      )
+                    : course['image'] != null
+                        ? Image.asset(
+                            course['image']?.toString() ?? '',
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              color: AppColors.purple.withOpacity(0.1),
+                              child: const Icon(Icons.image,
+                                  color: AppColors.purple, size: 30),
+                            ),
+                          )
+                        : Container(
+                            color: AppColors.purple.withOpacity(0.1),
+                            child: const Icon(Icons.image,
+                                color: AppColors.purple, size: 30),
+                          ),
               ),
             ),
             const SizedBox(width: 14),
@@ -1105,7 +1341,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          course['category'] as String,
+                          course['category']?['name'] ??
+                              course['category'] ??
+                              '',
                           style: GoogleFonts.cairo(
                               fontSize: 10,
                               color: AppColors.purple,
@@ -1113,7 +1351,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ),
                       ),
                       const Spacer(),
-                      if (course['isFree'] == true)
+                      if ((course['is_free'] ?? course['isFree']) == true)
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 3),
@@ -1122,7 +1360,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            'مجاني',
+                            AppLocalizations.of(context)!.free,
                             style: GoogleFonts.cairo(
                                 fontSize: 10,
                                 color: Colors.green[700],
@@ -1133,7 +1371,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    course['title'] as String,
+                    course['title'] ?? '',
                     style: GoogleFonts.cairo(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -1144,7 +1382,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    course['instructor'] as String,
+                    course['instructor']?['name'] ?? course['instructor'] ?? '',
                     style: GoogleFonts.cairo(
                         fontSize: 12, color: AppColors.mutedForeground),
                   ),
@@ -1155,7 +1393,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           size: 16, color: Colors.amber),
                       const SizedBox(width: 4),
                       Text(
-                        '${course['rating']}',
+                        '${course['rating'] ?? 0}',
                         style: GoogleFonts.cairo(
                             fontSize: 12, fontWeight: FontWeight.w600),
                       ),
@@ -1164,7 +1402,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           size: 14, color: Colors.grey[400]),
                       const SizedBox(width: 4),
                       Text(
-                        '${course['hours']}س',
+                        '${course['duration_hours'] ?? course['hours'] ?? 0}س',
                         style: GoogleFonts.cairo(
                             fontSize: 11, color: AppColors.mutedForeground),
                       ),
@@ -1173,7 +1411,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           size: 14, color: Colors.grey[400]),
                       const SizedBox(width: 4),
                       Text(
-                        '${course['students']}',
+                        '${course['students_count'] ?? course['students'] ?? 0}',
                         style: GoogleFonts.cairo(
                             fontSize: 11, color: AppColors.mutedForeground),
                       ),
@@ -1183,6 +1421,341 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  // Skeleton Loading Widgets
+  Widget _buildFeaturedCoursesSkeleton() {
+    return Skeletonizer(
+      enabled: true,
+      child: SizedBox(
+        height: 285,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: const EdgeInsets.only(left: 20, right: 8),
+          itemCount: 3,
+          itemBuilder: (context, index) {
+            return Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: Container(
+                width: 280,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      height: 160,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(20),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            height: 12,
+                            width: 80,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            height: 16,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Container(
+                            height: 14,
+                            width: 120,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Container(
+                                height: 12,
+                                width: 40,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[300],
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Container(
+                                height: 12,
+                                width: 40,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[300],
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoriesSkeleton() {
+    return Skeletonizer(
+      enabled: true,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Row(
+          children: List.generate(4, (index) {
+            return Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(left: index == 0 ? 0 : 10),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Container(
+                        height: 12,
+                        width: 50,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        height: 10,
+                        width: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContinueLearningSkeleton() {
+    return Skeletonizer(
+      enabled: true,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          children: List.generate(2, (index) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 90,
+                      height: 90,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            height: 12,
+                            width: 60,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            height: 14,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Container(
+                            height: 12,
+                            width: 100,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Container(
+                                height: 10,
+                                width: 30,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[300],
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Container(
+                                height: 10,
+                                width: 30,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[300],
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecommendedCoursesSkeleton() {
+    return Skeletonizer(
+      enabled: true,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          children: List.generate(3, (index) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 90,
+                      height: 90,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            height: 12,
+                            width: 60,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            height: 14,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Container(
+                            height: 12,
+                            width: 100,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Container(
+                                height: 10,
+                                width: 30,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[300],
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Container(
+                                height: 10,
+                                width: 30,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[300],
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
         ),
       ),
     );
@@ -1210,9 +1783,17 @@ class _SearchOverlayState extends State<_SearchOverlay> {
   List<Map<String, dynamic>> get _filteredCourses {
     if (_query.isEmpty) return widget.allCourses;
     return widget.allCourses.where((course) {
-      return course['title'].toString().contains(_query) ||
-          course['instructor'].toString().contains(_query) ||
-          course['category'].toString().contains(_query);
+      final title = course['title']?.toString() ?? '';
+      final instructor = course['instructor'] is Map
+          ? (course['instructor'] as Map)['name']?.toString() ?? ''
+          : course['instructor']?.toString() ?? '';
+      final category = course['category'] is Map
+          ? (course['category'] as Map)['name']?.toString() ?? ''
+          : course['category']?.toString() ?? '';
+
+      return title.contains(_query) ||
+          instructor.contains(_query) ||
+          category.contains(_query);
     }).toList();
   }
 
@@ -1256,7 +1837,7 @@ class _SearchOverlayState extends State<_SearchOverlay> {
                 autofocus: true,
                 style: GoogleFonts.cairo(fontSize: 15),
                 decoration: InputDecoration(
-                  hintText: 'ابحث عن دورة، مدرب، أو موضوع...',
+                  hintText: AppLocalizations.of(context)!.searchPlaceholder,
                   hintStyle: GoogleFonts.cairo(
                     fontSize: 14,
                     color: AppColors.mutedForeground,
@@ -1285,7 +1866,7 @@ class _SearchOverlayState extends State<_SearchOverlay> {
                             size: 64, color: Colors.grey[300]),
                         const SizedBox(height: 16),
                         Text(
-                          'لا توجد نتائج',
+                          AppLocalizations.of(context)!.noResultsFound,
                           style: GoogleFonts.cairo(
                             fontSize: 16,
                             color: AppColors.mutedForeground,
@@ -1312,19 +1893,65 @@ class _SearchOverlayState extends State<_SearchOverlay> {
                             children: [
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
-                                child: Image.asset(
-                                  course['image'] as String,
-                                  width: 60,
-                                  height: 60,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => Container(
-                                    width: 60,
-                                    height: 60,
-                                    color: AppColors.purple.withOpacity(0.1),
-                                    child: const Icon(Icons.image,
-                                        color: AppColors.purple),
-                                  ),
-                                ),
+                                child: (course['thumbnail'] != null ||
+                                        course['image'] != null)
+                                    ? Image.network(
+                                        course['thumbnail']?.toString() ?? '',
+                                        width: 60,
+                                        height: 60,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => course[
+                                                    'image'] !=
+                                                null
+                                            ? Image.asset(
+                                                course['image']?.toString() ??
+                                                    '',
+                                                width: 60,
+                                                height: 60,
+                                                fit: BoxFit.cover,
+                                                errorBuilder: (_, __, ___) =>
+                                                    Container(
+                                                  width: 60,
+                                                  height: 60,
+                                                  color: AppColors.purple
+                                                      .withOpacity(0.1),
+                                                  child: const Icon(Icons.image,
+                                                      color: AppColors.purple),
+                                                ),
+                                              )
+                                            : Container(
+                                                width: 60,
+                                                height: 60,
+                                                color: AppColors.purple
+                                                    .withOpacity(0.1),
+                                                child: const Icon(Icons.image,
+                                                    color: AppColors.purple),
+                                              ),
+                                      )
+                                    : course['image'] != null
+                                        ? Image.asset(
+                                            course['image']?.toString() ?? '',
+                                            width: 60,
+                                            height: 60,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (_, __, ___) =>
+                                                Container(
+                                              width: 60,
+                                              height: 60,
+                                              color: AppColors.purple
+                                                  .withOpacity(0.1),
+                                              child: const Icon(Icons.image,
+                                                  color: AppColors.purple),
+                                            ),
+                                          )
+                                        : Container(
+                                            width: 60,
+                                            height: 60,
+                                            color: AppColors.purple
+                                                .withOpacity(0.1),
+                                            child: const Icon(Icons.image,
+                                                color: AppColors.purple),
+                                          ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -1332,7 +1959,7 @@ class _SearchOverlayState extends State<_SearchOverlay> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      course['title'] as String,
+                                      course['title']?.toString() ?? '',
                                       style: GoogleFonts.cairo(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 14,
@@ -1342,7 +1969,13 @@ class _SearchOverlayState extends State<_SearchOverlay> {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      course['instructor'] as String,
+                                      course['instructor'] is Map
+                                          ? (course['instructor']
+                                                      as Map)['name']
+                                                  ?.toString() ??
+                                              ''
+                                          : course['instructor']?.toString() ??
+                                              '',
                                       style: GoogleFonts.cairo(
                                         fontSize: 12,
                                         color: AppColors.mutedForeground,
@@ -1360,7 +1993,7 @@ class _SearchOverlayState extends State<_SearchOverlay> {
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Text(
-                                    'مجاني',
+                                    AppLocalizations.of(context)!.free,
                                     style: GoogleFonts.cairo(
                                       fontSize: 11,
                                       color: Colors.green[700],

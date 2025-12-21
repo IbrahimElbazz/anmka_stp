@@ -15,7 +15,8 @@ class ExamsScreen extends StatefulWidget {
   State<ExamsScreen> createState() => _ExamsScreenState();
 }
 
-class _ExamsScreenState extends State<ExamsScreen> with TickerProviderStateMixin {
+class _ExamsScreenState extends State<ExamsScreen>
+    with TickerProviderStateMixin {
   bool _examStarted = false;
   int _currentQuestion = 0;
   List<int?> _selectedAnswers = [];
@@ -32,25 +33,45 @@ class _ExamsScreenState extends State<ExamsScreen> with TickerProviderStateMixin
     {
       'id': 2,
       'question': 'ما هي أفضل طريقة لتحسين تجربة المستخدم؟',
-      'options': ['إضافة المزيد من الألوان', 'تبسيط التصميم', 'استخدام خطوط صغيرة', 'إخفاء القوائم'],
+      'options': [
+        'إضافة المزيد من الألوان',
+        'تبسيط التصميم',
+        'استخدام خطوط صغيرة',
+        'إخفاء القوائم'
+      ],
       'correctAnswer': 1,
     },
     {
       'id': 3,
       'question': 'ما هو مبدأ التباين في التصميم؟',
-      'options': ['استخدام لون واحد', 'الفرق بين العناصر', 'تصغير النصوص', 'إزالة الصور'],
+      'options': [
+        'استخدام لون واحد',
+        'الفرق بين العناصر',
+        'تصغير النصوص',
+        'إزالة الصور'
+      ],
       'correctAnswer': 1,
     },
     {
       'id': 4,
       'question': 'ما هي أفضل ممارسة للتصميم المتجاوب؟',
-      'options': ['تصميم واحد لكل الأجهزة', 'استخدام تصميم مرن', 'تجاهل الهواتف', 'تصميم للحاسوب فقط'],
+      'options': [
+        'تصميم واحد لكل الأجهزة',
+        'استخدام تصميم مرن',
+        'تجاهل الهواتف',
+        'تصميم للحاسوب فقط'
+      ],
       'correctAnswer': 1,
     },
     {
       'id': 5,
       'question': 'ما هو الهدف من اختبار المستخدم؟',
-      'options': ['إرضاء المصمم', 'تحسين المنتج', 'زيادة التكلفة', 'إطالة الوقت'],
+      'options': [
+        'إرضاء المصمم',
+        'تحسين المنتج',
+        'زيادة التكلفة',
+        'إطالة الوقت'
+      ],
       'correctAnswer': 1,
     },
   ];
@@ -71,7 +92,8 @@ class _ExamsScreenState extends State<ExamsScreen> with TickerProviderStateMixin
     super.dispose();
   }
 
-  double get _progress => ((_currentQuestion + 1) / _examQuestions.length) * 100;
+  double get _progress =>
+      ((_currentQuestion + 1) / _examQuestions.length) * 100;
 
   int get _correctCount {
     int count = 0;
@@ -166,7 +188,8 @@ class _ExamsScreenState extends State<ExamsScreen> with TickerProviderStateMixin
                             color: Colors.white.withOpacity(0.15),
                             borderRadius: BorderRadius.circular(14),
                           ),
-                          child: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 18),
+                          child: const Icon(Icons.arrow_back_ios_new_rounded,
+                              color: Colors.white, size: 18),
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -227,7 +250,8 @@ class _ExamsScreenState extends State<ExamsScreen> with TickerProviderStateMixin
                                 ),
                               ],
                             ),
-                            child: const Icon(Icons.quiz_rounded, color: Colors.white, size: 48),
+                            child: const Icon(Icons.quiz_rounded,
+                                color: Colors.white, size: 48),
                           ),
                         ),
                         const SizedBox(height: 28),
@@ -262,11 +286,20 @@ class _ExamsScreenState extends State<ExamsScreen> with TickerProviderStateMixin
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
-                              _buildStatItem(Icons.help_outline_rounded, '${_examQuestions.length}', 'سؤال'),
-                              Container(width: 1, height: 40, color: Colors.grey[200]),
-                              _buildStatItem(Icons.timer_outlined, '15', 'دقيقة'),
-                              Container(width: 1, height: 40, color: Colors.grey[200]),
-                              _buildStatItem(Icons.check_circle_outline_rounded, '60%', 'للنجاح'),
+                              _buildStatItem(Icons.help_outline_rounded,
+                                  '${_examQuestions.length}', 'سؤال'),
+                              Container(
+                                  width: 1,
+                                  height: 40,
+                                  color: Colors.grey[200]),
+                              _buildStatItem(
+                                  Icons.timer_outlined, '15', 'دقيقة'),
+                              Container(
+                                  width: 1,
+                                  height: 40,
+                                  color: Colors.grey[200]),
+                              _buildStatItem(Icons.check_circle_outline_rounded,
+                                  '60%', 'للنجاح'),
                             ],
                           ),
                         ),
@@ -294,7 +327,8 @@ class _ExamsScreenState extends State<ExamsScreen> with TickerProviderStateMixin
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 26),
+                                const Icon(Icons.play_arrow_rounded,
+                                    color: Colors.white, size: 26),
                                 const SizedBox(width: 10),
                                 Text(
                                   'ابدأ الاختبار',
@@ -327,8 +361,14 @@ class _ExamsScreenState extends State<ExamsScreen> with TickerProviderStateMixin
       children: [
         Icon(icon, color: AppColors.purple, size: 24),
         const SizedBox(height: 8),
-        Text(value, style: GoogleFonts.cairo(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.foreground)),
-        Text(label, style: GoogleFonts.cairo(fontSize: 12, color: AppColors.mutedForeground)),
+        Text(value,
+            style: GoogleFonts.cairo(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppColors.foreground)),
+        Text(label,
+            style: GoogleFonts.cairo(
+                fontSize: 12, color: AppColors.mutedForeground)),
       ],
     );
   }
@@ -373,7 +413,8 @@ class _ExamsScreenState extends State<ExamsScreen> with TickerProviderStateMixin
                           color: Colors.white.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(14),
                         ),
-                        child: const Icon(Icons.close_rounded, color: Colors.white, size: 22),
+                        child: const Icon(Icons.close_rounded,
+                            color: Colors.white, size: 22),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -388,16 +429,21 @@ class _ExamsScreenState extends State<ExamsScreen> with TickerProviderStateMixin
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.timer_outlined, color: Colors.white, size: 18),
+                          const Icon(Icons.timer_outlined,
+                              color: Colors.white, size: 18),
                           const SizedBox(width: 6),
-                          Text('14:30', style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.bold)),
+                          Text('14:30',
+                              style: GoogleFonts.cairo(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ),
@@ -497,10 +543,14 @@ class _ExamsScreenState extends State<ExamsScreen> with TickerProviderStateMixin
                         margin: const EdgeInsets.only(bottom: 12),
                         padding: const EdgeInsets.all(18),
                         decoration: BoxDecoration(
-                          color: isSelected ? AppColors.purple.withOpacity(0.08) : Colors.white,
+                          color: isSelected
+                              ? AppColors.purple.withOpacity(0.08)
+                              : Colors.white,
                           borderRadius: BorderRadius.circular(18),
                           border: Border.all(
-                            color: isSelected ? AppColors.purple : Colors.grey[200]!,
+                            color: isSelected
+                                ? AppColors.purple
+                                : Colors.grey[200]!,
                             width: isSelected ? 2 : 1,
                           ),
                           boxShadow: isSelected
@@ -520,11 +570,14 @@ class _ExamsScreenState extends State<ExamsScreen> with TickerProviderStateMixin
                               width: 28,
                               height: 28,
                               decoration: BoxDecoration(
-                                color: isSelected ? AppColors.purple : Colors.grey[100],
+                                color: isSelected
+                                    ? AppColors.purple
+                                    : Colors.grey[100],
                                 shape: BoxShape.circle,
                               ),
                               child: isSelected
-                                  ? const Icon(Icons.check_rounded, color: Colors.white, size: 18)
+                                  ? const Icon(Icons.check_rounded,
+                                      color: Colors.white, size: 18)
                                   : Center(
                                       child: Text(
                                         '${index + 1}',
@@ -541,8 +594,12 @@ class _ExamsScreenState extends State<ExamsScreen> with TickerProviderStateMixin
                                 option,
                                 style: GoogleFonts.cairo(
                                   fontSize: 15,
-                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                                  color: isSelected ? AppColors.purple : AppColors.foreground,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.w500,
+                                  color: isSelected
+                                      ? AppColors.purple
+                                      : AppColors.foreground,
                                 ),
                               ),
                             ),
@@ -589,7 +646,10 @@ class _ExamsScreenState extends State<ExamsScreen> with TickerProviderStateMixin
                         child: Center(
                           child: Text(
                             'السابق',
-                            style: GoogleFonts.cairo(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.foreground),
+                            style: GoogleFonts.cairo(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.foreground),
                           ),
                         ),
                       ),
@@ -599,20 +659,31 @@ class _ExamsScreenState extends State<ExamsScreen> with TickerProviderStateMixin
                 Expanded(
                   flex: 2,
                   child: GestureDetector(
-                    onTap: _currentQuestion == _examQuestions.length - 1 ? _handleSubmit : _handleNext,
+                    onTap: _currentQuestion == _examQuestions.length - 1
+                        ? _handleSubmit
+                        : _handleNext,
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: _currentQuestion == _examQuestions.length - 1
-                              ? [const Color(0xFF10B981), const Color(0xFF059669)]
-                              : [const Color(0xFF7C3AED), const Color(0xFF5B21B6)],
+                              ? [
+                                  const Color(0xFF10B981),
+                                  const Color(0xFF059669)
+                                ]
+                              : [
+                                  const Color(0xFF7C3AED),
+                                  const Color(0xFF5B21B6)
+                                ],
                         ),
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: (_currentQuestion == _examQuestions.length - 1 ? Colors.green : AppColors.purple)
-                                .withOpacity(0.3),
+                            color:
+                                (_currentQuestion == _examQuestions.length - 1
+                                        ? Colors.green
+                                        : AppColors.purple)
+                                    .withOpacity(0.3),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
@@ -620,8 +691,13 @@ class _ExamsScreenState extends State<ExamsScreen> with TickerProviderStateMixin
                       ),
                       child: Center(
                         child: Text(
-                          _currentQuestion == _examQuestions.length - 1 ? 'إنهاء الاختبار' : 'التالي',
-                          style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                          _currentQuestion == _examQuestions.length - 1
+                              ? 'إنهاء الاختبار'
+                              : 'التالي',
+                          style: GoogleFonts.cairo(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white),
                         ),
                       ),
                     ),
@@ -660,14 +736,17 @@ class _ExamsScreenState extends State<ExamsScreen> with TickerProviderStateMixin
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: (passed ? Colors.green : Colors.red).withOpacity(0.3),
+                      color:
+                          (passed ? Colors.green : Colors.red).withOpacity(0.3),
                       blurRadius: 30,
                       offset: const Offset(0, 10),
                     ),
                   ],
                 ),
                 child: Icon(
-                  passed ? Icons.celebration_rounded : Icons.sentiment_dissatisfied_rounded,
+                  passed
+                      ? Icons.celebration_rounded
+                      : Icons.sentiment_dissatisfied_rounded,
                   color: Colors.white,
                   size: 70,
                 ),
@@ -684,8 +763,11 @@ class _ExamsScreenState extends State<ExamsScreen> with TickerProviderStateMixin
               ),
               const SizedBox(height: 8),
               Text(
-                passed ? 'لقد اجتزت الاختبار بنجاح' : 'لم تحقق الحد الأدنى للنجاح',
-                style: GoogleFonts.cairo(fontSize: 16, color: AppColors.mutedForeground),
+                passed
+                    ? 'لقد اجتزت الاختبار بنجاح'
+                    : 'لم تحقق الحد الأدنى للنجاح',
+                style: GoogleFonts.cairo(
+                    fontSize: 16, color: AppColors.mutedForeground),
               ),
               const SizedBox(height: 40),
 
@@ -715,18 +797,25 @@ class _ExamsScreenState extends State<ExamsScreen> with TickerProviderStateMixin
                     ),
                     Text(
                       'النتيجة النهائية',
-                      style: GoogleFonts.cairo(fontSize: 16, color: AppColors.mutedForeground),
+                      style: GoogleFonts.cairo(
+                          fontSize: 16, color: AppColors.mutedForeground),
                     ),
                     const SizedBox(height: 24),
-
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _buildResultStat('الإجابات الصحيحة', '$_correctCount', Colors.green),
-                        Container(width: 1, height: 50, color: Colors.grey[200]),
-                        _buildResultStat('الإجابات الخاطئة', '${_examQuestions.length - _correctCount}', Colors.red),
-                        Container(width: 1, height: 50, color: Colors.grey[200]),
-                        _buildResultStat('إجمالي الأسئلة', '${_examQuestions.length}', AppColors.purple),
+                        _buildResultStat(
+                            'الإجابات الصحيحة', '$_correctCount', Colors.green),
+                        Container(
+                            width: 1, height: 50, color: Colors.grey[200]),
+                        _buildResultStat(
+                            'الإجابات الخاطئة',
+                            '${_examQuestions.length - _correctCount}',
+                            Colors.red),
+                        Container(
+                            width: 1, height: 50, color: Colors.grey[200]),
+                        _buildResultStat('إجمالي الأسئلة',
+                            '${_examQuestions.length}', AppColors.purple),
                       ],
                     ),
                   ],
@@ -756,7 +845,10 @@ class _ExamsScreenState extends State<ExamsScreen> with TickerProviderStateMixin
                   child: Center(
                     child: Text(
                       'العودة للدورة',
-                      style: GoogleFonts.cairo(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white),
+                      style: GoogleFonts.cairo(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white),
                     ),
                   ),
                 ),
@@ -769,7 +861,8 @@ class _ExamsScreenState extends State<ExamsScreen> with TickerProviderStateMixin
                       _examStarted = true;
                       _submitted = false;
                       _currentQuestion = 0;
-                      _selectedAnswers = List.filled(_examQuestions.length, null);
+                      _selectedAnswers =
+                          List.filled(_examQuestions.length, null);
                     });
                   },
                   child: Container(
@@ -783,7 +876,10 @@ class _ExamsScreenState extends State<ExamsScreen> with TickerProviderStateMixin
                     child: Center(
                       child: Text(
                         'إعادة الاختبار',
-                        style: GoogleFonts.cairo(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.foreground),
+                        style: GoogleFonts.cairo(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.foreground),
                       ),
                     ),
                   ),
@@ -801,11 +897,13 @@ class _ExamsScreenState extends State<ExamsScreen> with TickerProviderStateMixin
       children: [
         Text(
           value,
-          style: GoogleFonts.cairo(fontSize: 28, fontWeight: FontWeight.bold, color: color),
+          style: GoogleFonts.cairo(
+              fontSize: 28, fontWeight: FontWeight.bold, color: color),
         ),
         Text(
           label,
-          style: GoogleFonts.cairo(fontSize: 11, color: AppColors.mutedForeground),
+          style:
+              GoogleFonts.cairo(fontSize: 11, color: AppColors.mutedForeground),
           textAlign: TextAlign.center,
         ),
       ],

@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/design/app_colors.dart';
 import '../../core/navigation/route_names.dart';
 import '../../services/auth_service.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Register Screen - Clean Design like Account Page
 class RegisterScreen extends StatefulWidget {
@@ -31,7 +32,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!_acceptTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('يرجى الموافقة على الشروط والأحكام',
+          content: Text(AppLocalizations.of(context)!.pleaseAcceptTerms,
               style: GoogleFonts.cairo()),
           backgroundColor: Colors.red,
         ),
@@ -44,8 +45,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (_passwordController.text != _passwordConfirmationController.text) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content:
-                Text('كلمات المرور غير متطابقة', style: GoogleFonts.cairo()),
+            content: Text(AppLocalizations.of(context)!.passwordMismatch,
+                style: GoogleFonts.cairo()),
             backgroundColor: Colors.red,
           ),
         );
@@ -146,7 +147,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: const Icon(
-                              Icons.arrow_forward_ios_rounded,
+                              Icons.arrow_back_ios_new_rounded,
                               color: Colors.white,
                               size: 18,
                             ),
@@ -154,7 +155,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                         const Spacer(),
                         Text(
-                          'إنشاء حساب جديد',
+                          AppLocalizations.of(context)!.register,
                           style: GoogleFonts.cairo(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -167,7 +168,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'انضم إلينا وابدأ رحلة التعلم 🎓',
+                      AppLocalizations.of(context)!.joinUsMessage,
                       style: GoogleFonts.cairo(
                         fontSize: 15,
                         color: Colors.white.withOpacity(0.85),
@@ -196,17 +197,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Name Field
-                        _buildLabel('الاسم الكامل'),
+                        _buildLabel(AppLocalizations.of(context)!.fullName),
                         const SizedBox(height: 8),
                         _buildTextField(
                           controller: _nameController,
-                          hint: 'أدخل اسمك الكامل',
+                          hint: AppLocalizations.of(context)!.pleaseEnterName,
                           icon: Icons.person_outline_rounded,
                         ),
                         const SizedBox(height: 16),
 
                         // Email Field
-                        _buildLabel('البريد الإلكتروني'),
+                        _buildLabel(AppLocalizations.of(context)!.email),
                         const SizedBox(height: 8),
                         _buildTextField(
                           controller: _emailController,
@@ -217,22 +218,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         const SizedBox(height: 16),
 
                         // Phone Field
-                        _buildLabel('رقم الهاتف'),
+                        _buildLabel(AppLocalizations.of(context)!.phone),
                         const SizedBox(height: 8),
                         _buildTextField(
                           controller: _phoneController,
-                          hint: '01xxxxxxxxx',
+                          hint: AppLocalizations.of(context)!.phonePlaceholder,
                           icon: Icons.phone_outlined,
                           keyboardType: TextInputType.phone,
                         ),
                         const SizedBox(height: 16),
 
                         // Password Field
-                        _buildLabel('كلمة المرور'),
+                        _buildLabel(AppLocalizations.of(context)!.password),
                         const SizedBox(height: 8),
                         _buildTextField(
                           controller: _passwordController,
-                          hint: 'أدخل كلمة المرور',
+                          hint: AppLocalizations.of(context)!.enterPassword,
                           icon: Icons.lock_outline_rounded,
                           isPassword: true,
                           passwordFieldType: 'password',
@@ -240,11 +241,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         const SizedBox(height: 16),
 
                         // Password Confirmation Field
-                        _buildLabel('تأكيد كلمة المرور'),
+                        _buildLabel(
+                            AppLocalizations.of(context)!.confirmNewPassword),
                         const SizedBox(height: 8),
                         _buildTextField(
                           controller: _passwordConfirmationController,
-                          hint: 'أدخل كلمة المرور مرة أخرى',
+                          hint:
+                              AppLocalizations.of(context)!.enterPasswordAgain,
                           icon: Icons.lock_outline_rounded,
                           isPassword: true,
                           passwordFieldType: 'confirmation',
@@ -294,13 +297,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 Expanded(
                                   child: Text.rich(
                                     TextSpan(
-                                      text: 'أوافق على ',
+                                      text:
+                                          '${AppLocalizations.of(context)!.iAgreeTo} ',
                                       style: GoogleFonts.cairo(
                                           fontSize: 13,
                                           color: AppColors.mutedForeground),
                                       children: [
                                         TextSpan(
-                                          text: 'الشروط والأحكام',
+                                          text: AppLocalizations.of(context)!
+                                              .termsAndConditions,
                                           style: GoogleFonts.cairo(
                                             fontSize: 13,
                                             color: AppColors.purple,
@@ -339,7 +344,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                         color: Colors.white, strokeWidth: 2.5),
                                   )
                                 : Text(
-                                    'إنشاء الحساب',
+                                    AppLocalizations.of(context)!.createAccount,
                                     style: GoogleFonts.cairo(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold),
@@ -354,7 +359,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                'لديك حساب بالفعل؟',
+                                AppLocalizations.of(context)!
+                                    .alreadyHaveAccount,
                                 style: GoogleFonts.cairo(
                                     fontSize: 14,
                                     color: AppColors.mutedForeground),
@@ -362,7 +368,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               TextButton(
                                 onPressed: () => context.go(RouteNames.login),
                                 child: Text(
-                                  'سجل دخولك',
+                                  AppLocalizations.of(context)!.login,
                                   style: GoogleFonts.cairo(
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
@@ -454,29 +460,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
         ),
         validator: (value) {
+          final l10n = AppLocalizations.of(context)!;
           if (value == null || value.isEmpty) {
-            return 'هذا الحقل مطلوب';
+            return l10n.fieldRequired;
           }
           if (keyboardType == TextInputType.emailAddress) {
             final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
             if (!emailRegex.hasMatch(value)) {
-              return 'البريد الإلكتروني غير صحيح';
+              return l10n.invalidEmail;
             }
           }
           if (isPassword &&
               passwordFieldType == 'password' &&
               value.length < 6) {
-            return 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+            return l10n.passwordMinLength;
           }
           if (isPassword && passwordFieldType == 'confirmation') {
             if (value != _passwordController.text) {
-              return 'كلمات المرور غير متطابقة';
+              return l10n.passwordMismatch;
             }
           }
           if (keyboardType == TextInputType.phone) {
             final phoneRegex = RegExp(r'^01[0-2,5]{1}[0-9]{8}$');
             if (!phoneRegex.hasMatch(value)) {
-              return 'رقم الهاتف غير صحيح';
+              return l10n.invalidPhone;
             }
           }
           return null;

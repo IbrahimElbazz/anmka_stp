@@ -4,6 +4,7 @@ import '../../core/design/app_colors.dart';
 import '../../core/design/app_text_styles.dart';
 import '../../core/navigation/route_names.dart';
 import '../../widgets/bottom_nav.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Progress Screen - Pixel-perfect match to React version
 /// Matches: components/screens/progress-screen.tsx
@@ -56,7 +57,8 @@ class _ProgressScreenState extends State<ProgressScreen> {
 
                     // Content - matches React: px-4 space-y-4
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16), // px-4
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 16), // px-4
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -67,7 +69,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'التقدم',
+                                AppLocalizations.of(context)!.progress,
                                 style: AppTextStyles.h2(
                                   color: AppColors.foreground,
                                 ),
@@ -79,7 +81,8 @@ class _ProgressScreenState extends State<ProgressScreen> {
                                 ),
                                 decoration: BoxDecoration(
                                   color: AppColors.lavenderLight,
-                                  borderRadius: BorderRadius.circular(999), // rounded-full
+                                  borderRadius: BorderRadius.circular(
+                                      999), // rounded-full
                                 ),
                                 child: Row(
                                   children: [
@@ -90,7 +93,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                                     ),
                                     const SizedBox(width: 8), // gap-2
                                     Text(
-                                      'جميع المواد',
+                                      AppLocalizations.of(context)!.allSubjects,
                                       style: AppTextStyles.bodySmall(
                                         color: AppColors.purple,
                                       ).copyWith(fontWeight: FontWeight.w500),
@@ -113,7 +116,8 @@ class _ProgressScreenState extends State<ProgressScreen> {
                             padding: const EdgeInsets.all(20), // p-5
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(24), // rounded-3xl
+                              borderRadius:
+                                  BorderRadius.circular(24), // rounded-3xl
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.black.withOpacity(0.05),
@@ -126,16 +130,19 @@ class _ProgressScreenState extends State<ProgressScreen> {
                               children: [
                                 // Header row - matches React: mb-4
                                 Padding(
-                                  padding: const EdgeInsets.only(bottom: 16), // mb-4
+                                  padding:
+                                      const EdgeInsets.only(bottom: 16), // mb-4
                                   child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Container(
                                         width: 32, // w-8
                                         height: 32, // h-8
                                         decoration: BoxDecoration(
                                           color: AppColors.purpleLight,
-                                          borderRadius: BorderRadius.circular(8), // rounded-lg
+                                          borderRadius: BorderRadius.circular(
+                                              8), // rounded-lg
                                         ),
                                         child: const Icon(
                                           Icons.bar_chart,
@@ -148,7 +155,8 @@ class _ProgressScreenState extends State<ProgressScreen> {
                                         padding: const EdgeInsets.all(4), // p-1
                                         decoration: BoxDecoration(
                                           color: Colors.grey[100],
-                                          borderRadius: BorderRadius.circular(999), // rounded-full
+                                          borderRadius: BorderRadius.circular(
+                                              999), // rounded-full
                                         ),
                                         child: Row(
                                           children: [
@@ -159,7 +167,8 @@ class _ProgressScreenState extends State<ProgressScreen> {
                                                 });
                                               },
                                               child: Container(
-                                                padding: const EdgeInsets.symmetric(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
                                                   horizontal: 16, // px-4
                                                   vertical: 4, // py-1
                                                 ),
@@ -167,22 +176,32 @@ class _ProgressScreenState extends State<ProgressScreen> {
                                                   color: _period == 'weekly'
                                                       ? Colors.white
                                                       : Colors.transparent,
-                                                  borderRadius: BorderRadius.circular(999),
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          999),
                                                   boxShadow: _period == 'weekly'
                                                       ? [
                                                           BoxShadow(
-                                                            color: Colors.black.withOpacity(0.1),
+                                                            color: Colors.black
+                                                                .withOpacity(
+                                                                    0.1),
                                                             blurRadius: 4,
-                                                            offset: const Offset(0, 2),
+                                                            offset:
+                                                                const Offset(
+                                                                    0, 2),
                                                           ),
                                                         ]
                                                       : null,
                                                 ),
                                                 child: Text(
-                                                  'أسبوعي',
-                                                  style: AppTextStyles.bodySmall(
+                                                  AppLocalizations.of(context)!
+                                                      .weekly,
+                                                  style:
+                                                      AppTextStyles.bodySmall(
                                                     color: AppColors.foreground,
-                                                  ).copyWith(fontWeight: FontWeight.w500),
+                                                  ).copyWith(
+                                                          fontWeight:
+                                                              FontWeight.w500),
                                                 ),
                                               ),
                                             ),
@@ -193,7 +212,8 @@ class _ProgressScreenState extends State<ProgressScreen> {
                                                 });
                                               },
                                               child: Container(
-                                                padding: const EdgeInsets.symmetric(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
                                                   horizontal: 16, // px-4
                                                   vertical: 4, // py-1
                                                 ),
@@ -201,22 +221,33 @@ class _ProgressScreenState extends State<ProgressScreen> {
                                                   color: _period == 'monthly'
                                                       ? Colors.white
                                                       : Colors.transparent,
-                                                  borderRadius: BorderRadius.circular(999),
-                                                  boxShadow: _period == 'monthly'
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          999),
+                                                  boxShadow: _period ==
+                                                          'monthly'
                                                       ? [
                                                           BoxShadow(
-                                                            color: Colors.black.withOpacity(0.1),
+                                                            color: Colors.black
+                                                                .withOpacity(
+                                                                    0.1),
                                                             blurRadius: 4,
-                                                            offset: const Offset(0, 2),
+                                                            offset:
+                                                                const Offset(
+                                                                    0, 2),
                                                           ),
                                                         ]
                                                       : null,
                                                 ),
                                                 child: Text(
-                                                  'شهري',
-                                                  style: AppTextStyles.bodySmall(
+                                                  AppLocalizations.of(context)!
+                                                      .monthly,
+                                                  style:
+                                                      AppTextStyles.bodySmall(
                                                     color: AppColors.foreground,
-                                                  ).copyWith(fontWeight: FontWeight.w500),
+                                                  ).copyWith(
+                                                          fontWeight:
+                                                              FontWeight.w500),
                                                 ),
                                               ),
                                             ),
@@ -229,7 +260,8 @@ class _ProgressScreenState extends State<ProgressScreen> {
 
                                 // Stats - matches React: gap-8 mb-6
                                 Padding(
-                                  padding: const EdgeInsets.only(bottom: 24), // mb-6
+                                  padding:
+                                      const EdgeInsets.only(bottom: 24), // mb-6
                                   child: Row(
                                     children: [
                                       // Lessons count
@@ -243,9 +275,12 @@ class _ProgressScreenState extends State<ProgressScreen> {
                                               ),
                                             ),
                                             TextSpan(
-                                              text: 'درس',
+                                              text:
+                                                  AppLocalizations.of(context)!
+                                                      .lesson,
                                               style: AppTextStyles.bodyMedium(
-                                                color: AppColors.mutedForeground,
+                                                color:
+                                                    AppColors.mutedForeground,
                                               ),
                                             ),
                                           ],
@@ -263,9 +298,12 @@ class _ProgressScreenState extends State<ProgressScreen> {
                                               ),
                                             ),
                                             TextSpan(
-                                              text: 'ساعة',
+                                              text:
+                                                  AppLocalizations.of(context)!
+                                                      .hour,
                                               style: AppTextStyles.bodyMedium(
-                                                color: AppColors.mutedForeground,
+                                                color:
+                                                    AppColors.mutedForeground,
                                               ),
                                             ),
                                           ],
@@ -287,7 +325,8 @@ class _ProgressScreenState extends State<ProgressScreen> {
                             padding: const EdgeInsets.all(20), // p-5
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(24), // rounded-3xl
+                              borderRadius:
+                                  BorderRadius.circular(24), // rounded-3xl
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.black.withOpacity(0.05),
@@ -316,21 +355,26 @@ class _ProgressScreenState extends State<ProgressScreen> {
                                         shape: BoxShape.circle,
                                       ),
                                       child: const Center(
-                                        child: Text('⭐', style: TextStyle(fontSize: 18)),
+                                        child: Text('⭐',
+                                            style: TextStyle(fontSize: 18)),
                                       ),
                                     ),
                                     const SizedBox(width: 12), // gap-3
                                     Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          'تصنيف الطلاب',
+                                          AppLocalizations.of(context)!
+                                              .studentRating,
                                           style: AppTextStyles.bodyMedium(
                                             color: AppColors.foreground,
-                                          ).copyWith(fontWeight: FontWeight.bold),
+                                          ).copyWith(
+                                              fontWeight: FontWeight.bold),
                                         ),
                                         Text(
-                                          'أفضل 10 طلاب',
+                                          AppLocalizations.of(context)!
+                                              .top10Students,
                                           style: AppTextStyles.bodySmall(
                                             color: AppColors.mutedForeground,
                                           ),
@@ -353,7 +397,10 @@ class _ProgressScreenState extends State<ProgressScreen> {
                                       width: 72, // 3 circles with overlap
                                       height: 32,
                                       child: Stack(
-                                        children: _topStudents.asMap().entries.map((entry) {
+                                        children: _topStudents
+                                            .asMap()
+                                            .entries
+                                            .map((entry) {
                                           final index = entry.key;
                                           return Positioned(
                                             left: index * 16.0,
@@ -370,9 +417,11 @@ class _ProgressScreenState extends State<ProgressScreen> {
                                               ),
                                               child: ClipOval(
                                                 child: Image.asset(
-                                                  entry.value['avatar'] as String,
+                                                  entry.value['avatar']
+                                                      as String,
                                                   fit: BoxFit.cover,
-                                                  errorBuilder: (context, error, stackTrace) =>
+                                                  errorBuilder: (context, error,
+                                                          stackTrace) =>
                                                       const Icon(
                                                     Icons.person,
                                                     size: 16,
@@ -399,7 +448,8 @@ class _ProgressScreenState extends State<ProgressScreen> {
                               padding: const EdgeInsets.all(20), // p-5
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(24), // rounded-3xl
+                                borderRadius:
+                                    BorderRadius.circular(24), // rounded-3xl
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.05),
@@ -415,7 +465,8 @@ class _ProgressScreenState extends State<ProgressScreen> {
                                     height: 48, // h-12
                                     decoration: BoxDecoration(
                                       color: AppColors.orange.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(16), // rounded-2xl
+                                      borderRadius: BorderRadius.circular(
+                                          16), // rounded-2xl
                                     ),
                                     child: const Icon(
                                       Icons.description,
@@ -426,16 +477,20 @@ class _ProgressScreenState extends State<ProgressScreen> {
                                   const SizedBox(width: 16), // gap-4
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          'اختباراتي',
+                                          AppLocalizations.of(context)!
+                                              .myExamsButton,
                                           style: AppTextStyles.bodyMedium(
                                             color: AppColors.foreground,
-                                          ).copyWith(fontWeight: FontWeight.bold),
+                                          ).copyWith(
+                                              fontWeight: FontWeight.bold),
                                         ),
                                         Text(
-                                          'عرض جميع الاختبارات المكتملة',
+                                          AppLocalizations.of(context)!
+                                              .viewAllCompletedExams,
                                           style: AppTextStyles.bodySmall(
                                             color: AppColors.mutedForeground,
                                           ),
@@ -444,7 +499,8 @@ class _ProgressScreenState extends State<ProgressScreen> {
                                     ),
                                   ),
                                   Transform.rotate(
-                                    angle: 1.5708, // 90 degrees = -90deg in React
+                                    angle:
+                                        1.5708, // 90 degrees = -90deg in React
                                     child: const Icon(
                                       Icons.keyboard_arrow_down,
                                       size: 20, // w-5 h-5
@@ -456,7 +512,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                             ),
                           ),
 
-                          const SizedBox(height: 120), // Space for bottom nav
+                          const SizedBox(height: 150), // Space for bottom nav
                         ],
                       ),
                     ),
@@ -489,7 +545,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
               Container(
                 width: 48, // w-12
                 height: 48, // h-12
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: AppColors.orangeLight,
                   shape: BoxShape.circle,
                 ),
@@ -507,7 +563,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'مرحباً، يعقوب 👋',
+                    AppLocalizations.of(context)!.helloJacob,
                     style: AppTextStyles.h4(color: AppColors.foreground),
                   ),
                   Row(
@@ -519,7 +575,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                       ),
                       const SizedBox(width: 4), // gap-1
                       Text(
-                        'التقدم: 76%',
+                        AppLocalizations.of(context)!.progressPercent(76),
                         style: AppTextStyles.bodySmall(
                           color: AppColors.mutedForeground,
                         ),
@@ -692,7 +748,9 @@ class _StripePainter extends CustomPainter {
     // Stripes
     const stripeWidth = 8.0;
     const gap = 8.0;
-    for (double x = -size.height; x < size.width + size.height; x += stripeWidth + gap) {
+    for (double x = -size.height;
+        x < size.width + size.height;
+        x += stripeWidth + gap) {
       final path = Path()
         ..moveTo(x, size.height)
         ..lineTo(x + stripeWidth, size.height)

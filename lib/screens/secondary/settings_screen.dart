@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/design/app_colors.dart';
 import '../../core/design/app_text_styles.dart';
 import '../../core/design/app_radius.dart';
+import '../../core/navigation/route_names.dart';
+import '../../services/profile_service.dart';
+import '../../core/config/theme_provider.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Settings Screen - Pixel-perfect match to React version
 /// Matches: components/screens/settings-screen.tsx
@@ -14,11 +20,117 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _darkMode = false;
+  bool _isLoading = true;
+  Map<String, dynamic>? _profile;
+  Map<String, dynamic>? _preferences;
   bool _notifications = true;
+  bool _emailNotifications = true;
+  bool _pushNotifications = true;
+
+  final ThemeProvider _themeProvider = ThemeProvider.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+    // Listen to theme changes
+    _themeProvider.addListener(_onThemeChanged);
+  }
+
+  @override
+  void dispose() {
+    _themeProvider.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+
+  void _onThemeChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _loadProfile() async {
+    setState(() => _isLoading = true);
+    try {
+      final profile = await ProfileService.instance.getProfile();
+      if (kDebugMode) {
+        print('✅ Profile loaded for settings: ${profile['name']}');
+      }
+      setState(() {
+        _profile = profile;
+        _preferences = profile['preferences'] as Map<String, dynamic>?;
+        _emailNotifications = _preferences?['email_notifications'] ?? true;
+        _pushNotifications = _preferences?['push_notifications'] ?? true;
+        _notifications = _pushNotifications;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error loading profile: $e');
+      }
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _updatePreferences() async {
+    try {
+      await ProfileService.instance.updatePreferences(
+        emailNotifications: _emailNotifications,
+        pushNotifications: _pushNotifications,
+      );
+      if (kDebugMode) {
+        print('✅ Preferences updated');
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.preferencesUpdated,
+              style: GoogleFonts.cairo(),
+            ),
+            backgroundColor: const Color(0xFF10B981),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error updating preferences: $e');
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.errorUpdatingPreferences,
+              style: GoogleFonts.cairo(),
+            ),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: AppColors.beige,
+        body: Center(
+          child: CircularProgressIndicator(
+            color: AppColors.purple,
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.beige,
       body: SafeArea(
@@ -27,8 +139,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             // Header - Purple gradient like Home
             Container(
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [Color(0xFF7C3AED), Color(0xFF5B21B6)],
@@ -51,12 +163,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: Container(
                       width: 40, // w-10
                       height: 40, // h-10
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: AppColors.whiteOverlay20, // bg-white/20
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
-                        Icons.chevron_right,
+                        Icons.arrow_back_ios_new_rounded,
                         color: Colors.white,
                         size: 20, // w-5 h-5
                       ),
@@ -64,7 +176,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   const SizedBox(width: 16), // gap-4
                   Text(
-                    'الإعدادات',
+                    AppLocalizations.of(context)!.settings,
                     style: AppTextStyles.h3(color: Colors.white),
                   ),
                 ],
@@ -102,21 +214,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             Container(
                               width: 64, // w-16
                               height: 64, // h-16
-                              decoration: BoxDecoration(
+                              decoration: const BoxDecoration(
                                 color: AppColors.orangeLight,
                                 shape: BoxShape.circle,
                               ),
                               child: ClipOval(
-                                child: Image.asset(
-                                  'assets/images/user-avatar.png',
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      const Icon(
-                                    Icons.person,
-                                    size: 32,
-                                    color: AppColors.purple,
-                                  ),
-                                ),
+                                child: _profile?['avatar'] != null
+                                    ? Image.network(
+                                        _profile!['avatar']?.toString() ?? '',
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
+                                                Image.asset(
+                                          'assets/images/user-avatar.png',
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) =>
+                                              const Icon(
+                                            Icons.person,
+                                            size: 32,
+                                            color: AppColors.purple,
+                                          ),
+                                        ),
+                                      )
+                                    : Image.asset(
+                                        'assets/images/user-avatar.png',
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
+                                                const Icon(
+                                          Icons.person,
+                                          size: 32,
+                                          color: AppColors.purple,
+                                        ),
+                                      ),
                               ),
                             ),
                             const SizedBox(width: 16), // gap-4
@@ -126,13 +256,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'يعقوب أحمد',
+                                    _profile?['name']?.toString() ??
+                                        AppLocalizations.of(context)!.user,
                                     style: AppTextStyles.h3(
                                       color: AppColors.foreground,
                                     ),
                                   ),
                                   Text(
-                                    'yaqoub@email.com',
+                                    _profile?['email']?.toString() ?? '',
                                     style: AppTextStyles.bodyMedium(
                                       color: AppColors.mutedForeground,
                                     ),
@@ -141,18 +272,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               ),
                             ),
                             // Edit button - matches React: w-10 h-10 rounded-xl
-                            Container(
-                              width: 40, // w-10
-                              height: 40, // h-10
-                              decoration: BoxDecoration(
-                                color: AppColors.lavenderLight,
-                                borderRadius:
-                                    BorderRadius.circular(12), // rounded-xl
-                              ),
-                              child: const Icon(
-                                Icons.person,
-                                size: 20, // w-5 h-5
-                                color: AppColors.purple,
+                            GestureDetector(
+                              onTap: () async {
+                                final result = await context.push(
+                                  RouteNames.editProfile,
+                                  extra: _profile,
+                                );
+                                if (result == true && mounted) {
+                                  _loadProfile();
+                                }
+                              },
+                              child: Container(
+                                width: 40, // w-10
+                                height: 40, // h-10
+                                decoration: BoxDecoration(
+                                  color: AppColors.lavenderLight,
+                                  borderRadius:
+                                      BorderRadius.circular(12), // rounded-xl
+                                ),
+                                child: const Icon(
+                                  Icons.edit,
+                                  size: 20, // w-5 h-5
+                                  color: AppColors.purple,
+                                ),
                               ),
                             ),
                           ],
@@ -163,7 +305,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Padding(
                         padding: const EdgeInsets.only(bottom: 16), // mb-4
                         child: Text(
-                          'الإعدادات العامة',
+                          AppLocalizations.of(context)!.generalSettings,
                           style: AppTextStyles.h4(
                             color: AppColors.foreground,
                           ),
@@ -173,46 +315,56 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       // Language setting - matches React SettingItem
                       _buildSettingItem(
                         icon: Icons.language,
-                        label: 'اللغة',
-                        value: 'العربية',
+                        label: AppLocalizations.of(context)!.language,
+                        value: _themeProvider.getLanguageName(),
+                        onTap: () => _showLanguageDialog(),
                       ),
 
                       // Notifications toggle - matches React SettingItem with toggle
                       _buildSettingItem(
                         icon: Icons.notifications,
-                        label: 'الإشعارات',
+                        label: AppLocalizations.of(context)!.notifications,
                         hasToggle: true,
                         toggleValue: _notifications,
                         onToggle: () {
                           setState(() {
                             _notifications = !_notifications;
+                            _pushNotifications = _notifications;
                           });
+                          _updatePreferences();
                         },
                       ),
 
                       // Dark mode toggle - matches React SettingItem with toggle
+                      // _buildSettingItem(
+                      //   icon: Icons.dark_mode,
+                      //   label: AppLocalizations.of(context)!.darkMode,
+                      //   hasToggle: true,
+                      //   toggleValue: _themeProvider.isDarkMode,
+                      //   onToggle: () {
+                      //     _themeProvider.toggleDarkMode();
+                      //   },
+                      // ),
+
+                      // Change Password setting
                       _buildSettingItem(
-                        icon: Icons.dark_mode,
-                        label: 'الوضع الداكن',
-                        hasToggle: true,
-                        toggleValue: _darkMode,
-                        onToggle: () {
-                          setState(() {
-                            _darkMode = !_darkMode;
-                          });
+                        icon: Icons.lock,
+                        label: AppLocalizations.of(context)!.changePassword,
+                        onTap: () {
+                          context.push(RouteNames.changePassword);
                         },
                       ),
 
                       // Privacy setting
                       _buildSettingItem(
                         icon: Icons.shield,
-                        label: 'الخصوصية والأمان',
+                        label: AppLocalizations.of(context)!.privacyAndSecurity,
                       ),
 
                       // Help setting
                       _buildSettingItem(
                         icon: Icons.help,
-                        label: 'المساعدة والدعم',
+                        label: AppLocalizations.of(context)!.helpAndSupport,
                       ),
 
                       const SizedBox(height: 32),
@@ -234,9 +386,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     bool hasToggle = false,
     bool toggleValue = false,
     VoidCallback? onToggle,
+    VoidCallback? onTap,
   }) {
     return GestureDetector(
-      onTap: hasToggle ? onToggle : () {},
+      onTap: hasToggle ? onToggle : (onTap ?? () {}),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12), // mb-3
         padding: const EdgeInsets.all(16), // p-4
@@ -326,6 +479,89 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     color: AppColors.mutedForeground,
                   ),
                 ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showLanguageDialog() {
+    final l10n = AppLocalizations.of(context)!;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          l10n.selectLanguage,
+          style: AppTextStyles.h4(color: AppColors.foreground),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildLanguageOption('ar', l10n.arabic, Icons.language),
+            const SizedBox(height: 12),
+            _buildLanguageOption('en', l10n.english, Icons.language),
+          ],
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLanguageOption(String code, String name, IconData icon) {
+    final isSelected = _themeProvider.locale.languageCode == code;
+    return GestureDetector(
+      onTap: () {
+        _themeProvider.setLanguage(Locale(code));
+        Navigator.of(context).pop();
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.languageChanged(name),
+              style: GoogleFonts.cairo(),
+            ),
+            backgroundColor: const Color(0xFF10B981),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.lavenderLight : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? AppColors.purple : AppColors.border,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? AppColors.purple : AppColors.mutedForeground,
+            ),
+            const SizedBox(width: 12),
+            Text(
+              name,
+              style: AppTextStyles.bodyMedium(
+                color: isSelected ? AppColors.purple : AppColors.foreground,
+              ).copyWith(
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+            const Spacer(),
+            if (isSelected)
+              const Icon(
+                Icons.check_circle,
+                color: AppColors.purple,
+                size: 20,
               ),
           ],
         ),

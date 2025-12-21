@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/design/app_colors.dart';
 import '../../core/design/app_text_styles.dart';
 import '../../core/design/app_radius.dart';
+import '../../services/payments_service.dart';
 
 /// Checkout Screen - Pixel-perfect match to React version
 /// Matches: components/screens/checkout-screen.tsx
@@ -20,6 +23,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   String _couponCode = '';
   bool _couponApplied = false;
   bool _isProcessing = false;
+  bool _isValidatingCoupon = false;
+  String? _checkoutSessionId;
+
+  // Pricing from API
+  double _originalPrice = 0.0;
+  double _discountAmount = 0.0;
+  double _finalPrice = 0.0;
 
   // Payment methods matching React exactly
   final _paymentMethods = [
@@ -43,40 +53,273 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     },
   ];
 
-  double get _originalPrice => (widget.course?['price'] ?? 40.0) as double;
-  double get _discount => _couponApplied ? _originalPrice * 0.2 : 0;
-  double get _finalPrice => _originalPrice - _discount;
+  @override
+  void initState() {
+    super.initState();
+    _loadInitialPrice();
+  }
 
-  void _handleApplyCoupon() {
-    if (_couponCode.toLowerCase() == 'save20') {
-      setState(() {
-        _couponApplied = true;
-      });
+  void _loadInitialPrice() {
+    final price = widget.course?['price'];
+    if (price == null) {
+      _originalPrice = 40.0;
+      _finalPrice = 40.0;
+      return;
+    }
+    if (price is num) {
+      _originalPrice = price.toDouble();
+    } else if (price is String) {
+      final parsed = num.tryParse(price);
+      _originalPrice = parsed?.toDouble() ?? 40.0;
+    } else {
+      _originalPrice = 40.0;
+    }
+    _finalPrice = _originalPrice;
+  }
+
+  Future<void> _handleApplyCoupon() async {
+    if (_couponCode.isEmpty) return;
+
+    final course = widget.course;
+    if (course == null || course['id'] == null) return;
+
+    final courseId = course['id']?.toString();
+    if (courseId == null || courseId.isEmpty) return;
+
+    setState(() => _isValidatingCoupon = true);
+
+    try {
+      final result = await PaymentsService.instance.validateCoupon(
+        code: _couponCode,
+        courseId: courseId,
+      );
+
+      if (kDebugMode) {
+        print('✅ Coupon validated: $result');
+      }
+
+      if (result['is_valid'] == true) {
+        setState(() {
+          _couponApplied = true;
+          _discountAmount =
+              (result['discount_amount'] as num?)?.toDouble() ?? 0.0;
+          _finalPrice =
+              (result['final_price'] as num?)?.toDouble() ?? _originalPrice;
+          _isValidatingCoupon = false;
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                result['message']?.toString() ?? 'تم تطبيق الخصم بنجاح',
+                style: GoogleFonts.cairo(),
+              ),
+              backgroundColor: const Color(0xFF10B981),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          );
+        }
+      } else {
+        setState(() => _isValidatingCoupon = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'كود الخصم غير صحيح',
+                style: GoogleFonts.cairo(),
+              ),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error validating coupon: $e');
+      }
+
+      setState(() => _isValidatingCoupon = false);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              e.toString().contains('401') ||
+                      e.toString().contains('Unauthorized')
+                  ? 'يجب تسجيل الدخول أولاً'
+                  : e.toString().contains('Invalid') ||
+                          e.toString().contains('غير صحيح')
+                      ? 'كود الخصم غير صحيح'
+                      : 'حدث خطأ أثناء التحقق من كود الخصم',
+              style: GoogleFonts.cairo(),
+            ),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
     }
   }
 
-  void _handleCheckout() {
+  Future<void> _handleCheckout() async {
     if (_selectedPayment == null) return;
-    setState(() {
-      _isProcessing = true;
-    });
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          _isProcessing = false;
-        });
-        context.pop();
+
+    final course = widget.course;
+    if (course == null || course['id'] == null) return;
+
+    final courseId = course['id']?.toString();
+    if (courseId == null || courseId.isEmpty) return;
+
+    setState(() => _isProcessing = true);
+
+    try {
+      // Map payment method IDs to API format
+      String paymentMethod = 'card'; // default
+      if (_selectedPayment == 'fawry') {
+        paymentMethod = 'fawry';
+      } else if (_selectedPayment == 'wallet') {
+        paymentMethod = 'wallet';
+      } else if (_selectedPayment == 'visa') {
+        paymentMethod = 'card';
       }
-    });
+
+      // Initiate checkout
+      final checkoutData = await PaymentsService.instance.initiateCheckout(
+        courseId: courseId,
+        paymentMethod: paymentMethod,
+        couponCode: _couponApplied ? _couponCode : null,
+      );
+
+      if (kDebugMode) {
+        print('✅ Checkout initiated: $checkoutData');
+      }
+
+      setState(() {
+        _checkoutSessionId = checkoutData['checkout_session_id']?.toString();
+      });
+
+      // Update pricing from API response
+      if (checkoutData['pricing'] != null) {
+        final pricing = checkoutData['pricing'] as Map<String, dynamic>;
+        setState(() {
+          _originalPrice =
+              (pricing['original_price'] as num?)?.toDouble() ?? _originalPrice;
+          _discountAmount =
+              (pricing['discount_amount'] as num?)?.toDouble() ?? 0.0;
+          if (pricing['coupon_discount'] != null) {
+            _discountAmount +=
+                (pricing['coupon_discount'] as num?)?.toDouble() ?? 0.0;
+          }
+          _finalPrice =
+              (pricing['final_price'] as num?)?.toDouble() ?? _originalPrice;
+        });
+      }
+
+      // Complete checkout (in real app, this would be done after payment gateway)
+      if (_checkoutSessionId != null) {
+        try {
+          final completeData = await PaymentsService.instance.completeCheckout(
+            checkoutSessionId: _checkoutSessionId!,
+            paymentMethod: paymentMethod,
+            paymentToken:
+                'tok_${DateTime.now().millisecondsSinceEpoch}', // Mock token
+          );
+
+          if (kDebugMode) {
+            print('✅ Checkout completed: $completeData');
+          }
+
+          setState(() => _isProcessing = false);
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  completeData['message']?.toString() ??
+                      'تمت عملية الشراء بنجاح',
+                  style: GoogleFonts.cairo(),
+                ),
+                backgroundColor: const Color(0xFF10B981),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            );
+
+            // Navigate back and refresh course details
+            context.pop(true); // Return true to indicate success
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('❌ Error completing checkout: $e');
+          }
+
+          setState(() => _isProcessing = false);
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'حدث خطأ أثناء إتمام عملية الدفع',
+                  style: GoogleFonts.cairo(),
+                ),
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error initiating checkout: $e');
+      }
+
+      setState(() => _isProcessing = false);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              e.toString().contains('401') ||
+                      e.toString().contains('Unauthorized')
+                  ? 'يجب تسجيل الدخول أولاً'
+                  : 'حدث خطأ أثناء عملية الدفع',
+              style: GoogleFonts.cairo(),
+            ),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final course = widget.course;
     if (course == null) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: AppColors.beige,
-        body: const Center(child: Text('لا توجد دورة')),
+        body: Center(child: Text('لا توجد دورة')),
       );
     }
 
@@ -88,7 +331,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           children: [
             // Header - matches React: bg-[var(--purple)] rounded-b-[3rem] pt-4 pb-8 px-4
             Container(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: AppColors.purple,
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(AppRadius.largeCard),
@@ -108,7 +351,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     child: Container(
                       width: 40, // w-10
                       height: 40, // h-10
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: AppColors.whiteOverlay20, // bg-white/20
                         shape: BoxShape.circle,
                       ),
@@ -142,7 +385,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         padding: const EdgeInsets.all(16), // p-4
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(24), // rounded-3xl
+                          borderRadius:
+                              BorderRadius.circular(24), // rounded-3xl
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.1),
@@ -158,22 +402,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               width: 80, // w-20
                               height: 80, // h-20
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(16), // rounded-2xl
+                                borderRadius:
+                                    BorderRadius.circular(16), // rounded-2xl
                               ),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(16),
-                                child: Image.asset(
-                                  course['image'] as String? ?? 'assets/images/motion-graphics-course-in-mumbai.png',
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      Container(
-                                    color: AppColors.purple.withOpacity(0.1),
-                                    child: const Icon(
-                                      Icons.image,
-                                      color: AppColors.purple,
-                                    ),
-                                  ),
-                                ),
+                                child: _buildCourseImage(course),
                               ),
                             ),
                             const SizedBox(width: 16), // gap-4
@@ -183,7 +417,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    course['title'] as String? ?? 'عنوان الدورة',
+                                    course['title']?.toString() ??
+                                        'عنوان الدورة',
                                     style: AppTextStyles.bodyMedium(
                                       color: AppColors.foreground,
                                     ).copyWith(fontWeight: FontWeight.bold),
@@ -192,7 +427,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                   ),
                                   const SizedBox(height: 4), // mb-1
                                   Text(
-                                    course['instructor'] as String? ?? 'المدرب',
+                                    course['instructor'] is Map
+                                        ? (course['instructor'] as Map)['name']
+                                                ?.toString() ??
+                                            'المدرب'
+                                        : course['instructor']?.toString() ??
+                                            'المدرب',
                                     style: AppTextStyles.bodySmall(
                                       color: AppColors.purple,
                                     ),
@@ -253,7 +493,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         padding: const EdgeInsets.all(16), // p-4
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(16), // rounded-2xl
+                          borderRadius:
+                              BorderRadius.circular(16), // rounded-2xl
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.05),
@@ -292,7 +533,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                     ),
                                     decoration: BoxDecoration(
                                       color: AppColors.lavenderLight,
-                                      borderRadius: BorderRadius.circular(12), // rounded-xl
+                                      borderRadius: BorderRadius.circular(
+                                          12), // rounded-xl
                                     ),
                                     child: TextField(
                                       enabled: !_couponApplied,
@@ -316,7 +558,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 ),
                                 const SizedBox(width: 8), // gap-2
                                 GestureDetector(
-                                  onTap: _couponApplied || _couponCode.isEmpty
+                                  onTap: (_couponApplied ||
+                                          _couponCode.isEmpty ||
+                                          _isValidatingCoupon)
                                       ? null
                                       : _handleApplyCoupon,
                                   child: Container(
@@ -327,21 +571,37 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                     decoration: BoxDecoration(
                                       color: _couponApplied
                                           ? Colors.green[100]
-                                          : AppColors.purple,
-                                      borderRadius: BorderRadius.circular(12), // rounded-xl
+                                          : (_isValidatingCoupon
+                                              ? Colors.grey[300]
+                                              : AppColors.purple),
+                                      borderRadius: BorderRadius.circular(
+                                          12), // rounded-xl
                                     ),
-                                    child: _couponApplied
-                                        ? Icon(
-                                            Icons.check,
-                                            size: 20, // w-5 h-5
-                                            color: Colors.green[600],
+                                    child: _isValidatingCoupon
+                                        ? const SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                      Colors.grey),
+                                            ),
                                           )
-                                        : Text(
-                                            'تطبيق',
-                                            style: AppTextStyles.bodyMedium(
-                                              color: Colors.white,
-                                            ).copyWith(fontWeight: FontWeight.w500),
-                                          ),
+                                        : _couponApplied
+                                            ? Icon(
+                                                Icons.check,
+                                                size: 20, // w-5 h-5
+                                                color: Colors.green[600],
+                                              )
+                                            : Text(
+                                                'تطبيق',
+                                                style: AppTextStyles.bodyMedium(
+                                                  color: Colors.white,
+                                                ).copyWith(
+                                                    fontWeight:
+                                                        FontWeight.w500),
+                                              ),
                                   ),
                                 ),
                               ],
@@ -365,7 +625,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         padding: const EdgeInsets.all(16), // p-4
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(16), // rounded-2xl
+                          borderRadius:
+                              BorderRadius.circular(16), // rounded-2xl
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.05),
@@ -378,7 +639,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Padding(
-                              padding: const EdgeInsets.only(bottom: 16), // mb-4
+                              padding:
+                                  const EdgeInsets.only(bottom: 16), // mb-4
                               child: Text(
                                 'طريقة الدفع',
                                 style: AppTextStyles.bodyMedium(
@@ -387,7 +649,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               ),
                             ),
                             ..._paymentMethods.map((method) {
-                              final isSelected = _selectedPayment == method['id'];
+                              final isSelected =
+                                  _selectedPayment == method['id'];
                               return GestureDetector(
                                 onTap: () {
                                   setState(() {
@@ -395,7 +658,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                   });
                                 },
                                 child: Container(
-                                  margin: const EdgeInsets.only(bottom: 12), // space-y-3
+                                  margin: const EdgeInsets.only(
+                                      bottom: 12), // space-y-3
                                   padding: const EdgeInsets.all(16), // p-4
                                   decoration: BoxDecoration(
                                     color: isSelected
@@ -407,7 +671,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                           : Colors.grey[200]!,
                                       width: 2,
                                     ),
-                                    borderRadius: BorderRadius.circular(16), // rounded-2xl
+                                    borderRadius: BorderRadius.circular(
+                                        16), // rounded-2xl
                                   ),
                                   child: Row(
                                     children: [
@@ -418,7 +683,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                           color: isSelected
                                               ? AppColors.purple
                                               : Colors.grey[100],
-                                          borderRadius: BorderRadius.circular(12), // rounded-xl
+                                          borderRadius: BorderRadius.circular(
+                                              12), // rounded-xl
                                         ),
                                         child: Icon(
                                           method['icon'] as IconData,
@@ -431,18 +697,21 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                       const SizedBox(width: 16), // gap-4
                                       Expanded(
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
                                             Text(
                                               method['name'] as String,
                                               style: AppTextStyles.bodyMedium(
                                                 color: AppColors.foreground,
-                                              ).copyWith(fontWeight: FontWeight.w500),
+                                              ).copyWith(
+                                                  fontWeight: FontWeight.w500),
                                             ),
                                             Text(
                                               method['description'] as String,
                                               style: AppTextStyles.labelSmall(
-                                                color: AppColors.mutedForeground,
+                                                color:
+                                                    AppColors.mutedForeground,
                                               ),
                                             ),
                                           ],
@@ -486,7 +755,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         padding: const EdgeInsets.all(16), // p-4
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(16), // rounded-2xl
+                          borderRadius:
+                              BorderRadius.circular(16), // rounded-2xl
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.05),
@@ -499,7 +769,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Padding(
-                              padding: const EdgeInsets.only(bottom: 16), // mb-4
+                              padding:
+                                  const EdgeInsets.only(bottom: 16), // mb-4
                               child: Text(
                                 'ملخص الطلب',
                                 style: AppTextStyles.bodyMedium(
@@ -518,26 +789,27 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                   ),
                                 ),
                                 Text(
-                                  '${_originalPrice.toStringAsFixed(0)} جنيه',
+                                  '${_originalPrice.toStringAsFixed(2)} جنيه',
                                   style: AppTextStyles.bodyMedium(
                                     color: AppColors.foreground,
                                   ).copyWith(fontWeight: FontWeight.w500),
                                 ),
                               ],
                             ),
-                            if (_couponApplied) ...[
+                            if (_couponApplied && _discountAmount > 0) ...[
                               const SizedBox(height: 12), // space-y-3
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    'الخصم (20%)',
+                                    'الخصم',
                                     style: AppTextStyles.bodyMedium(
                                       color: Colors.green[600],
                                     ),
                                   ),
                                   Text(
-                                    '-${_discount.toStringAsFixed(2)} جنيه',
+                                    '-${_discountAmount.toStringAsFixed(2)} جنيه',
                                     style: AppTextStyles.bodyMedium(
                                       color: Colors.green[600],
                                     ),
@@ -579,20 +851,25 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             : _handleCheckout,
                         child: Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 16), // py-4
+                          padding:
+                              const EdgeInsets.symmetric(vertical: 16), // py-4
                           decoration: BoxDecoration(
                             color: _selectedPayment != null && !_isProcessing
                                 ? AppColors.purple
                                 : Colors.grey[200],
-                            borderRadius: BorderRadius.circular(16), // rounded-2xl
+                            borderRadius:
+                                BorderRadius.circular(16), // rounded-2xl
                           ),
                           child: Center(
                             child: Text(
-                              _isProcessing ? 'جاري المعالجة...' : 'تأكيد الدفع',
+                              _isProcessing
+                                  ? 'جاري المعالجة...'
+                                  : 'تأكيد الدفع',
                               style: AppTextStyles.buttonLarge(
-                                color: _selectedPayment != null && !_isProcessing
-                                    ? Colors.white
-                                    : Colors.grey[400],
+                                color:
+                                    _selectedPayment != null && !_isProcessing
+                                        ? Colors.white
+                                        : Colors.grey[400],
                               ),
                             ),
                           ),
@@ -609,5 +886,69 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildCourseImage(Map<String, dynamic> course) {
+    // Try thumbnail first, then image, then banner
+    String? imageUrl;
+    if (course['thumbnail'] != null) {
+      imageUrl = course['thumbnail']?.toString();
+    } else if (course['image'] != null) {
+      imageUrl = course['image']?.toString();
+    } else if (course['banner'] != null) {
+      imageUrl = course['banner']?.toString();
+    }
+
+    if (imageUrl != null &&
+        imageUrl.isNotEmpty &&
+        imageUrl.startsWith('http')) {
+      // Network image
+      return Image.network(
+        imageUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => Container(
+          color: AppColors.purple.withOpacity(0.1),
+          child: const Icon(
+            Icons.image,
+            color: AppColors.purple,
+          ),
+        ),
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            color: AppColors.purple.withOpacity(0.1),
+            child: const Center(
+              child: CircularProgressIndicator(
+                color: AppColors.purple,
+                strokeWidth: 2,
+              ),
+            ),
+          );
+        },
+      );
+    } else if (imageUrl != null && imageUrl.isNotEmpty) {
+      // Asset image
+      return Image.asset(
+        imageUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => Container(
+          color: AppColors.purple.withOpacity(0.1),
+          child: const Icon(
+            Icons.image,
+            color: AppColors.purple,
+          ),
+        ),
+      );
+    } else {
+      // Placeholder
+      return Container(
+        color: AppColors.purple.withOpacity(0.1),
+        child: const Icon(
+          Icons.menu_book_rounded,
+          color: AppColors.purple,
+          size: 40,
+        ),
+      );
+    }
   }
 }

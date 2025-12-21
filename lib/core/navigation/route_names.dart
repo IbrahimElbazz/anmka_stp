@@ -30,5 +30,6 @@ class RouteNames {
   static const String enrolled = '/enrolled';
   static const String settings = '/settings';
   static const String allCourses = '/all-courses';
+  static const String editProfile = '/edit-profile';
+  static const String changePassword = '/change-password';
 }
-

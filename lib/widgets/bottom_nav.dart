@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/design/app_colors.dart';
 import '../core/navigation/route_names.dart';
+import '../core/localization/localization_helper.dart';
 
 /// Bottom Navigation Bar - Liquid Glass Effect
 class BottomNav extends StatelessWidget {
@@ -71,14 +72,14 @@ class BottomNav extends StatelessWidget {
                     children: [
                       _NavItem(
                         icon: Icons.home_rounded,
-                        label: 'الرئيسية',
+                        label: context.l10n.home,
                         id: 'home',
                         activeTab: activeTab,
                         onTap: () => context.go(RouteNames.home),
                       ),
                       _NavItem(
                         icon: Icons.grid_view_rounded,
-                        label: 'الدورات',
+                        label: context.l10n.courses,
                         id: 'courses',
                         activeTab: activeTab,
                         onTap: () => context.go(RouteNames.allCourses),
@@ -89,14 +90,14 @@ class BottomNav extends StatelessWidget {
                       ),
                       _NavItem(
                         icon: Icons.menu_book_rounded,
-                        label: 'دوراتي',
+                        label: context.l10n.myCourses,
                         id: 'enrolled',
                         activeTab: activeTab,
                         onTap: () => context.push(RouteNames.enrolled),
                       ),
                       _NavItem(
                         icon: Icons.person_rounded,
-                        label: 'حسابي',
+                        label: context.l10n.myAccount,
                         id: 'dashboard',
                         activeTab: activeTab,
                         onTap: () => context.go(RouteNames.dashboard),

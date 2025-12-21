@@ -34,6 +34,18 @@ dependencies:
   
   # URL Launcher
   url_launcher: ^6.1.0
+  
+  # Share
+  share_plus: ^7.2.2
+  
+  # Skeleton Loading
+  skeletonizer: ^2.1.2
+  
+  # Image Picker
+  image_picker: ^1.0.7
+  
+  # Permissions
+  permission_handler: ^11.2.0
 
 dev_dependencies:
   flutter_test:

@@ -1,106 +1,111 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import '../../core/design/app_colors.dart';
 import '../../core/design/app_radius.dart';
+import '../../core/localization/localization_helper.dart';
 import '../../core/navigation/route_names.dart';
 import '../../widgets/bottom_nav.dart';
+import '../../services/courses_service.dart';
 
 /// Enrolled Screen - My Courses with Modern Design
-class EnrolledScreen extends StatelessWidget {
+class EnrolledScreen extends StatefulWidget {
   const EnrolledScreen({super.key});
 
-  static final _enrolledCourses = [
-    {
-      'id': 1,
-      'title': 'مقدمة في الجبر',
-      'category': 'الرياضيات',
-      'progress': 75,
-      'lessons': 12,
-      'completedLessons': 9,
-      'icon': '📐',
-      'instructor': 'أحمد محمد',
-      'rating': 4.8,
-      'hours': 24,
-      'image': 'assets/images/motion-graphics-course-in-mumbai.png',
-      'lastViewed': 'منذ ساعتين',
-      'currentLesson': 'الدرس 9: المعادلات التربيعية',
-    },
-    {
-      'id': 2,
-      'title': 'أساسيات البرمجة',
-      'category': 'علوم الحاسب',
-      'progress': 45,
-      'lessons': 20,
-      'completedLessons': 9,
-      'icon': '💻',
-      'instructor': 'سارة أحمد',
-      'rating': 4.9,
-      'hours': 36,
-      'image': 'assets/images/motion-pro-thumbnail.jpg',
-      'lastViewed': 'أمس',
-      'currentLesson': 'الدرس 9: الحلقات التكرارية',
-    },
-    {
-      'id': 3,
-      'title': 'الفيزياء الحديثة',
-      'category': 'الفيزياء',
-      'progress': 30,
-      'lessons': 15,
-      'completedLessons': 5,
-      'icon': '⚛️',
-      'instructor': 'محمد علي',
-      'rating': 4.7,
-      'hours': 28,
-      'image': 'assets/images/Full_HD_Cover_2d_to_3d.png',
-      'lastViewed': 'منذ 3 أيام',
-      'currentLesson': 'الدرس 5: نظرية النسبية',
-    },
-  ];
+  @override
+  State<EnrolledScreen> createState() => _EnrolledScreenState();
+}
 
-  void _handleOpenCourse(BuildContext context, Map<String, dynamic> course) {
+class _EnrolledScreenState extends State<EnrolledScreen> {
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _enrolledCourses = [];
+  Map<String, dynamic>? _meta;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadEnrollments();
+  }
+
+  Future<void> _loadEnrollments() async {
+    setState(() => _isLoading = true);
+    try {
+      final response = await CoursesService.instance.getEnrollments(
+        status: 'all',
+        page: 1,
+        perPage: 20,
+      );
+
+      if (kDebugMode) {
+        print('✅ Enrollments loaded: ${response['data']?.length ?? 0}');
+      }
+
+      setState(() {
+        if (response['data'] is List) {
+          _enrolledCourses = List<Map<String, dynamic>>.from(
+            response['data'] as List,
+          );
+        } else {
+          _enrolledCourses = [];
+        }
+        _meta = response['meta'] as Map<String, dynamic>?;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error loading enrollments: $e');
+      }
+      setState(() {
+        _enrolledCourses = [];
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _handleOpenCourse(
+      BuildContext context, Map<String, dynamic> enrollment) {
+    // Extract course data from enrollment
+    final course = enrollment['course'] as Map<String, dynamic>?;
+    if (course == null) return;
+
     final courseData = {
       ...course,
-      'isFree': true,
-      'price': 0.0,
-      'students': 500,
-      'lessons': [
-        {
-          'id': 1,
-          'title': 'المقدمة',
-          'duration': '5 دقائق',
-          'completed': true,
-          'locked': false,
-          'youtubeVideoId': 'AevtORdu4pc'
-        },
-        {
-          'id': 2,
-          'title': 'الدرس الأول',
-          'duration': '15 دقيقة',
-          'completed': true,
-          'locked': false,
-          'youtubeVideoId': 'AevtORdu4pc'
-        },
-        {
-          'id': 3,
-          'title': 'الدرس الثاني',
-          'duration': '20 دقيقة',
-          'completed': false,
-          'locked': false,
-          'youtubeVideoId': 'AevtORdu4pc'
-        },
-        {
-          'id': 4,
-          'title': 'الدرس الثالث',
-          'duration': '18 دقيقة',
-          'completed': false,
-          'locked': false,
-          'youtubeVideoId': 'AevtORdu4pc'
-        },
-      ],
+      'id': course['id']?.toString(),
+      'isFree': course['is_free'] == true || course['isFree'] == true,
+      'price': course['price'] ?? 0.0,
+      'progress': enrollment['progress'] ?? 0,
+      'completed_lessons': enrollment['completed_lessons'] ?? 0,
+      'total_lessons':
+          enrollment['total_lessons'] ?? course['lessons_count'] ?? 0,
+      'is_enrolled': true,
     };
     context.push(RouteNames.courseDetails, extra: courseData);
+  }
+
+  String _formatTimeAgo(BuildContext context, String? dateString) {
+    if (dateString == null || dateString.isEmpty) {
+      return context.l10n.timeAgo;
+    }
+    try {
+      final date = DateTime.parse(dateString);
+      final now = DateTime.now();
+      final difference = now.difference(date);
+
+      if (difference.inDays > 0) {
+        return context.l10n.daysAgo(difference.inDays);
+      } else if (difference.inHours > 0) {
+        return context.l10n.hoursAgo(difference.inHours);
+      } else if (difference.inMinutes > 0) {
+        return context.l10n.minutesAgo(difference.inMinutes);
+      } else {
+        return context.l10n.now;
+      }
+    } catch (e) {
+      return context.l10n.timeAgo;
+    }
   }
 
   @override
@@ -116,32 +121,38 @@ class EnrolledScreen extends StatelessWidget {
 
               // Content
               Expanded(
-                child: _enrolledCourses.isEmpty
-                    ? _buildEmptyState(context)
-                    : ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 140),
-                        physics: const BouncingScrollPhysics(),
-                        itemCount: _enrolledCourses.length,
-                        itemBuilder: (context, index) {
-                          final course = _enrolledCourses[index];
-                          return TweenAnimationBuilder<double>(
-                            tween: Tween(begin: 0.0, end: 1.0),
-                            duration:
-                                Duration(milliseconds: 400 + (index * 100)),
-                            curve: Curves.easeOut,
-                            builder: (context, value, child) {
-                              return Transform.translate(
-                                offset: Offset(0, 20 * (1 - value)),
-                                child: Opacity(
-                                  opacity: value,
-                                  child: child,
-                                ),
-                              );
-                            },
-                            child: _buildCourseCard(context, course),
-                          );
-                        },
-                      ),
+                child: _isLoading
+                    ? _buildLoadingState()
+                    : _enrolledCourses.isEmpty
+                        ? _buildEmptyState(context)
+                        : RefreshIndicator(
+                            onRefresh: _loadEnrollments,
+                            child: ListView.builder(
+                              padding:
+                                  const EdgeInsets.fromLTRB(20, 0, 20, 140),
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              itemCount: _enrolledCourses.length,
+                              itemBuilder: (context, index) {
+                                final enrollment = _enrolledCourses[index];
+                                return TweenAnimationBuilder<double>(
+                                  tween: Tween(begin: 0.0, end: 1.0),
+                                  duration: Duration(
+                                      milliseconds: 400 + (index * 100)),
+                                  curve: Curves.easeOut,
+                                  builder: (context, value, child) {
+                                    return Transform.translate(
+                                      offset: Offset(0, 20 * (1 - value)),
+                                      child: Opacity(
+                                        opacity: value,
+                                        child: child,
+                                      ),
+                                    );
+                                  },
+                                  child: _buildCourseCard(context, enrollment),
+                                );
+                              },
+                            ),
+                          ),
               ),
             ],
           ),
@@ -156,7 +167,7 @@ class EnrolledScreen extends StatelessWidget {
     final totalProgress = _enrolledCourses.isEmpty
         ? 0
         : (_enrolledCourses
-                    .map((c) => c['progress'] as int)
+                    .map((c) => (c['progress'] as num?)?.toInt() ?? 0)
                     .reduce((a, b) => a + b) /
                 _enrolledCourses.length)
             .round();
@@ -168,7 +179,7 @@ class EnrolledScreen extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [Color(0xFF7C3AED), Color(0xFF5B21B6)],
         ),
-        borderRadius: BorderRadius.only(
+        borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(AppRadius.largeCard),
           bottomRight: Radius.circular(AppRadius.largeCard),
         ),
@@ -200,7 +211,7 @@ class EnrolledScreen extends StatelessWidget {
                         border:
                             Border.all(color: Colors.white.withOpacity(0.2)),
                       ),
-                      child: const Icon(Icons.arrow_forward_ios_rounded,
+                      child: const Icon(Icons.arrow_back_ios_new_rounded,
                           color: Colors.white, size: 18),
                     ),
                   ),
@@ -210,7 +221,7 @@ class EnrolledScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'دوراتي',
+                          context.l10n.myCourses,
                           style: GoogleFonts.cairo(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -218,7 +229,9 @@ class EnrolledScreen extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          '${_enrolledCourses.length} دورات مسجلة',
+                          context.l10n.enrolledCoursesCount(
+                            _meta?['total_enrolled'] ?? _enrolledCourses.length,
+                          ),
                           style: GoogleFonts.cairo(
                             fontSize: 14,
                             color: Colors.white.withOpacity(0.7),
@@ -244,8 +257,9 @@ class EnrolledScreen extends StatelessWidget {
                     Expanded(
                       child: _buildStatItem(
                         icon: Icons.play_circle_fill_rounded,
-                        value: '${_enrolledCourses.length}',
-                        label: 'دورات',
+                        value:
+                            '${_meta?['total_enrolled'] ?? _enrolledCourses.length}',
+                        label: context.l10n.courses,
                       ),
                     ),
                     Container(
@@ -257,7 +271,7 @@ class EnrolledScreen extends StatelessWidget {
                       child: _buildStatItem(
                         icon: Icons.check_circle_rounded,
                         value: '$totalProgress%',
-                        label: 'متوسط التقدم',
+                        label: context.l10n.averageProgress,
                       ),
                     ),
                     Container(
@@ -269,8 +283,8 @@ class EnrolledScreen extends StatelessWidget {
                       child: _buildStatItem(
                         icon: Icons.emoji_events_rounded,
                         value:
-                            '${_enrolledCourses.where((c) => (c['progress'] as int) == 100).length}',
-                        label: 'مكتملة',
+                            '${_meta?['completed'] ?? _enrolledCourses.where((c) => (c['progress'] as num? ?? 0) >= 100).length}',
+                        label: context.l10n.completed,
                       ),
                     ),
                   ],
@@ -308,8 +322,28 @@ class EnrolledScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCourseCard(BuildContext context, Map<String, dynamic> course) {
-    final progress = course['progress'] as int;
+  Widget _buildCourseCard(
+      BuildContext context, Map<String, dynamic> enrollment) {
+    // Extract course data from enrollment
+    final course = enrollment['course'] as Map<String, dynamic>?;
+    if (course == null) return const SizedBox.shrink();
+
+    final progress = (enrollment['progress'] as num?)?.toInt() ?? 0;
+    final completedLessons = enrollment['completed_lessons'] as int? ?? 0;
+    final totalLessons = enrollment['total_lessons'] as int? ??
+        course['lessons_count'] as int? ??
+        0;
+    final courseTitle = course['title']?.toString() ?? '';
+    final instructor = course['instructor'] is Map
+        ? (course['instructor'] as Map)['name']?.toString() ?? ''
+        : course['instructor']?.toString() ?? '';
+    final rating = course['rating'] as num? ?? 0.0;
+    final durationHours = course['duration_hours'] as num? ?? 0;
+    final thumbnail = course['thumbnail']?.toString();
+    final category = course['category'] is Map
+        ? (course['category'] as Map)['name']?.toString() ?? ''
+        : course['category']?.toString() ?? '';
+    final enrolledAt = enrollment['enrolled_at']?.toString();
     final progressColor = progress >= 70
         ? const Color(0xFF10B981)
         : progress >= 40
@@ -317,7 +351,7 @@ class EnrolledScreen extends StatelessWidget {
             : AppColors.purple;
 
     return GestureDetector(
-      onTap: () => _handleOpenCourse(context, course),
+      onTap: () => _handleOpenCourse(context, enrollment),
       child: Container(
         margin: const EdgeInsets.only(bottom: 20),
         decoration: BoxDecoration(
@@ -368,12 +402,26 @@ class EnrolledScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: Center(
-                        child: Text(
-                          course['icon'] as String? ?? '📚',
-                          style: const TextStyle(fontSize: 24),
-                        ),
-                      ),
+                      child: thumbnail != null && thumbnail.isNotEmpty
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: Image.network(
+                                thumbnail,
+                                width: 50,
+                                height: 50,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => const Icon(
+                                  Icons.menu_book_rounded,
+                                  size: 24,
+                                  color: AppColors.purple,
+                                ),
+                              ),
+                            )
+                          : const Icon(
+                              Icons.menu_book_rounded,
+                              size: 24,
+                              color: AppColors.purple,
+                            ),
                     ),
                   ),
                   // Progress Circle
@@ -435,7 +483,7 @@ class EnrolledScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        course['category'] as String,
+                        category.isNotEmpty ? category : context.l10n.course,
                         style: GoogleFonts.cairo(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
@@ -456,7 +504,7 @@ class EnrolledScreen extends StatelessWidget {
                 children: [
                   // Title
                   Text(
-                    course['title'] as String,
+                    courseTitle,
                     style: GoogleFonts.cairo(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -473,18 +521,25 @@ class EnrolledScreen extends StatelessWidget {
                       Icon(Icons.person_outline_rounded,
                           size: 14, color: Colors.grey[400]),
                       const SizedBox(width: 4),
-                      Text(
-                        course['instructor'] as String,
-                        style: GoogleFonts.cairo(
-                          fontSize: 12,
-                          color: AppColors.mutedForeground,
+                      Expanded(
+                        child: Text(
+                          instructor.isNotEmpty
+                              ? instructor
+                              : context.l10n.instructor,
+                          style: GoogleFonts.cairo(
+                            fontSize: 12,
+                            color: AppColors.mutedForeground,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const Spacer(),
-                      Icon(Icons.star_rounded, size: 14, color: Colors.amber),
+                      const Icon(Icons.star_rounded,
+                          size: 14, color: Colors.amber),
                       const SizedBox(width: 2),
                       Text(
-                        '${course['rating']}',
+                        rating.toStringAsFixed(1),
                         style: GoogleFonts.cairo(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -524,7 +579,7 @@ class EnrolledScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 10),
                       Text(
-                        '${course['completedLessons']}/${course['lessons']}',
+                        '$completedLessons/$totalLessons',
                         style: GoogleFonts.cairo(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -565,14 +620,17 @@ class EnrolledScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'متابعة التعلم',
+                                context.l10n.continueLearning,
                                 style: GoogleFonts.cairo(
                                   fontSize: 10,
                                   color: AppColors.mutedForeground,
                                 ),
                               ),
                               Text(
-                                course['currentLesson'] as String,
+                                completedLessons < totalLessons
+                                    ? context.l10n.lessonFrom(
+                                        completedLessons + 1, totalLessons)
+                                    : context.l10n.allLessonsCompleted,
                                 style: GoogleFonts.cairo(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
@@ -602,10 +660,10 @@ class EnrolledScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildMiniStat(
-                          Icons.access_time_rounded, '${course['hours']}س'),
+                      _buildMiniStat(Icons.access_time_rounded,
+                          '${durationHours.toInt()}${context.l10n.hourShort}'),
                       _buildMiniStat(Icons.play_lesson_rounded,
-                          '${course['lessons']} درس'),
+                          context.l10n.lessonsCount(totalLessons)),
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 4),
@@ -619,7 +677,7 @@ class EnrolledScreen extends StatelessWidget {
                                 size: 12, color: Colors.grey[500]),
                             const SizedBox(width: 4),
                             Text(
-                              course['lastViewed'] as String,
+                              _formatTimeAgo(context, enrolledAt),
                               style: GoogleFonts.cairo(
                                 fontSize: 10,
                                 color: AppColors.mutedForeground,
@@ -655,6 +713,26 @@ class EnrolledScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildLoadingState() {
+    return Skeletonizer(
+      enabled: true,
+      child: ListView.builder(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 140),
+        itemCount: 3,
+        itemBuilder: (context, index) {
+          return Container(
+            margin: const EdgeInsets.only(bottom: 20),
+            height: 280,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(28),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildEmptyState(BuildContext context) {
     return Center(
       child: Column(
@@ -672,7 +750,7 @@ class EnrolledScreen extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           Text(
-            'لم تشترك في أي دورة بعد',
+            context.l10n.noEnrolledCourses,
             style: GoogleFonts.cairo(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -681,7 +759,7 @@ class EnrolledScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'ابدأ رحلة التعلم واشترك في دورتك الأولى',
+            context.l10n.startLearningJourney,
             style: GoogleFonts.cairo(
               fontSize: 14,
               color: AppColors.mutedForeground,
@@ -706,7 +784,7 @@ class EnrolledScreen extends StatelessWidget {
                 ],
               ),
               child: Text(
-                'استكشف الدورات',
+                context.l10n.exploreCourses,
                 style: GoogleFonts.cairo(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,

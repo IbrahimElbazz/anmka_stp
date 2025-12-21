@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Service for storing and retrieving authentication tokens
@@ -19,7 +20,13 @@ class TokenStorageService {
   /// Get access token
   Future<String?> getAccessToken() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_keyAccessToken);
+    final token = prefs.getString(_keyAccessToken);
+    if (kDebugMode && token != null) {
+      print('🔑 Retrieved token from storage (length: ${token.length})');
+    } else if (kDebugMode) {
+      print('🔑 No token found in storage');
+    }
+    return token;
   }
 
   /// Save refresh token
@@ -39,11 +46,48 @@ class TokenStorageService {
     required String accessToken,
     required String refreshToken,
   }) async {
+    if (kDebugMode) {
+      print('💾 TokenStorageService.saveTokens called');
+      print('  accessToken length: ${accessToken.length}');
+      print('  accessToken isEmpty: ${accessToken.isEmpty}');
+      print('  refreshToken length: ${refreshToken.length}');
+    }
+    
+    if (accessToken.isEmpty) {
+      print('❌ ERROR: Cannot save empty access token!');
+      throw Exception('Access token cannot be empty');
+    }
+    
     final prefs = await SharedPreferences.getInstance();
-    await Future.wait([
+    
+    if (kDebugMode) {
+      print('  Saving to SharedPreferences...');
+      print('  Key: $_keyAccessToken');
+    }
+    
+    final saveResult = await Future.wait([
       prefs.setString(_keyAccessToken, accessToken),
       prefs.setString(_keyRefreshToken, refreshToken),
     ]);
+    
+    if (kDebugMode) {
+      print('  Save results: $saveResult');
+    }
+    
+    // Verify tokens were saved immediately
+    final savedToken = await prefs.getString(_keyAccessToken);
+    if (kDebugMode) {
+      print('  Verification read: ${savedToken != null ? "token exists (length: ${savedToken.length})" : "token is NULL"}');
+    }
+    
+    if (savedToken != null && savedToken == accessToken) {
+      print('✅ Token saved successfully (length: ${accessToken.length})');
+    } else {
+      print('❌ Token save verification failed');
+      print('  Expected length: ${accessToken.length}');
+      print('  Saved token: ${savedToken != null ? "exists (length: ${savedToken.length})" : "NULL"}');
+      print('  Tokens match: ${savedToken == accessToken}');
+    }
   }
 
   /// Clear all tokens

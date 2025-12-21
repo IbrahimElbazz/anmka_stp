@@ -101,7 +101,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: const Icon(
-                              Icons.arrow_forward_ios_rounded,
+                              Icons.arrow_back_ios_new_rounded,
                               color: Colors.white,
                               size: 18,
                             ),
@@ -403,4 +403,3 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 }
-

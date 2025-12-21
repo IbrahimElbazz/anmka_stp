@@ -1,49 +1,98 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import '../../core/design/app_colors.dart';
 import '../../core/design/app_text_styles.dart';
 import '../../core/design/app_radius.dart';
+import '../../core/localization/localization_helper.dart';
+import '../../services/exams_service.dart';
 
 /// My Exams Screen - Pixel-perfect match to React version
 /// Matches: components/screens/my-exams-screen.tsx
-class MyExamsScreen extends StatelessWidget {
+class MyExamsScreen extends StatefulWidget {
   const MyExamsScreen({super.key});
 
-  // Static data matching React exactly
-  static const _completedExams = [
-    {
-      'id': 1,
-      'title': 'اختبار تصميم واجهات المستخدم',
-      'score': 85,
-      'totalQuestions': 20,
-      'correctAnswers': 17,
-      'passed': true,
-      'date': '15 ديسمبر 2024',
-    },
-    {
-      'id': 2,
-      'title': 'اختبار أساسيات البرمجة',
-      'score': 92,
-      'totalQuestions': 25,
-      'correctAnswers': 23,
-      'passed': true,
-      'date': '10 ديسمبر 2024',
-    },
-    {
-      'id': 3,
-      'title': 'اختبار الرياضيات المتقدمة',
-      'score': 45,
-      'totalQuestions': 30,
-      'correctAnswers': 14,
-      'passed': false,
-      'date': '5 ديسمبر 2024',
-    },
-  ];
+  @override
+  State<MyExamsScreen> createState() => _MyExamsScreenState();
+}
+
+class _MyExamsScreenState extends State<MyExamsScreen> {
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _completedExams = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadExams();
+  }
+
+  Future<void> _loadExams() async {
+    setState(() => _isLoading = true);
+    try {
+      final response = await ExamsService.instance.getMyExams();
+
+      if (kDebugMode) {
+        print('✅ Exams loaded: ${response['completed']?.length ?? 0}');
+      }
+
+      setState(() {
+        if (response['completed'] is List) {
+          _completedExams = List<Map<String, dynamic>>.from(
+            response['completed'] as List,
+          );
+        } else {
+          _completedExams = [];
+        }
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error loading exams: $e');
+      }
+      setState(() {
+        _completedExams = [];
+        _isLoading = false;
+      });
+    }
+  }
+
+  String _formatDate(BuildContext context, String? dateString) {
+    if (dateString == null || dateString.isEmpty) {
+      return context.l10n.undefinedDate;
+    }
+    try {
+      final date = DateTime.parse(dateString);
+      final months = [
+        context.l10n.monthJanuary,
+        context.l10n.monthFebruary,
+        context.l10n.monthMarch,
+        context.l10n.monthApril,
+        context.l10n.monthMay,
+        context.l10n.monthJune,
+        context.l10n.monthJuly,
+        context.l10n.monthAugust,
+        context.l10n.monthSeptember,
+        context.l10n.monthOctober,
+        context.l10n.monthNovember,
+        context.l10n.monthDecember,
+      ];
+      return '${date.day} ${months[date.month - 1]} ${date.year}';
+    } catch (e) {
+      return dateString;
+    }
+  }
+
+  // Static fallback data
 
   @override
   Widget build(BuildContext context) {
-    final passedCount = _completedExams.where((e) => e['passed'] == true).length;
-    final failedCount = _completedExams.where((e) => e['passed'] != true).length;
+    final passedCount = _completedExams
+        .where((e) => e['is_passed'] == true || e['passed'] == true)
+        .length;
+    final failedCount = _completedExams
+        .where((e) => e['is_passed'] != true && e['passed'] != true)
+        .length;
 
     return Scaffold(
       backgroundColor: AppColors.beige,
@@ -53,7 +102,7 @@ class MyExamsScreen extends StatelessWidget {
           children: [
             // Header - matches React: bg-[var(--orange)] rounded-b-[3rem] pt-4 pb-8 px-4
             Container(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: AppColors.orange, // Orange header!
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(AppRadius.largeCard),
@@ -77,7 +126,7 @@ class MyExamsScreen extends StatelessWidget {
                         child: Container(
                           width: 40, // w-10
                           height: 40, // h-10
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             color: AppColors.whiteOverlay20, // bg-white/20
                             shape: BoxShape.circle,
                           ),
@@ -90,14 +139,14 @@ class MyExamsScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 16), // gap-4
                       Text(
-                        'اختباراتي',
+                        context.l10n.myExams,
                         style: AppTextStyles.h2(color: Colors.white),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16), // mb-4
                   Text(
-                    'عرض جميع الاختبارات المكتملة',
+                    context.l10n.viewAllCompletedExams,
                     style: AppTextStyles.bodyMedium(
                       color: Colors.white.withOpacity(0.7), // white/70
                     ),
@@ -110,98 +159,113 @@ class MyExamsScreen extends StatelessWidget {
             Expanded(
               child: Transform.translate(
                 offset: const Offset(0, -24), // -mt-6
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 16), // px-4
-                  child: Column(
-                    children: [
-                      // Stats Card - matches React: bg-white rounded-3xl p-5 shadow-lg grid grid-cols-3
-                      Container(
-                        margin: const EdgeInsets.only(bottom: 24), // mb-6
-                        padding: const EdgeInsets.all(20), // p-5
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(24), // rounded-3xl
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 12,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            // Total exams
-                            Expanded(
+                child: _isLoading
+                    ? _buildLoadingState()
+                    : _completedExams.isEmpty
+                        ? _buildEmptyState()
+                        : RefreshIndicator(
+                            onRefresh: _loadExams,
+                            child: SingleChildScrollView(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16), // px-4
+                              physics: const AlwaysScrollableScrollPhysics(),
                               child: Column(
                                 children: [
-                                  Text(
-                                    '${_completedExams.length}',
-                                    style: AppTextStyles.h2(
-                                      color: AppColors.purple,
+                                  // Stats Card - matches React: bg-white rounded-3xl p-5 shadow-lg grid grid-cols-3
+                                  Container(
+                                    margin: const EdgeInsets.only(
+                                        bottom: 24), // mb-6
+                                    padding: const EdgeInsets.all(20), // p-5
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(
+                                          24), // rounded-3xl
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.1),
+                                          blurRadius: 12,
+                                          offset: const Offset(0, 6),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        // Total exams
+                                        Expanded(
+                                          child: Column(
+                                            children: [
+                                              Text(
+                                                '${_completedExams.length}',
+                                                style: AppTextStyles.h2(
+                                                  color: AppColors.purple,
+                                                ),
+                                              ),
+                                              Text(
+                                                context.l10n.totalExams,
+                                                style: AppTextStyles.labelSmall(
+                                                  color:
+                                                      AppColors.mutedForeground,
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        // Passed
+                                        Expanded(
+                                          child: Column(
+                                            children: [
+                                              Text(
+                                                '$passedCount',
+                                                style: AppTextStyles.h2(
+                                                  color: Colors.green,
+                                                ),
+                                              ),
+                                              Text(
+                                                context.l10n.passed,
+                                                style: AppTextStyles.labelSmall(
+                                                  color:
+                                                      AppColors.mutedForeground,
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        // Failed
+                                        Expanded(
+                                          child: Column(
+                                            children: [
+                                              Text(
+                                                '$failedCount',
+                                                style: AppTextStyles.h2(
+                                                  color: Colors.red,
+                                                ),
+                                              ),
+                                              Text(
+                                                context.l10n.failed,
+                                                style: AppTextStyles.labelSmall(
+                                                  color:
+                                                      AppColors.mutedForeground,
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  Text(
-                                    'إجمالي الاختبارات',
-                                    style: AppTextStyles.labelSmall(
-                                      color: AppColors.mutedForeground,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            // Passed
-                            Expanded(
-                              child: Column(
-                                children: [
-                                  Text(
-                                    '$passedCount',
-                                    style: AppTextStyles.h2(
-                                      color: Colors.green,
-                                    ),
-                                  ),
-                                  Text(
-                                    'ناجح',
-                                    style: AppTextStyles.labelSmall(
-                                      color: AppColors.mutedForeground,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            // Failed
-                            Expanded(
-                              child: Column(
-                                children: [
-                                  Text(
-                                    '$failedCount',
-                                    style: AppTextStyles.h2(
-                                      color: Colors.red,
-                                    ),
-                                  ),
-                                  Text(
-                                    'راسب',
-                                    style: AppTextStyles.labelSmall(
-                                      color: AppColors.mutedForeground,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
 
-                      // Exams List - matches React: space-y-4
-                      ..._completedExams.map((exam) => _buildExamCard(exam)),
+                                  // Exams List - matches React: space-y-4
+                                  ..._completedExams
+                                      .map((exam) => _buildExamCard(context, exam)),
 
-                      const SizedBox(height: 32),
-                    ],
-                  ),
-                ),
+                                  const SizedBox(height: 32),
+                                ],
+                              ),
+                            ),
+                          ),
               ),
             ),
           ],
@@ -210,9 +274,21 @@ class MyExamsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildExamCard(Map<String, dynamic> exam) {
-    final passed = exam['passed'] == true;
-    final score = exam['score'] as int;
+  Widget _buildExamCard(BuildContext context, Map<String, dynamic> exam) {
+    final passed = exam['is_passed'] == true || exam['passed'] == true;
+    final score = (exam['score'] as num?)?.toInt() ??
+        (exam['best_score'] as num?)?.toInt() ??
+        0;
+    final totalQuestions = exam['total_questions'] as int? ??
+        exam['questions_count'] as int? ??
+        exam['totalQuestions'] as int? ??
+        0;
+    final correctAnswers =
+        exam['correct_answers'] as int? ?? exam['correctAnswers'] as int? ?? 0;
+    final examTitle = exam['title']?.toString() ?? context.l10n.exam;
+    final completedAt = exam['completed_at']?.toString() ??
+        exam['submitted_at']?.toString() ??
+        exam['date']?.toString();
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16), // space-y-4
@@ -255,7 +331,7 @@ class MyExamsScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      exam['title'] as String,
+                      examTitle,
                       style: AppTextStyles.bodyMedium(
                         color: AppColors.foreground,
                       ).copyWith(fontWeight: FontWeight.bold),
@@ -270,7 +346,7 @@ class MyExamsScreen extends StatelessWidget {
                         ),
                         const SizedBox(width: 8), // gap-2
                         Text(
-                          exam['date'] as String,
+                          _formatDate(context, completedAt),
                           style: AppTextStyles.bodySmall(
                             color: AppColors.mutedForeground,
                           ),
@@ -291,7 +367,7 @@ class MyExamsScreen extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '${exam['correctAnswers']}/${exam['totalQuestions']}',
+                    '$correctAnswers/$totalQuestions',
                     style: AppTextStyles.labelSmall(
                       color: AppColors.mutedForeground,
                     ),
@@ -335,12 +411,212 @@ class MyExamsScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(999), // rounded-full
               ),
               child: Text(
-                passed ? 'ناجح' : 'راسب',
+                passed ? context.l10n.passed : context.l10n.failed,
                 style: AppTextStyles.labelSmall(
                   color: passed ? Colors.green[700] : Colors.red[700],
                 ).copyWith(fontWeight: FontWeight.w500),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return Skeletonizer(
+      enabled: true,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          children: [
+            Container(
+              margin: const EdgeInsets.only(bottom: 24),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Container(
+                          height: 24,
+                          width: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          height: 12,
+                          width: 60,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Container(
+                          height: 24,
+                          width: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          height: 12,
+                          width: 60,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Container(
+                          height: 24,
+                          width: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          height: 12,
+                          width: 60,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            ...List.generate(3, (index) {
+              return Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 56,
+                          height: 56,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                height: 16,
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[300],
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                height: 12,
+                                width: 100,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[300],
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          height: 24,
+                          width: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+            const SizedBox(height: 32),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              color: AppColors.orange.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.quiz_rounded,
+              size: 60,
+              color: AppColors.orange,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            context.l10n.noCompletedExams,
+            style: AppTextStyles.h2(
+              color: AppColors.foreground,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            context.l10n.startCompletingExams,
+            style: AppTextStyles.bodyMedium(
+              color: AppColors.mutedForeground,
+            ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),

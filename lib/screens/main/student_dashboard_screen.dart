@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -8,10 +9,47 @@ import '../../core/design/app_radius.dart';
 import '../../core/navigation/route_names.dart';
 import '../../widgets/bottom_nav.dart';
 import '../../services/auth_service.dart';
+import '../../services/profile_service.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Student Dashboard Screen - Simple Modern Design
-class StudentDashboardScreen extends StatelessWidget {
+class StudentDashboardScreen extends StatefulWidget {
   const StudentDashboardScreen({super.key});
+
+  @override
+  State<StudentDashboardScreen> createState() => _StudentDashboardScreenState();
+}
+
+class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
+  bool _isLoading = true;
+  Map<String, dynamic>? _profile;
+  Map<String, dynamic>? _statistics;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    setState(() => _isLoading = true);
+    try {
+      final profile = await ProfileService.instance.getProfile();
+      if (kDebugMode) {
+        print('✅ Profile loaded: ${profile['name']}');
+      }
+      setState(() {
+        _profile = profile;
+        _statistics = profile['statistics'] as Map<String, dynamic>?;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error loading profile: $e');
+      }
+      setState(() => _isLoading = false);
+    }
+  }
 
   Future<void> _handleLogout(BuildContext context) async {
     // Show confirmation dialog
@@ -22,21 +60,21 @@ class StudentDashboardScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
         ),
         title: Text(
-          'تسجيل الخروج',
+          AppLocalizations.of(context)!.logout,
           style: GoogleFonts.cairo(
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
         ),
         content: Text(
-          'هل أنت متأكد من تسجيل الخروج؟',
+          AppLocalizations.of(context)!.confirmLogout,
           style: GoogleFonts.cairo(fontSize: 14),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
             child: Text(
-              'إلغاء',
+              AppLocalizations.of(context)!.cancel,
               style: GoogleFonts.cairo(
                 color: AppColors.mutedForeground,
               ),
@@ -45,7 +83,7 @@ class StudentDashboardScreen extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             child: Text(
-              'تسجيل الخروج',
+              AppLocalizations.of(context)!.logout,
               style: GoogleFonts.cairo(
                 color: Colors.red,
                 fontWeight: FontWeight.bold,
@@ -75,7 +113,7 @@ class StudentDashboardScreen extends StatelessWidget {
               const CircularProgressIndicator(),
               const SizedBox(height: 16),
               Text(
-                'جاري تسجيل الخروج...',
+                AppLocalizations.of(context)!.loggingOut,
                 style: GoogleFonts.cairo(fontSize: 14),
               ),
             ],
@@ -113,7 +151,8 @@ class StudentDashboardScreen extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'حدث خطأ أثناء تسجيل الخروج: ${e.toString().replaceFirst('Exception: ', '')}',
+            AppLocalizations.of(context)!
+                .errorLoggingOut(e.toString().replaceFirst('Exception: ', '')),
             style: GoogleFonts.cairo(),
           ),
           backgroundColor: Colors.red,
@@ -132,51 +171,56 @@ class StudentDashboardScreen extends StatelessWidget {
       ),
     );
 
+    final enrolledCourses = _statistics?['enrolled_courses'] ?? 0;
+    final certificates = _statistics?['certificates_earned'] ?? 0;
+    final totalHours = _statistics?['total_learning_hours'] ?? 0;
+    final l10n = AppLocalizations.of(context)!;
+
     final menuItems = [
       {
         'icon': Icons.menu_book_rounded,
-        'label': 'الدروس المشترك بها',
-        'subtitle': '12 دورة نشطة',
+        'label': l10n.enrolledLessons,
+        'subtitle': l10n.activeCourse(enrolledCourses),
         'color': const Color(0xFF7C3AED),
         'bgColor': const Color(0xFFEDE9FE),
         'onTap': () => context.push(RouteNames.enrolled),
       },
       {
         'icon': Icons.assignment_rounded,
-        'label': 'اختباراتي',
-        'subtitle': '3 اختبارات قادمة',
+        'label': l10n.myExams,
+        'subtitle': l10n.viewAllExams,
         'color': const Color(0xFFF97316),
         'bgColor': const Color(0xFFFFF7ED),
         'onTap': () => context.push(RouteNames.myExams),
       },
       {
         'icon': Icons.videocam_rounded,
-        'label': 'الكورسات اللايف',
-        'subtitle': 'جلسة في انتظارك',
+        'label': l10n.liveCourses,
+        'subtitle': l10n.comingSoon,
         'color': const Color(0xFF10B981),
         'bgColor': const Color(0xFFD1FAE5),
         'onTap': () => context.push(RouteNames.liveCourses),
       },
       {
         'icon': Icons.emoji_events_rounded,
-        'label': 'الشهادات',
-        'subtitle': '5 شهادات محققة',
+        'label': l10n.certificates,
+        'subtitle': '$certificates ${l10n.certificates}',
         'color': const Color(0xFFEAB308),
         'bgColor': const Color(0xFFFEF9C3),
         'onTap': () => context.push(RouteNames.certificates),
       },
       {
         'icon': Icons.download_rounded,
-        'label': 'التحميلات',
-        'subtitle': '8 ملفات محفوظة',
+        'label': l10n.downloads,
+        'subtitle': l10n.savedFiles,
         'color': const Color(0xFF3B82F6),
         'bgColor': const Color(0xFFDBEAFE),
         'onTap': () => context.push(RouteNames.downloads),
       },
       {
         'icon': Icons.settings_rounded,
-        'label': 'الإعدادات',
-        'subtitle': 'تخصيص التطبيق',
+        'label': l10n.settings,
+        'subtitle': l10n.customizeApp,
         'color': const Color(0xFF6B7280),
         'bgColor': const Color(0xFFF3F4F6),
         'onTap': () => context.push(RouteNames.settings),
@@ -190,100 +234,103 @@ class StudentDashboardScreen extends StatelessWidget {
           Column(
             children: [
               // Header
-              _buildHeader(context),
+              _buildHeader(context, enrolledCourses, certificates, totalHours),
 
               // Content
               Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 140),
-                  physics: const BouncingScrollPhysics(),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'القائمة الرئيسية',
-                        style: GoogleFonts.cairo(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.foreground,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 140),
+                        physics: const BouncingScrollPhysics(),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              AppLocalizations.of(context)!.mainMenu,
+                              style: GoogleFonts.cairo(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.foreground,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
 
-                      // Menu Grid
-                      GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 12,
-                          crossAxisSpacing: 12,
-                          childAspectRatio: 1.1,
-                        ),
-                        itemCount: menuItems.length,
-                        itemBuilder: (context, index) {
-                          final item = menuItems[index];
-                          return _buildMenuItem(
-                            icon: item['icon'] as IconData,
-                            label: item['label'] as String,
-                            subtitle: item['subtitle'] as String,
-                            color: item['color'] as Color,
-                            bgColor: item['bgColor'] as Color,
-                            onTap: item['onTap'] as VoidCallback,
-                          );
-                        },
-                      ),
+                            // Menu Grid
+                            GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                mainAxisSpacing: 12,
+                                crossAxisSpacing: 12,
+                                childAspectRatio: 1.1,
+                              ),
+                              itemCount: menuItems.length,
+                              itemBuilder: (context, index) {
+                                final item = menuItems[index];
+                                return _buildMenuItem(
+                                  icon: item['icon'] as IconData,
+                                  label: item['label'] as String,
+                                  subtitle: item['subtitle'] as String,
+                                  color: item['color'] as Color,
+                                  bgColor: item['bgColor'] as Color,
+                                  onTap: item['onTap'] as VoidCallback,
+                                );
+                              },
+                            ),
 
-                      const SizedBox(height: 24),
+                            const SizedBox(height: 24),
 
-                      // Logout Button
-                      GestureDetector(
-                        onTap: () => _handleLogout(context),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          decoration: BoxDecoration(
-                            color: Colors.red[50],
-                            borderRadius: BorderRadius.circular(16),
-                            border:
-                                Border.all(color: Colors.red.withOpacity(0.2)),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.logout_rounded,
-                                  color: Colors.red[600], size: 20),
-                              const SizedBox(width: 8),
-                              Text(
-                                'تسجيل الخروج',
-                                style: GoogleFonts.cairo(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.red[600],
+                            // Logout Button
+                            GestureDetector(
+                              onTap: () => _handleLogout(context),
+                              child: Container(
+                                width: double.infinity,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
+                                decoration: BoxDecoration(
+                                  color: Colors.red[50],
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                      color: Colors.red.withOpacity(0.2)),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.logout_rounded,
+                                        color: Colors.red[600], size: 20),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      AppLocalizations.of(context)!.logout,
+                                      style: GoogleFonts.cairo(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.red[600],
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
+
+                            const SizedBox(height: 12),
+
+                            // Delete Account
+                            Center(
+                              child: TextButton(
+                                onPressed: () {},
+                                child: Text(
+                                  AppLocalizations.of(context)!.deleteAccount,
+                                  style: GoogleFonts.cairo(
+                                      fontSize: 13, color: Colors.red[300]),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-
-                      const SizedBox(height: 12),
-
-                      // Delete Account
-                      Center(
-                        child: TextButton(
-                          onPressed: () {},
-                          child: Text(
-                            'حذف الحساب',
-                            style: GoogleFonts.cairo(
-                                fontSize: 13, color: Colors.red[300]),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               ),
             ],
           ),
@@ -295,7 +342,8 @@ class StudentDashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, int enrolledCourses,
+      int certificates, int totalHours) {
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -335,14 +383,14 @@ class StudentDashboardScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: const Icon(
-                        Icons.arrow_forward_ios_rounded,
+                        Icons.arrow_back_ios_new_rounded,
                         color: Colors.white,
                         size: 18,
                       ),
                     ),
                   ),
                   Text(
-                    'حسابي',
+                    AppLocalizations.of(context)!.myAccount,
                     style: GoogleFonts.cairo(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -386,25 +434,43 @@ class StudentDashboardScreen extends StatelessWidget {
                   ],
                 ),
                 child: ClipOval(
-                  child: Image.asset(
-                    'assets/images/student-avatar.png',
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      color: Colors.white,
-                      child: const Icon(
-                        Icons.person,
-                        size: 45,
-                        color: AppColors.purple,
-                      ),
-                    ),
-                  ),
+                  child: _profile?['avatar'] != null
+                      ? Image.network(
+                          _profile!['avatar']?.toString() ?? '',
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Image.asset(
+                            'assets/images/student-avatar.png',
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              color: Colors.white,
+                              child: const Icon(
+                                Icons.person,
+                                size: 45,
+                                color: AppColors.purple,
+                              ),
+                            ),
+                          ),
+                        )
+                      : Image.asset(
+                          'assets/images/student-avatar.png',
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            color: Colors.white,
+                            child: const Icon(
+                              Icons.person,
+                              size: 45,
+                              color: AppColors.purple,
+                            ),
+                          ),
+                        ),
                 ),
               ),
 
               const SizedBox(height: 12),
 
               Text(
-                'يعقوب أحمد',
+                _profile?['name']?.toString() ??
+                    AppLocalizations.of(context)!.user,
                 style: GoogleFonts.cairo(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -412,7 +478,7 @@ class StudentDashboardScreen extends StatelessWidget {
                 ),
               ),
               Text(
-                'yaqoub@email.com',
+                _profile?['email']?.toString() ?? '',
                 style: GoogleFonts.cairo(
                   fontSize: 14,
                   color: Colors.white.withOpacity(0.7),
@@ -432,21 +498,30 @@ class StudentDashboardScreen extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _buildStat('12', 'دورة', Icons.play_circle_fill_rounded),
+                    _buildStat(
+                        '$enrolledCourses',
+                        AppLocalizations.of(context)!.course,
+                        Icons.play_circle_fill_rounded),
                     Container(
                       width: 1,
                       height: 25,
                       margin: const EdgeInsets.symmetric(horizontal: 16),
                       color: Colors.white.withOpacity(0.3),
                     ),
-                    _buildStat('5', 'شهادة', Icons.emoji_events_rounded),
+                    _buildStat(
+                        '$certificates',
+                        AppLocalizations.of(context)!.certificates,
+                        Icons.emoji_events_rounded),
                     Container(
                       width: 1,
                       height: 25,
                       margin: const EdgeInsets.symmetric(horizontal: 16),
                       color: Colors.white.withOpacity(0.3),
                     ),
-                    _buildStat('48', 'ساعة', Icons.access_time_filled_rounded),
+                    _buildStat(
+                        '$totalHours',
+                        AppLocalizations.of(context)!.hour,
+                        Icons.access_time_filled_rounded),
                   ],
                 ),
               ),

@@ -1,0 +1,1828 @@
+{
+  "@@locale": "ar",
+  "appName": "منصة أنمكا التعليمية",
+  "@appName": {
+    "description": "اسم التطبيق"
+  },
+  
+  "settings": "الإعدادات",
+  "@settings": {
+    "description": "عنوان شاشة الإعدادات"
+  },
+  "generalSettings": "الإعدادات العامة",
+  "@generalSettings": {
+    "description": "عنوان قسم الإعدادات العامة"
+  },
+  "language": "اللغة",
+  "@language": {
+    "description": "إعداد اللغة"
+  },
+  "notifications": "الإشعارات",
+  "@notifications": {
+    "description": "إعداد الإشعارات"
+  },
+  "darkMode": "الوضع الداكن",
+  "@darkMode": {
+    "description": "إعداد الوضع الداكن"
+  },
+  "privacyAndSecurity": "الخصوصية والأمان",
+  "@privacyAndSecurity": {
+    "description": "إعداد الخصوصية والأمان"
+  },
+  "helpAndSupport": "المساعدة والدعم",
+  "@helpAndSupport": {
+    "description": "إعداد المساعدة والدعم"
+  },
+  "changePassword": "تغيير كلمة المرور",
+  "@changePassword": {
+    "description": "تغيير كلمة المرور"
+  },
+  "arabic": "العربية",
+  "@arabic": {
+    "description": "اسم اللغة العربية"
+  },
+  "english": "English",
+  "@english": {
+    "description": "اسم اللغة الإنجليزية"
+  },
+  "selectLanguage": "اختر اللغة",
+  "@selectLanguage": {
+    "description": "عنوان dialog اختيار اللغة"
+  },
+  "languageChanged": "تم تغيير اللغة إلى {name}",
+  "@languageChanged": {
+    "description": "رسالة نجاح تغيير اللغة",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "preferencesUpdated": "تم تحديث التفضيلات بنجاح",
+  "@preferencesUpdated": {
+    "description": "رسالة نجاح تحديث التفضيلات"
+  },
+  "errorUpdatingPreferences": "حدث خطأ أثناء تحديث التفضيلات",
+  "@errorUpdatingPreferences": {
+    "description": "رسالة خطأ تحديث التفضيلات"
+  },
+  "user": "المستخدم",
+  "@user": {
+    "description": "اسم المستخدم الافتراضي"
+  },
+  
+  "login": "تسجيل الدخول",
+  "@login": {
+    "description": "عنوان شاشة تسجيل الدخول"
+  },
+  "email": "البريد الإلكتروني",
+  "@email": {
+    "description": "حقل البريد الإلكتروني"
+  },
+  "password": "كلمة المرور",
+  "@password": {
+    "description": "حقل كلمة المرور"
+  },
+  "forgotPassword": "نسيت كلمة المرور؟",
+  "@forgotPassword": {
+    "description": "رابط نسيان كلمة المرور"
+  },
+  "noAccount": "ليس لديك حساب؟",
+  "@noAccount": {
+    "description": "نص عدم وجود حساب"
+  },
+  "registerNow": "سجل الآن",
+  "@registerNow": {
+    "description": "رابط التسجيل"
+  },
+  "invalidEmail": "البريد الإلكتروني غير صحيح",
+  "@invalidEmail": {
+    "description": "رسالة خطأ البريد الإلكتروني"
+  },
+  "pleaseEnterEmail": "الرجاء إدخال البريد الإلكتروني",
+  "@pleaseEnterEmail": {
+    "description": "رسالة إدخال البريد الإلكتروني"
+  },
+  "pleaseEnterPassword": "الرجاء إدخال كلمة المرور",
+  "@pleaseEnterPassword": {
+    "description": "رسالة إدخال كلمة المرور"
+  },
+  "welcomeBack": "مرحباً بعودتك! 👋",
+  "@welcomeBack": {
+    "description": "رسالة الترحيب في تسجيل الدخول"
+  },
+  "enterEmail": "أدخل بريدك الإلكتروني",
+  "@enterEmail": {
+    "description": "نص placeholder البريد الإلكتروني"
+  },
+  "enterPassword": "أدخل كلمة المرور",
+  "@enterPassword": {
+    "description": "نص placeholder كلمة المرور"
+  },
+  "fieldRequired": "هذا الحقل مطلوب",
+  "@fieldRequired": {
+    "description": "رسالة الحقل مطلوب"
+  },
+  "or": "أو",
+  "@or": {
+    "description": "أو"
+  },
+  "google": "Google",
+  "@google": {
+    "description": "Google"
+  },
+  "apple": "Apple",
+  "@apple": {
+    "description": "Apple"
+  },
+  
+  "register": "إنشاء حساب جديد",
+  "@register": {
+    "description": "عنوان شاشة التسجيل"
+  },
+  "joinUsMessage": "انضم إلينا وابدأ رحلة التعلم 🎓",
+  "@joinUsMessage": {
+    "description": "رسالة الترحيب في التسجيل"
+  },
+  "fullName": "الاسم الكامل",
+  "@fullName": {
+    "description": "حقل الاسم الكامل"
+  },
+  "pleaseEnterName": "أدخل اسمك الكامل",
+  "@pleaseEnterName": {
+    "description": "رسالة إدخال الاسم"
+  },
+  "phone": "رقم الهاتف",
+  "@phone": {
+    "description": "حقل رقم الهاتف"
+  },
+  "phonePlaceholder": "01xxxxxxxxx",
+  "@phonePlaceholder": {
+    "description": "placeholder رقم الهاتف"
+  },
+  "invalidPhone": "رقم الهاتف غير صحيح",
+  "@invalidPhone": {
+    "description": "رسالة خطأ رقم الهاتف"
+  },
+  "enterPasswordAgain": "أدخل كلمة المرور مرة أخرى",
+  "@enterPasswordAgain": {
+    "description": "أدخل كلمة المرور مرة أخرى"
+  },
+  "iAgreeTo": "أوافق على",
+  "@iAgreeTo": {
+    "description": "أوافق على"
+  },
+  "pleaseAcceptTerms": "يرجى الموافقة على الشروط والأحكام",
+  "@pleaseAcceptTerms": {
+    "description": "يرجى الموافقة على الشروط والأحكام"
+  },
+  "createAccount": "إنشاء الحساب",
+  "@createAccount": {
+    "description": "إنشاء الحساب"
+  },
+  "alreadyHaveAccount": "لديك حساب بالفعل؟",
+  "@alreadyHaveAccount": {
+    "description": "لديك حساب بالفعل؟"
+  },
+  "termsAndConditions": "الشروط والأحكام",
+  "@termsAndConditions": {
+    "description": "الشروط والأحكام"
+  },
+  
+  "home": "الرئيسية",
+  "@home": {
+    "description": "الصفحة الرئيسية"
+  },
+  "courses": "الدورات",
+  "@courses": {
+    "description": "الدورات"
+  },
+  "progress": "التقدم",
+  "@progress": {
+    "description": "التقدم"
+  },
+  "profile": "الملف الشخصي",
+  "@profile": {
+    "description": "الملف الشخصي"
+  },
+  
+  "featuredCourses": "الدورات المميزة",
+  "@featuredCourses": {
+    "description": "الدورات المميزة"
+  },
+  "categories": "التصنيفات",
+  "@categories": {
+    "description": "التصنيفات"
+  },
+  "category": "التصنيف",
+  "@category": {
+    "description": "التصنيف"
+  },
+  "startLearningJourney": "ابدأ رحلة التعلم",
+  "@startLearningJourney": {
+    "description": "نص البانر الرئيسي"
+  },
+  "discount50": "خصم 50% على جميع الدورات",
+  "@discount50": {
+    "description": "نص الخصم"
+  },
+  "subscribeNow": "اشترك الآن",
+  "@subscribeNow": {
+    "description": "زر الاشتراك"
+  },
+  
+  "all": "الكل",
+  "@all": {
+    "description": "الكل"
+  },
+  "newest": "الأحدث",
+  "@newest": {
+    "description": "الأحدث"
+  },
+  "highestRated": "الأعلى تقييماً",
+  "@highestRated": {
+    "description": "الأعلى تقييماً"
+  },
+  "bestSelling": "الأكثر مبيعاً",
+  "@bestSelling": {
+    "description": "الأكثر مبيعاً"
+  },
+  "priceLowToHigh": "السعر: من الأقل",
+  "@priceLowToHigh": {
+    "description": "السعر من الأقل للأعلى"
+  },
+  "priceHighToLow": "السعر: من الأعلى",
+  "@priceHighToLow": {
+    "description": "السعر من الأعلى للأقل"
+  },
+  "errorLoadingCourses": "حدث خطأ أثناء تحميل الدورات",
+  "@errorLoadingCourses": {
+    "description": "رسالة خطأ تحميل الدورات"
+  },
+  
+  "instructor": "المدرب",
+  "@instructor": {
+    "description": "المدرب"
+  },
+  "lessons": "الدروس",
+  "@lessons": {
+    "description": "الدروس"
+  },
+  "lesson": "الدرس",
+  "@lesson": {
+    "description": "الدرس"
+  },
+  "course": "الدورة",
+  "@course": {
+    "description": "الدورة"
+  },
+  "courseSuitable": "الدورة مناسبة للمبتدئين والمحترفين على حد سواء.",
+  "@courseSuitable": {
+    "description": "وصف الدورة"
+  },
+  "enrolledSuccessfully": "تم الاشتراك في الدورة بنجاح",
+  "@enrolledSuccessfully": {
+    "description": "رسالة نجاح الاشتراك"
+  },
+  "errorEnrolling": "حدث خطأ أثناء الاشتراك في الدورة",
+  "@errorEnrolling": {
+    "description": "رسالة خطأ الاشتراك"
+  },
+  "addedToWishlist": "تمت الإضافة إلى قائمة الرغبات",
+  "@addedToWishlist": {
+    "description": "رسالة إضافة للرغبات"
+  },
+  "removedFromWishlist": "تمت الإزالة من قائمة الرغبات",
+  "@removedFromWishlist": {
+    "description": "رسالة إزالة من الرغبات"
+  },
+  "errorWishlist": "حدث خطأ أثناء {action} قائمة الرغبات",
+  "@errorWishlist": {
+    "description": "رسالة خطأ الرغبات",
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "addingTo": "الإضافة إلى",
+  "@addingTo": {
+    "description": "إضافة إلى"
+  },
+  "removingFrom": "الإزالة من",
+  "@removingFrom": {
+    "description": "إزالة من"
+  },
+  "startExam": "بدء الامتحان",
+  "@startExam": {
+    "description": "بدء الامتحان"
+  },
+  "errorStartingExam": "حدث خطأ أثناء بدء الامتحان",
+  "@errorStartingExam": {
+    "description": "رسالة خطأ بدء الامتحان"
+  },
+  "submitExam": "تقديم الامتحان",
+  "@submitExam": {
+    "description": "تقديم الامتحان"
+  },
+  "errorSubmittingExam": "حدث خطأ أثناء تقديم الامتحان",
+  "@errorSubmittingExam": {
+    "description": "رسالة خطأ تقديم الامتحان"
+  },
+  "practiceExam": "الامتحان التجريبي",
+  "@practiceExam": {
+    "description": "الامتحان التجريبي"
+  },
+  "question": "السؤال",
+  "@question": {
+    "description": "السؤال"
+  },
+  "questionNumber": "السؤال {number}",
+  "@questionNumber": {
+    "description": "رقم السؤال",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "next": "التالي",
+  "@next": {
+    "description": "التالي"
+  },
+  "previous": "السابق",
+  "@previous": {
+    "description": "السابق"
+  },
+  "timeTaken": "الوقت المستغرق: {minutes} دقيقة",
+  "@timeTaken": {
+    "description": "الوقت المستغرق",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  
+  "downloads": "التحميلات",
+  "@downloads": {
+    "description": "التحميلات"
+  },
+  "downloadLinkReceived": "تم الحصول على رابط التحميل. سيتم التحميل قريباً...",
+  "@downloadLinkReceived": {
+    "description": "رسالة رابط التحميل"
+  },
+  "errorDownloading": "حدث خطأ أثناء التحميل: {error}",
+  "@errorDownloading": {
+    "description": "رسالة خطأ التحميل",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fileDeleted": "تم حذف الملف بنجاح",
+  "@fileDeleted": {
+    "description": "رسالة نجاح الحذف"
+  },
+  "errorDeleting": "حدث خطأ أثناء الحذف: {error}",
+  "@errorDeleting": {
+    "description": "رسالة خطأ الحذف",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "certificates": "الشهادات",
+  "@certificates": {
+    "description": "الشهادات"
+  },
+  "downloadSuccessful": "تم التحميل بنجاح: {path}",
+  "@downloadSuccessful": {
+    "description": "رسالة نجاح التحميل",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "errorDownloadingFile": "حدث خطأ أثناء التحميل: {error}",
+  "@errorDownloadingFile": {
+    "description": "رسالة خطأ تحميل الملف",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorSharing": "حدث خطأ أثناء المشاركة",
+  "@errorSharing": {
+    "description": "رسالة خطأ المشاركة"
+  },
+  "student": "الطالب",
+  "@student": {
+    "description": "الطالب"
+  },
+  
+  "liveCourses": "الكورسات اللايف",
+  "@liveCourses": {
+    "description": "الكورسات اللايف"
+  },
+  "registeredSuccessfully": "تم التسجيل في الجلسة بنجاح",
+  "@registeredSuccessfully": {
+    "description": "رسالة نجاح التسجيل"
+  },
+  "errorRegistering": "حدث خطأ أثناء التسجيل في الجلسة",
+  "@errorRegistering": {
+    "description": "رسالة خطأ التسجيل"
+  },
+  "sunday": "الأحد",
+  "@sunday": {
+    "description": "يوم الأحد"
+  },
+  "monday": "الإثنين",
+  "@monday": {
+    "description": "يوم الإثنين"
+  },
+  "tuesday": "الثلاثاء",
+  "@tuesday": {
+    "description": "يوم الثلاثاء"
+  },
+  "wednesday": "الأربعاء",
+  "@wednesday": {
+    "description": "يوم الأربعاء"
+  },
+  "thursday": "الخميس",
+  "@thursday": {
+    "description": "يوم الخميس"
+  },
+  "friday": "الجمعة",
+  "@friday": {
+    "description": "يوم الجمعة"
+  },
+  "saturday": "السبت",
+  "@saturday": {
+    "description": "يوم السبت"
+  },
+  
+  "enrolledLessons": "الدروس المشترك بها",
+  "@enrolledLessons": {
+    "description": "الدروس المشترك بها"
+  },
+  "savedFiles": "الملفات المحفوظة",
+  "@savedFiles": {
+    "description": "الملفات المحفوظة"
+  },
+  "mainMenu": "القائمة الرئيسية",
+  "@mainMenu": {
+    "description": "القائمة الرئيسية"
+  },
+  "logout": "تسجيل الخروج",
+  "@logout": {
+    "description": "تسجيل الخروج"
+  },
+  "errorLoggingOut": "حدث خطأ أثناء تسجيل الخروج: {error}",
+  "@errorLoggingOut": {
+    "description": "رسالة خطأ تسجيل الخروج",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "now": "الآن",
+  "@now": {
+    "description": "الآن"
+  },
+  "lessonNumber": "الدرس {current} من {total}",
+  "@lessonNumber": {
+    "description": "رقم الدرس",
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "allLessonsCompleted": "تم إكمال جميع الدروس",
+  "@allLessonsCompleted": {
+    "description": "اكتمال جميع الدروس"
+  },
+  
+  "previousLesson": "الدرس السابق",
+  "@previousLesson": {
+    "description": "الدرس السابق"
+  },
+  "nextLesson": "الدرس التالي",
+  "@nextLesson": {
+    "description": "الدرس التالي"
+  },
+  "duration": "المدة: {duration}",
+  "@duration": {
+    "description": "مدة الدرس",
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "notSpecified": "غير محدد",
+  "@notSpecified": {
+    "description": "غير محدد"
+  },
+  
+  "design": "التصميم",
+  "@design": {
+    "description": "التصميم"
+  },
+  "programming": "البرمجة",
+  "@programming": {
+    "description": "البرمجة"
+  },
+  "marketing": "التسويق",
+  "@marketing": {
+    "description": "التسويق"
+  },
+  "data": "البيانات",
+  "@data": {
+    "description": "البيانات"
+  },
+  
+  "checkout": "الدفع",
+  "@checkout": {
+    "description": "الدفع"
+  },
+  "discountApplied": "تم تطبيق الخصم بنجاح",
+  "@discountApplied": {
+    "description": "رسالة نجاح تطبيق الخصم"
+  },
+  "errorCheckingDiscount": "حدث خطأ أثناء التحقق من كود الخصم",
+  "@errorCheckingDiscount": {
+    "description": "رسالة خطأ التحقق من الخصم"
+  },
+  "purchaseSuccessful": "تمت عملية الشراء بنجاح",
+  "@purchaseSuccessful": {
+    "description": "رسالة نجاح الشراء"
+  },
+  "errorCompletingPayment": "حدث خطأ أثناء إتمام عملية الدفع",
+  "@errorCompletingPayment": {
+    "description": "رسالة خطأ إتمام الدفع"
+  },
+  "errorProcessingPayment": "حدث خطأ أثناء عملية الدفع",
+  "@errorProcessingPayment": {
+    "description": "رسالة خطأ معالجة الدفع"
+  },
+  "discount20": "تم تطبيق الخصم 20%",
+  "@discount20": {
+    "description": "رسالة خصم 20%"
+  },
+  "discount": "الخصم",
+  "@discount": {
+    "description": "الخصم"
+  },
+  "total": "الإجمالي",
+  "@total": {
+    "description": "الإجمالي"
+  },
+  
+  "editProfile": "تعديل الملف الشخصي",
+  "@editProfile": {
+    "description": "تعديل الملف الشخصي"
+  },
+  "errorLoadingProfile": "حدث خطأ أثناء تحميل الملف الشخصي",
+  "@errorLoadingProfile": {
+    "description": "رسالة خطأ تحميل الملف الشخصي"
+  },
+  "profileUpdated": "تم تحديث الملف الشخصي بنجاح",
+  "@profileUpdated": {
+    "description": "رسالة نجاح تحديث الملف الشخصي"
+  },
+  "errorUpdatingProfile": "حدث خطأ أثناء تحديث الملف الشخصي: {error}",
+  "@errorUpdatingProfile": {
+    "description": "رسالة خطأ تحديث الملف الشخصي",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "country": "البلد (اختياري)",
+  "@country": {
+    "description": "البلد"
+  },
+  "timezone": "المنطقة الزمنية (اختياري)",
+  "@timezone": {
+    "description": "المنطقة الزمنية"
+  },
+  "name": "الاسم",
+  "@name": {
+    "description": "الاسم"
+  },
+  "bio": "نبذة عنك",
+  "@bio": {
+    "description": "نبذة عنك"
+  },
+  "saveChanges": "حفظ التغييرات",
+  "@saveChanges": {
+    "description": "حفظ التغييرات"
+  },
+  "selectImageSource": "اختر مصدر الصورة",
+  "@selectImageSource": {
+    "description": "اختر مصدر الصورة"
+  },
+  "camera": "الكاميرا",
+  "@camera": {
+    "description": "الكاميرا"
+  },
+  "gallery": "المعرض",
+  "@gallery": {
+    "description": "المعرض"
+  },
+  "cameraPermissionDenied": "تم رفض إذن الكاميرا. يرجى السماح بالوصول إلى الكاميرا من الإعدادات",
+  "@cameraPermissionDenied": {
+    "description": "رسالة رفض إذن الكاميرا"
+  },
+  "galleryPermissionDenied": "تم رفض إذن المعرض. يرجى السماح بالوصول إلى الصور من الإعدادات",
+  "@galleryPermissionDenied": {
+    "description": "رسالة رفض إذن المعرض"
+  },
+  "errorPickingImage": "حدث خطأ أثناء اختيار الصورة",
+  "@errorPickingImage": {
+    "description": "رسالة خطأ اختيار الصورة"
+  },
+  "avatarUploaded": "تم رفع الصورة بنجاح",
+  "@avatarUploaded": {
+    "description": "رسالة نجاح رفع الصورة"
+  },
+  "errorUploadingAvatar": "حدث خطأ أثناء رفع الصورة: {error}",
+  "@errorUploadingAvatar": {
+    "description": "رسالة خطأ رفع الصورة",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "passwordChanged": "تم تغيير كلمة المرور بنجاح",
+  "@passwordChanged": {
+    "description": "رسالة نجاح تغيير كلمة المرور"
+  },
+  "errorChangingPassword": "حدث خطأ أثناء تغيير كلمة المرور: {error}",
+  "@errorChangingPassword": {
+    "description": "رسالة خطأ تغيير كلمة المرور",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "currentPassword": "كلمة المرور الحالية",
+  "@currentPassword": {
+    "description": "كلمة المرور الحالية"
+  },
+  "newPassword": "كلمة المرور الجديدة",
+  "@newPassword": {
+    "description": "كلمة المرور الجديدة"
+  },
+  "confirmPassword": "تأكيد كلمة المرور",
+  "@confirmPassword": {
+    "description": "تأكيد كلمة المرور"
+  },
+  "pleaseEnterCurrentPassword": "الرجاء إدخال كلمة المرور الحالية",
+  "@pleaseEnterCurrentPassword": {
+    "description": "رسالة إدخال كلمة المرور الحالية"
+  },
+  "pleaseEnterNewPassword": "الرجاء إدخال كلمة المرور الجديدة",
+  "@pleaseEnterNewPassword": {
+    "description": "رسالة إدخال كلمة المرور الجديدة"
+  },
+  "pleaseConfirmPassword": "الرجاء تأكيد كلمة المرور",
+  "@pleaseConfirmPassword": {
+    "description": "رسالة تأكيد كلمة المرور"
+  },
+  
+  "forgotPasswordTitle": "نسيت كلمة المرور؟",
+  "@forgotPasswordTitle": {
+    "description": "عنوان نسيان كلمة المرور"
+  },
+  "backToLogin": "العودة لتسجيل الدخول",
+  "@backToLogin": {
+    "description": "العودة لتسجيل الدخول"
+  },
+  "sentSuccessfully": "تم الإرسال بنجاح!",
+  "@sentSuccessfully": {
+    "description": "رسالة نجاح الإرسال"
+  },
+  "resetPasswordSent": "تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني",
+  "@resetPasswordSent": {
+    "description": "رسالة إرسال رابط إعادة التعيين"
+  },
+  
+  "exams": "الاختبار",
+  "@exams": {
+    "description": "الاختبار"
+  },
+  "questionOf": "السؤال {current} من {total}",
+  "@questionOf": {
+    "description": "السؤال من",
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "finishExam": "إنهاء الاختبار",
+  "@finishExam": {
+    "description": "إنهاء الاختبار"
+  },
+  "finalResult": "النتيجة النهائية",
+  "@finalResult": {
+    "description": "النتيجة النهائية"
+  },
+  "correctAnswers": "الإجابات الصحيحة",
+  "@correctAnswers": {
+    "description": "الإجابات الصحيحة"
+  },
+  "wrongAnswers": "الإجابات الخاطئة",
+  "@wrongAnswers": {
+    "description": "الإجابات الخاطئة"
+  },
+  
+  "notificationsTitle": "الإشعارات",
+  "@notificationsTitle": {
+    "description": "عنوان شاشة الإشعارات"
+  },
+  
+  "science": "العلم نور يضيء طريقك",
+  "@science": {
+    "description": "نص الشاشة الافتتاحية"
+  },
+  "success": "النجاح يبدأ بخطوة",
+  "@success": {
+    "description": "نص الشاشة الافتتاحية"
+  },
+  "nextStep": "التالي",
+  "@nextStep": {
+    "description": "التالي"
+  },
+  "startNow": "ابدأ الآن",
+  "@startNow": {
+    "description": "ابدأ الآن"
+  },
+  
+  "myCourses": "دوراتي",
+  "@myCourses": {
+    "description": "دوراتي"
+  },
+  "subjects": "مادة",
+  "@subjects": {
+    "description": "مادة"
+  },
+  "lessonsCount": "{count} درس",
+  "@lessonsCount": {
+    "description": "عدد الدروس",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "coursesCount": "{count} دورة",
+  "@coursesCount": {
+    "description": "عدد الدورات",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "free": "مجاني",
+  "@free": {
+    "description": "مجاني"
+  },
+  "paid": "مدفوع",
+  "@paid": {
+    "description": "مدفوع"
+  },
+  "allCourses": "جميع الدورات",
+  "@allCourses": {
+    "description": "جميع الدورات"
+  },
+  "coursesAvailable": "{count} دورة متاحة",
+  "@coursesAvailable": {
+    "description": "عدد الدورات المتاحة",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "searchCourse": "ابحث عن دورة...",
+  "@searchCourse": {
+    "description": "ابحث عن دورة"
+  },
+  "noResults": "لا توجد نتائج",
+  "@noResults": {
+    "description": "لا توجد نتائج"
+  },
+  "tryDifferentSearch": "جرب البحث بكلمات مختلفة أو تغيير الفلاتر",
+  "@tryDifferentSearch": {
+    "description": "جرب البحث بكلمات مختلفة"
+  },
+  "egyptianPound": "{amount} ج.م",
+  "@egyptianPound": {
+    "description": "جنيه مصري",
+    "placeholders": {
+      "amount": {
+        "type": "int"
+      }
+    }
+  },
+  "noCourseData": "لا توجد بيانات للدورة",
+  "@noCourseData": {
+    "description": "لا توجد بيانات للدورة"
+  },
+  "courseTitle": "عنوان الدورة",
+  "@courseTitle": {
+    "description": "عنوان الدورة"
+  },
+  "trialExam": "امتحان تجريبي",
+  "@trialExam": {
+    "description": "امتحان تجريبي"
+  },
+  "noLessonsAvailable": "لا توجد دروس متاحة",
+  "@noLessonsAvailable": {
+    "description": "لا توجد دروس متاحة"
+  },
+  "certifiedCertificate": "شهادة معتمدة عند الإكمال",
+  "@certifiedCertificate": {
+    "description": "شهادة معتمدة"
+  },
+  "loadingExam": "جاري تحميل الامتحان...",
+  "@loadingExam": {
+    "description": "جاري تحميل الامتحان"
+  },
+  "noTrialExamAvailable": "لا يوجد امتحان تجريبي متاح",
+  "@noTrialExamAvailable": {
+    "description": "لا يوجد امتحان تجريبي متاح"
+  },
+  "startExamButton": "ابدأ الامتحان",
+  "@startExamButton": {
+    "description": "ابدأ الامتحان"
+  },
+  "notAvailable": "غير متاح",
+  "@notAvailable": {
+    "description": "غير متاح"
+  },
+  "enrolling": "جاري الاشتراك...",
+  "@enrolling": {
+    "description": "جاري الاشتراك"
+  },
+  "startLearningNow": "ابدأ التعلم الآن",
+  "@startLearningNow": {
+    "description": "ابدأ التعلم الآن"
+  },
+  "enrollFree": "اشترك مجاناً",
+  "@enrollFree": {
+    "description": "اشترك مجاناً"
+  },
+  "enrollInCourse": "اشترك في الدورة",
+  "@enrollInCourse": {
+    "description": "اشترك في الدورة"
+  },
+  "loginRequired": "يجب تسجيل الدخول أولاً",
+  "@loginRequired": {
+    "description": "يجب تسجيل الدخول أولاً"
+  },
+  "noQuestionsAvailable": "لا توجد أسئلة متاحة في الامتحان",
+  "@noQuestionsAvailable": {
+    "description": "لا توجد أسئلة متاحة"
+  },
+  "finishExamButton": "إنهاء الامتحان",
+  "@finishExamButton": {
+    "description": "إنهاء الامتحان"
+  },
+  "loadingQuestions": "جاري تحميل الأسئلة...",
+  "@loadingQuestions": {
+    "description": "جاري تحميل الأسئلة"
+  },
+  "finish": "إنهاء",
+  "@finish": {
+    "description": "إنهاء"
+  },
+  "downloadLinkUnavailable": "رابط التحميل غير متاح",
+  "@downloadLinkUnavailable": {
+    "description": "رابط التحميل غير متاح"
+  },
+  "downloading": "جاري التحميل...",
+  "@downloading": {
+    "description": "جاري التحميل"
+  },
+  "cannotAccessDownloads": "لا يمكن الوصول إلى مجلد التحميلات",
+  "@cannotAccessDownloads": {
+    "description": "لا يمكن الوصول إلى مجلد التحميلات"
+  },
+  "certificateCompletion": "شهادة إتمام: {course}",
+  "@certificateCompletion": {
+    "description": "شهادة إتمام",
+    "placeholders": {
+      "course": {
+        "type": "String"
+      }
+    }
+  },
+  "certificateNumber": "رقم الشهادة: {number}",
+  "@certificateNumber": {
+    "description": "رقم الشهادة",
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "verificationLink": "رابط التحقق: {url}",
+  "@verificationLink": {
+    "description": "رابط التحقق",
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "download": "تحميل",
+  "@download": {
+    "description": "تحميل"
+  },
+  "share": "مشاركة",
+  "@share": {
+    "description": "مشاركة"
+  },
+  "noCertificatesYet": "لا توجد شهادات بعد",
+  "@noCertificatesYet": {
+    "description": "لا توجد شهادات بعد"
+  },
+  "completeCoursesForCertificates": "أكمل الدورات للحصول على شهادات معتمدة",
+  "@completeCoursesForCertificates": {
+    "description": "أكمل الدورات للحصول على شهادات"
+  },
+  "gettingDownloadLink": "جاري الحصول على رابط التحميل...",
+  "@gettingDownloadLink": {
+    "description": "جاري الحصول على رابط التحميل"
+  },
+  "deleteFile": "حذف الملف",
+  "@deleteFile": {
+    "description": "حذف الملف"
+  },
+  "confirmDeleteFile": "هل أنت متأكد من حذف هذا الملف؟",
+  "@confirmDeleteFile": {
+    "description": "تأكيد حذف الملف"
+  },
+  "cancel": "إلغاء",
+  "@cancel": {
+    "description": "إلغاء"
+  },
+  "delete": "حذف",
+  "@delete": {
+    "description": "حذف"
+  },
+  "noDownloads": "لا توجد تحميلات",
+  "@noDownloads": {
+    "description": "لا توجد تحميلات"
+  },
+  "willOpenOffline": "سيتم فتح الدورة في وضع عدم الاتصال",
+  "@willOpenOffline": {
+    "description": "سيتم فتح الدورة في وضع عدم الاتصال"
+  },
+  "noLiveSessions": "لا توجد جلسات لايف متاحة",
+  "@noLiveSessions": {
+    "description": "لا توجد جلسات لايف متاحة"
+  },
+  "sessionsComingSoon": "سيتم إضافة الجلسات القادمة قريباً",
+  "@sessionsComingSoon": {
+    "description": "سيتم إضافة الجلسات قريباً"
+  },
+  "willOpenSessionLink": "سيتم فتح رابط الجلسة",
+  "@willOpenSessionLink": {
+    "description": "سيتم فتح رابط الجلسة"
+  },
+  "sessionLinkUnavailable": "رابط الجلسة غير متاح",
+  "@sessionLinkUnavailable": {
+    "description": "رابط الجلسة غير متاح"
+  },
+  "comingSoon": "قريباً",
+  "@comingSoon": {
+    "description": "قريباً"
+  },
+  "startsIn": "يبدأ خلال",
+  "@startsIn": {
+    "description": "يبدأ خلال"
+  },
+  "hour": "ساعة",
+  "@hour": {
+    "description": "ساعة"
+  },
+  "minute": "دقيقة",
+  "@minute": {
+    "description": "دقيقة"
+  },
+  "logout": "تسجيل الخروج",
+  "@logout": {
+    "description": "تسجيل الخروج"
+  },
+  "confirmLogout": "هل أنت متأكد من تسجيل الخروج؟",
+  "@confirmLogout": {
+    "description": "تأكيد تسجيل الخروج"
+  },
+  "loggingOut": "جاري تسجيل الخروج...",
+  "@loggingOut": {
+    "description": "جاري تسجيل الخروج"
+  },
+  "myExams": "اختباراتي",
+  "@myExams": {
+    "description": "اختباراتي"
+  },
+  "viewAllExams": "عرض جميع الاختبارات المكتملة",
+  "@viewAllExams": {
+    "description": "عرض جميع الاختبارات المكتملة"
+  },
+  "exam": "اختبار",
+  "@exam": {
+    "description": "اختبار"
+  },
+  "noCompletedExams": "لا توجد اختبارات مكتملة",
+  "@noCompletedExams": {
+    "description": "لا توجد اختبارات مكتملة"
+  },
+  "startCompletingExams": "ابدأ في إكمال الاختبارات لرؤية نتائجك هنا",
+  "@startCompletingExams": {
+    "description": "ابدأ في إكمال الاختبارات"
+  },
+  "ago": "منذ فترة",
+  "@ago": {
+    "description": "منذ فترة"
+  },
+  "daysAgo": "منذ {days} {days, plural, =1 {يوم} other {أيام}}",
+  "@daysAgo": {
+    "description": "منذ أيام",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "منذ {hours} {hours, plural, =1 {ساعة} other {ساعات}}",
+  "@hoursAgo": {
+    "description": "منذ ساعات",
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "minutesAgo": "منذ {minutes} {minutes, plural, =1 {دقيقة} other {دقائق}}",
+  "@minutesAgo": {
+    "description": "منذ دقائق",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "activeCourse": "{count} دورة نشطة",
+  "@activeCourse": {
+    "description": "دورة نشطة",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteAccount": "حذف الحساب",
+  "@deleteAccount": {
+    "description": "حذف الحساب"
+  },
+  "myAccount": "حسابي",
+  "@myAccount": {
+    "description": "حسابي"
+  },
+  "customizeApp": "تخصيص التطبيق",
+  "@customizeApp": {
+    "description": "تخصيص التطبيق"
+  },
+  "progress": "التقدم",
+  "@progress": {
+    "description": "التقدم"
+  },
+  "allSubjects": "جميع المواد",
+  "@allSubjects": {
+    "description": "جميع المواد"
+  },
+  "weekly": "أسبوعي",
+  "@weekly": {
+    "description": "أسبوعي"
+  },
+  "monthly": "شهري",
+  "@monthly": {
+    "description": "شهري"
+  },
+  "studentRating": "تصنيف الطلاب",
+  "@studentRating": {
+    "description": "تصنيف الطلاب"
+  },
+  "top10Students": "أفضل 10 طلاب",
+  "@top10Students": {
+    "description": "أفضل 10 طلاب"
+  },
+  "myExamsButton": "اختباراتي",
+  "@myExamsButton": {
+    "description": "اختباراتي"
+  },
+  "viewAllCompletedExams": "عرض جميع الاختبارات المكتملة",
+  "@viewAllCompletedExams": {
+    "description": "عرض جميع الاختبارات المكتملة"
+  },
+  "welcome": "مرحباً، {name} 👋",
+  "@welcome": {
+    "description": "مرحباً",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "visitor": "زائر",
+  "@visitor": {
+    "description": "زائر"
+  },
+  "excellentStudent": "طالب متميز",
+  "@excellentStudent": {
+    "description": "طالب متميز"
+  },
+  "specialOffer": "عرض خاص",
+  "@specialOffer": {
+    "description": "عرض خاص"
+  },
+  "subscribeNowButton": "اشترك الآن",
+  "@subscribeNowButton": {
+    "description": "اشترك الآن"
+  },
+  "enrolledCourse": "كورس مشترك",
+  "@enrolledCourse": {
+    "description": "كورس مشترك"
+  },
+  "learningHours": "ساعة تعلم",
+  "@learningHours": {
+    "description": "ساعة تعلم"
+  },
+  "continueLearning": "تابع التعلم",
+  "@continueLearning": {
+    "description": "تابع التعلم"
+  },
+  "recommendedCourses": "دورات موصى بها",
+  "@recommendedCourses": {
+    "description": "دورات موصى بها"
+  },
+  "viewMore": "عرض المزيد",
+  "@viewMore": {
+    "description": "عرض المزيد"
+  },
+  "searchPlaceholder": "ابحث عن دورة، مدرب، أو موضوع...",
+  "@searchPlaceholder": {
+    "description": "ابحث عن دورة، مدرب، أو موضوع"
+  },
+  "noResultsFound": "لا توجد نتائج",
+  "@noResultsFound": {
+    "description": "لا توجد نتائج"
+  },
+  "selectSubject": "اختر المادة التي تريد تعلمها",
+  "@selectSubject": {
+    "description": "اختر المادة التي تريد تعلمها"
+  },
+  "noCategories": "لا توجد تصنيفات",
+  "@noCategories": {
+    "description": "لا توجد تصنيفات"
+  },
+  "categoriesComingSoon": "سيتم إضافة التصنيفات قريباً",
+  "@categoriesComingSoon": {
+    "description": "سيتم إضافة التصنيفات قريباً"
+  },
+  "course": "دورة",
+  "@course": {
+    "description": "دورة"
+  },
+  "courses": "دورات",
+  "@courses": {
+    "description": "دورات"
+  },
+  "passwordMismatch": "كلمة المرور غير متطابقة",
+  "@passwordMismatch": {
+    "description": "كلمة المرور غير متطابقة"
+  },
+  "passwordMinLength": "كلمة المرور يجب أن تكون 6 أحرف على الأقل",
+  "@passwordMinLength": {
+    "description": "كلمة المرور يجب أن تكون 6 أحرف على الأقل"
+  },
+  "confirmNewPassword": "تأكيد كلمة المرور الجديدة",
+  "@confirmNewPassword": {
+    "description": "تأكيد كلمة المرور الجديدة"
+  },
+  "invalidCouponCode": "كود الخصم غير صحيح",
+  "@invalidCouponCode": {
+    "description": "كود الخصم غير صحيح"
+  },
+  "completePurchase": "إتمام الشراء",
+  "@completePurchase": {
+    "description": "إتمام الشراء"
+  },
+  "enterCouponCode": "أدخل كود الخصم",
+  "@enterCouponCode": {
+    "description": "أدخل كود الخصم"
+  },
+  "apply": "تطبيق",
+  "@apply": {
+    "description": "تطبيق"
+  },
+  "paymentMethod": "طريقة الدفع",
+  "@paymentMethod": {
+    "description": "طريقة الدفع"
+  },
+  "fawry": "فوري",
+  "@fawry": {
+    "description": "فوري"
+  },
+  "payAtFawryBranch": "ادفع في أي فرع فوري",
+  "@payAtFawryBranch": {
+    "description": "ادفع في أي فرع فوري"
+  },
+  "eWallet": "محفظة إلكترونية",
+  "@eWallet": {
+    "description": "محفظة إلكترونية"
+  },
+  "walletDescription": "فودافون كاش - اتصالات كاش - أورانج كاش",
+  "@walletDescription": {
+    "description": "وصف المحفظة الإلكترونية"
+  },
+  "visaMastercard": "فيزا / ماستركارد",
+  "@visaMastercard": {
+    "description": "فيزا / ماستركارد"
+  },
+  "creditDebitCard": "بطاقة ائتمان أو خصم",
+  "@creditDebitCard": {
+    "description": "بطاقة ائتمان أو خصم"
+  },
+  "orderSummary": "ملخص الطلب",
+  "@orderSummary": {
+    "description": "ملخص الطلب"
+  },
+  "coursePrice": "سعر الدورة",
+  "@coursePrice": {
+    "description": "سعر الدورة"
+  },
+  "egyptianPoundAmount": "{amount} جنيه",
+  "@egyptianPoundAmount": {
+    "description": "جنيه مصري",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmPayment": "تأكيد الدفع",
+  "@confirmPayment": {
+    "description": "تأكيد الدفع"
+  },
+  "processing": "جاري المعالجة...",
+  "@processing": {
+    "description": "جاري المعالجة"
+  },
+  "noCourse": "لا توجد دورة",
+  "@noCourse": {
+    "description": "لا توجد دورة"
+  },
+  "dateNotSpecified": "تاريخ غير محدد",
+  "@dateNotSpecified": {
+    "description": "تاريخ غير محدد"
+  },
+  "certifiesThat": "يشهد بأن",
+  "@certifiesThat": {
+    "description": "يشهد بأن"
+  },
+  "hasCompletedWithGrade": "قد أتم هذه الدورة بتقدير",
+  "@hasCompletedWithGrade": {
+    "description": "قد أتم هذه الدورة بتقدير"
+  },
+  "excellent": "ممتاز",
+  "@excellent": {
+    "description": "ممتاز"
+  },
+  "math": "الرياضيات",
+  "@math": {
+    "description": "الرياضيات"
+  },
+  "literature": "الأدب",
+  "@literature": {
+    "description": "الأدب"
+  },
+  "biology": "الأحياء",
+  "@biology": {
+    "description": "الأحياء"
+  },
+  "physics": "الفيزياء",
+  "@physics": {
+    "description": "الفيزياء"
+  },
+  "chemistry": "الكيمياء",
+  "@chemistry": {
+    "description": "الكيمياء"
+  },
+  "practicalEngineering": "الهندسة العملية",
+  "@practicalEngineering": {
+    "description": "الهندسة العملية"
+  },
+  "creativePlaneShapes": "مناهج إبداعية للأشكال المستوية",
+  "@creativePlaneShapes": {
+    "description": "مناهج إبداعية للأشكال المستوية"
+  },
+  "cellularBiologyDiscoveries": "اكتشافات في علم الأحياء الخلوية",
+  "@cellularBiologyDiscoveries": {
+    "description": "اكتشافات في علم الأحياء الخلوية"
+  },
+  "introduction": "المقدمة",
+  "@introduction": {
+    "description": "المقدمة"
+  },
+  "whatIsDesign": "ما هو التصميم؟",
+  "@whatIsDesign": {
+    "description": "ما هو التصميم؟"
+  },
+  "howToCreateWireframe": "كيفية إنشاء الإطار السلكي",
+  "@howToCreateWireframe": {
+    "description": "كيفية إنشاء الإطار السلكي"
+  },
+  "yourFirstDesign": "تصميمك الأول",
+  "@yourFirstDesign": {
+    "description": "تصميمك الأول"
+  },
+  "progressPercent": "التقدم: {percent}%",
+  "@progressPercent": {
+    "description": "التقدم",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "helloJacob": "مرحباً، يعقوب 👋",
+  "@helloJacob": {
+    "description": "مرحباً، يعقوب"
+  },
+  "startLearningJourneyMessage": "ابدأ رحلة التعلم واشترك في دورتك الأولى",
+  "@startLearningJourneyMessage": {
+    "description": "ابدأ رحلة التعلم واشترك في دورتك الأولى"
+  },
+  
+  "learnEasily": "تعلم بسهولة",
+  "@learnEasily": {
+    "description": "تعلم بسهولة"
+  },
+  "continuousProgress": "تقدم مستمر",
+  "@continuousProgress": {
+    "description": "تقدم مستمر"
+  },
+  "discoverBestCourses": "اكتشف أفضل الدورات التعليمية مع مدرسين محترفين من جميع أنحاء العالم",
+  "@discoverBestCourses": {
+    "description": "اكتشف أفضل الدورات التعليمية"
+  },
+  "trackProgressAndGetCertificates": "تابع تقدمك واحصل على شهادات معتمدة عند إتمام الدورات",
+  "@trackProgressAndGetCertificates": {
+    "description": "تابع تقدمك واحصل على شهادات"
+  },
+  "smartLearningPlatform": "منصة التعليم الذكية",
+  "@smartLearningPlatform": {
+    "description": "منصة التعليم الذكية"
+  },
+  "certifiedAndSecure": "منصة معتمدة وآمنة",
+  "@certifiedAndSecure": {
+    "description": "منصة معتمدة وآمنة"
+  },
+  "everyDayNewOpportunity": "كل يوم فرصة جديدة للتعلم",
+  "@everyDayNewOpportunity": {
+    "description": "كل يوم فرصة جديدة للتعلم"
+  },
+  "version": "v1.0.0",
+  "@version": {
+    "description": "إصدار التطبيق"
+  },
+  "enrolledCoursesCount": "{count} دورات مسجلة",
+  "@enrolledCoursesCount": {
+    "description": "عدد الدورات المسجلة",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "averageProgress": "متوسط التقدم",
+  "@averageProgress": {
+    "description": "متوسط التقدم"
+  },
+  "completed": "مكتملة",
+  "@completed": {
+    "description": "مكتملة"
+  },
+  "lessonFrom": "الدرس {current} من {total}",
+  "@lessonFrom": {
+    "description": "الدرس من إجمالي",
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "hourShort": "س",
+  "@hourShort": {
+    "description": "ساعة مختصرة"
+  },
+  "now": "الآن",
+  "@now": {
+    "description": "الآن"
+  },
+  "timeAgo": "منذ فترة",
+  "@timeAgo": {
+    "description": "منذ فترة"
+  },
+  "daysAgo": "منذ {count} {count, plural, =1 {يوم} other {أيام}}",
+  "@daysAgo": {
+    "description": "منذ أيام",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "منذ {count} {count, plural, =1 {ساعة} other {ساعات}}",
+  "@hoursAgo": {
+    "description": "منذ ساعات",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "minutesAgo": "منذ {count} {count, plural, =1 {دقيقة} other {دقائق}}",
+  "@minutesAgo": {
+    "description": "منذ دقائق",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noEnrolledCourses": "لم تشترك في أي دورة بعد",
+  "@noEnrolledCourses": {
+    "description": "لا توجد دورات مسجلة"
+  },
+  "startLearningJourney": "ابدأ رحلة التعلم واشترك في دورتك الأولى",
+  "@startLearningJourney": {
+    "description": "ابدأ رحلة التعلم"
+  },
+  "exploreCourses": "استكشف الدورات",
+  "@exploreCourses": {
+    "description": "استكشف الدورات"
+  },
+  "noTitle": "بدون عنوان",
+  "@noTitle": {
+    "description": "بدون عنوان"
+  },
+  "egyptianPoundShort": "ج.م",
+  "@egyptianPoundShort": {
+    "description": "جنيه مصري مختصر"
+  },
+  "errorLoadingNotifications": "فشل تحميل الإشعارات: {error}",
+  "@errorLoadingNotifications": {
+    "description": "خطأ تحميل الإشعارات",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorUpdatingNotification": "فشل تحديث الإشعار: {error}",
+  "@errorUpdatingNotification": {
+    "description": "خطأ تحديث الإشعار",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorUpdatingNotifications": "فشل تحديث الإشعارات: {error}",
+  "@errorUpdatingNotifications": {
+    "description": "خطأ تحديث الإشعارات",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "newNotifications": "إشعارات جديدة",
+  "@newNotifications": {
+    "description": "إشعارات جديدة"
+  },
+  "newNotificationsCount": "{count} إشعارات جديدة",
+  "@newNotificationsCount": {
+    "description": "عدد الإشعارات الجديدة",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "markAllAsRead": "تحديد الكل كمقروء",
+  "@markAllAsRead": {
+    "description": "تحديد الكل كمقروء"
+  },
+  "newSection": "جديد",
+  "@newSection": {
+    "description": "جديد"
+  },
+  "past": "سابقة",
+  "@past": {
+    "description": "سابقة"
+  },
+  "noNotifications": "لا توجد إشعارات",
+  "@noNotifications": {
+    "description": "لا توجد إشعارات"
+  },
+  "newNotificationsWillAppear": "ستظهر الإشعارات الجديدة هنا",
+  "@newNotificationsWillAppear": {
+    "description": "ستظهر الإشعارات الجديدة هنا"
+  },
+  "recently": "منذ قليل",
+  "@recently": {
+    "description": "منذ قليل"
+  },
+  "minutesAgoShort": "منذ {count} دقيقة",
+  "@minutesAgoShort": {
+    "description": "منذ دقائق",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgoShort": "منذ {count} ساعة",
+  "@hoursAgoShort": {
+    "description": "منذ ساعات",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgoShort": "منذ {count} يوم",
+  "@daysAgoShort": {
+    "description": "منذ أيام",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "totalExams": "إجمالي الاختبارات",
+  "@totalExams": {
+    "description": "إجمالي الاختبارات"
+  },
+  "passed": "ناجح",
+  "@passed": {
+    "description": "ناجح"
+  },
+  "failed": "راسب",
+  "@failed": {
+    "description": "راسب"
+  },
+  "undefinedDate": "تاريخ غير محدد",
+  "@undefinedDate": {
+    "description": "تاريخ غير محدد"
+  },
+  "monthJanuary": "يناير",
+  "@monthJanuary": {
+    "description": "يناير"
+  },
+  "monthFebruary": "فبراير",
+  "@monthFebruary": {
+    "description": "فبراير"
+  },
+  "monthMarch": "مارس",
+  "@monthMarch": {
+    "description": "مارس"
+  },
+  "monthApril": "أبريل",
+  "@monthApril": {
+    "description": "أبريل"
+  },
+  "monthMay": "مايو",
+  "@monthMay": {
+    "description": "مايو"
+  },
+  "monthJune": "يونيو",
+  "@monthJune": {
+    "description": "يونيو"
+  },
+  "monthJuly": "يوليو",
+  "@monthJuly": {
+    "description": "يوليو"
+  },
+  "monthAugust": "أغسطس",
+  "@monthAugust": {
+    "description": "أغسطس"
+  },
+  "monthSeptember": "سبتمبر",
+  "@monthSeptember": {
+    "description": "سبتمبر"
+  },
+  "monthOctober": "أكتوبر",
+  "@monthOctober": {
+    "description": "أكتوبر"
+  },
+  "monthNovember": "نوفمبر",
+  "@monthNovember": {
+    "description": "نوفمبر"
+  },
+  "monthDecember": "ديسمبر",
+  "@monthDecember": {
+    "description": "ديسمبر"
+  },
+  "downloadedFiles": "{count, plural, =1 {ملف محمل} other {ملفات محملة}}",
+  "@downloadedFiles": {
+    "description": "ملفات محملة",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "storage": "مساحة التخزين",
+  "@storage": {
+    "description": "مساحة التخزين"
+  },
+  "storageUsed": "{used} GB من {limit} GB مستخدم",
+  "@storageUsed": {
+    "description": "مساحة التخزين المستخدمة",
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "file": "ملف",
+  "@file": {
+    "description": "ملف"
+  },
+  "undefinedSize": "حجم غير محدد",
+  "@undefinedSize": {
+    "description": "حجم غير محدد"
+  },
+  "watchOffline": "مشاهدة بدون إنترنت",
+  "@watchOffline": {
+    "description": "مشاهدة بدون إنترنت"
+  },
+  "fileIdNotAvailable": "معرف الملف غير متاح",
+  "@fileIdNotAvailable": {
+    "description": "معرف الملف غير متاح"
+  },
+  "gettingDownloadLink": "جاري الحصول على رابط التحميل...",
+  "@gettingDownloadLink": {
+    "description": "جاري الحصول على رابط التحميل"
+  },
+  "downloadLinkNotAvailable": "رابط التحميل غير متاح",
+  "@downloadLinkNotAvailable": {
+    "description": "رابط التحميل غير متاح"
+  },
+  "downloadLinkObtained": "تم الحصول على رابط التحميل. سيتم التحميل قريباً...",
+  "@downloadLinkObtained": {
+    "description": "تم الحصول على رابط التحميل"
+  },
+  "courseWillOpenOffline": "سيتم فتح الدورة في وضع عدم الاتصال",
+  "@courseWillOpenOffline": {
+    "description": "سيتم فتح الدورة في وضع عدم الاتصال"
+  },
+  "courseIdNotAvailable": "معرف الدورة غير متاح",
+  "@courseIdNotAvailable": {
+    "description": "معرف الدورة غير متاح"
+  },
+  "downloadCoursesToWatchOffline": "حمّل الدورات لمشاهدتها بدون إنترنت",
+  "@downloadCoursesToWatchOffline": {
+    "description": "حمّل الدورات لمشاهدتها بدون إنترنت"
+  },
+  "liveSessionsCount": "{count} جلسات {status}",
+  "@liveSessionsCount": {
+    "description": "عدد الجلسات",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "live": "مباشرة",
+  "@live": {
+    "description": "مباشرة"
+  },
+  "upcoming": "قادمة",
+  "@upcoming": {
+    "description": "قادمة"
+  },
+  "liveSession": "جلسة لايف",
+  "@liveSession": {
+    "description": "جلسة لايف"
+  },
+  "liveNow": "مباشر الآن",
+  "@liveNow": {
+    "description": "مباشر الآن"
+  },
+  "remindMe": "تذكيري",
+  "@remindMe": {
+    "description": "تذكيري"
+  },
+  "joinNow": "انضم الآن",
+  "@joinNow": {
+    "description": "انضم الآن"
+  },
+  "registeredForSession": "تم التسجيل في الجلسة بنجاح",
+  "@registeredForSession": {
+    "description": "تم التسجيل في الجلسة بنجاح"
+  },
+  "mustLoginFirst": "يجب تسجيل الدخول أولاً",
+  "@mustLoginFirst": {
+    "description": "يجب تسجيل الدخول أولاً"
+  },
+  "day": "يوم",
+  "@day": {
+    "description": "يوم"
+  },
+  "second": "ثانية",
+  "@second": {
+    "description": "ثانية"
+  },
+  "oneHour": "1 ساعة",
+  "@oneHour": {
+    "description": "1 ساعة"
+  },
+  "achievedCertificates": "{count} شهادات محققة",
+  "@achievedCertificates": {
+    "description": "شهادات محققة",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "certificateOfCompletion": "شهادة إتمام",
+  "@certificateOfCompletion": {
+    "description": "شهادة إتمام"
+  },
+  "student": "الطالب",
+  "@student": {
+    "description": "الطالب"
+  },
+  "excellent": "ممتاز",
+  "@excellent": {
+    "description": "ممتاز"
+  },
+  "downloadFailed": "فشل التحميل: {code}",
+  "@downloadFailed": {
+    "description": "فشل التحميل",
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
+  "certificateNumberLabel": "رقم الشهادة",
+  "@certificateNumberLabel": {
+    "description": "رقم الشهادة"
+  },
+  "verificationLinkLabel": "رابط التحقق",
+  "@verificationLinkLabel": {
+    "description": "رابط التحقق"
+  }
+}
+

@@ -7,6 +7,7 @@ import '../../core/navigation/route_names.dart';
 import '../../widgets/bottom_nav.dart';
 import '../../widgets/course_card_courses.dart';
 import '../../widgets/subject_chip.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Courses Screen - Pixel-perfect match to React version
 /// Matches: components/screens/courses-screen.tsx
@@ -18,22 +19,26 @@ class CoursesScreen extends StatefulWidget {
 }
 
 class _CoursesScreenState extends State<CoursesScreen> {
-  String _activeSubject = 'الرياضيات';
+  String? _activeSubject;
 
-  final _subjects = [
-    {'icon': '📚', 'label': 'الأدب'},
-    {'icon': '📐', 'label': 'الرياضيات'},
-    {'icon': '🧬', 'label': 'الأحياء'},
-    {'icon': '⚛️', 'label': 'الفيزياء'},
-    {'icon': '🧪', 'label': 'الكيمياء'},
-  ];
+  List<Map<String, String>> get _subjects {
+    final l10n = AppLocalizations.of(context)!;
+    return [
+      {'icon': '📚', 'label': l10n.literature, 'key': 'literature'},
+      {'icon': '📐', 'label': l10n.math, 'key': 'math'},
+      {'icon': '🧬', 'label': l10n.biology, 'key': 'biology'},
+      {'icon': '⚛️', 'label': l10n.physics, 'key': 'physics'},
+      {'icon': '🧪', 'label': l10n.chemistry, 'key': 'chemistry'},
+    ];
+  }
 
   void _handleCourseClick(Map<String, dynamic> courseData) {
+    final l10n = AppLocalizations.of(context)!;
     final course = {
       'id': 1,
       'title': courseData['title'],
       'category': courseData['category'],
-      'instructor': 'محمد أحمد',
+      'instructor': l10n.instructor,
       'rating': 4.8,
       'hours': 48,
       'price': 0.0, // Default to free
@@ -43,32 +48,32 @@ class _CoursesScreenState extends State<CoursesScreen> {
       'lessons': [
         {
           'id': 1,
-          'title': 'المقدمة',
-          'duration': '2 دقيقة 18 ثانية',
+          'title': l10n.introduction,
+          'duration': '2 ${l10n.minute} 18 ${l10n.minute}',
           'completed': true,
           'locked': false,
           'youtubeVideoId': 'AevtORdu4pc',
         },
         {
           'id': 2,
-          'title': 'ما هو التصميم؟',
-          'duration': '18 دقيقة 46 ثانية',
+          'title': l10n.whatIsDesign,
+          'duration': '18 ${l10n.minute} 46 ${l10n.minute}',
           'completed': false,
           'locked': false,
           'youtubeVideoId': 'AevtORdu4pc',
         },
         {
           'id': 3,
-          'title': 'كيفية إنشاء الإطار السلكي',
-          'duration': '20 دقيقة 58 ثانية',
+          'title': l10n.howToCreateWireframe,
+          'duration': '20 ${l10n.minute} 58 ${l10n.minute}',
           'completed': false,
           'locked': false,
           'youtubeVideoId': 'AevtORdu4pc',
         },
         {
           'id': 4,
-          'title': 'تصميمك الأول',
-          'duration': '15 دقيقة 30 ثانية',
+          'title': l10n.yourFirstDesign,
+          'duration': '15 ${l10n.minute} 30 ${l10n.minute}',
           'completed': false,
           'locked': false,
           'youtubeVideoId': 'AevtORdu4pc',
@@ -76,18 +81,18 @@ class _CoursesScreenState extends State<CoursesScreen> {
       ],
       'exam': {
         'id': 1,
-        'title': 'امتحان الكورس',
+        'title': l10n.exam,
         'questions': [
           {
             'id': 1,
-            'question': 'ما هو موضوع هذا الكورس؟',
-            'options': ['الخيار الأول', 'الخيار الثاني', 'الخيار الثالث', 'الخيار الرابع'],
+            'question': l10n.question,
+            'options': ['${l10n.next} 1', '${l10n.next} 2', '${l10n.next} 3', '${l10n.next} 4'],
             'correctAnswer': 0,
           },
           {
             'id': 2,
-            'question': 'ما هي المهارات التي ستتعلمها؟',
-            'options': ['مهارة 1', 'مهارة 2', 'مهارة 3', 'مهارة 4'],
+            'question': l10n.question,
+            'options': ['${l10n.next} 1', '${l10n.next} 2', '${l10n.next} 3', '${l10n.next} 4'],
             'correctAnswer': 1,
           },
         ],
@@ -201,7 +206,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                   children: [
                                     // Title - matches React: text-3xl font-bold mb-4
                                     Text(
-                                      'دوراتي',
+                                      AppLocalizations.of(context)!.myCourses,
                                       style: AppTextStyles.h1(color: Colors.white),
                                     ),
                                     const SizedBox(height: 16), // mb-4
@@ -226,7 +231,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                               ),
                                               const SizedBox(width: 8), // gap-2
                                               Text(
-                                                '12 مادة',
+                                                AppLocalizations.of(context)!.subjects,
                                                 style: AppTextStyles.bodySmall(
                                                   color: Colors.white,
                                                 ),
@@ -253,7 +258,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                               ),
                                               const SizedBox(width: 8), // gap-2
                                               Text(
-                                                '43 درس',
+                                                AppLocalizations.of(context)!.lessonsCount(43),
                                                 style: AppTextStyles.bodySmall(
                                                   color: Colors.white,
                                                 ),
@@ -301,7 +306,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                   itemCount: _subjects.length,
                                   itemBuilder: (context, index) {
                                     final subject = _subjects[index];
-                                    final isActive = _activeSubject == subject['label'];
+                                    final isActive = _activeSubject == subject['key'];
                                     return Padding(
                                       padding: EdgeInsets.only(
                                         left: index == 0 ? 0 : 12, // gap-3
@@ -312,7 +317,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                         isActive: isActive,
                                         onTap: () {
                                           setState(() {
-                                            _activeSubject = subject['label']!;
+                                            _activeSubject = subject['key'];
                                           });
                                         },
                                       ),
@@ -328,26 +333,26 @@ class _CoursesScreenState extends State<CoursesScreen> {
                               child: Column(
                                 children: [
                                   CourseCardCourses(
-                                    category: 'الهندسة العملية',
-                                    title: 'مناهج إبداعية للأشكال المستوية',
+                                    category: AppLocalizations.of(context)!.practicalEngineering,
+                                    title: AppLocalizations.of(context)!.creativePlaneShapes,
                                     participants: 43,
                                     variant: 'dark',
                                     icon: '📐',
                                     onTap: () => _handleCourseClick({
-                                      'category': 'الهندسة العملية',
-                                      'title': 'مناهج إبداعية للأشكال المستوية',
+                                      'category': AppLocalizations.of(context)!.practicalEngineering,
+                                      'title': AppLocalizations.of(context)!.creativePlaneShapes,
                                     }),
                                   ),
                                   const SizedBox(height: 16), // space-y-4
                                   CourseCardCourses(
-                                    category: 'العالم المجهري حولنا',
-                                    title: 'اكتشافات في علم الأحياء الخلوية',
+                                    category: AppLocalizations.of(context)!.category,
+                                    title: AppLocalizations.of(context)!.cellularBiologyDiscoveries,
                                     participants: 12,
                                     variant: 'light',
                                     icon: '🔬',
                                     onTap: () => _handleCourseClick({
-                                      'category': 'العالم المجهري حولنا',
-                                      'title': 'اكتشافات في علم الأحياء الخلوية',
+                                      'category': AppLocalizations.of(context)!.category,
+                                      'title': AppLocalizations.of(context)!.cellularBiologyDiscoveries,
                                     }),
                                   ),
                                 ],

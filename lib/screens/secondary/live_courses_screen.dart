@@ -1,48 +1,88 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import '../../core/design/app_colors.dart';
 import '../../core/design/app_text_styles.dart';
 import '../../core/design/app_radius.dart';
+import '../../core/localization/localization_helper.dart';
+import '../../services/live_courses_service.dart';
 
 /// Live Courses Screen - Pixel-perfect match to React version
 /// Matches: components/screens/live-courses-screen.tsx
-class LiveCoursesScreen extends StatelessWidget {
+class LiveCoursesScreen extends StatefulWidget {
   const LiveCoursesScreen({super.key});
 
-  // Static data matching React exactly
-  static const _liveCourses = [
-    {
-      'id': 1,
-      'title': 'ورشة عمل: تصميم التطبيقات',
-      'instructor': 'أحمد محمد',
-      'date': '2025-12-20T14:00:00',
-      'duration': '2 ساعة',
-      'participants': 156,
-      'status': 'upcoming',
-      'image': 'assets/images/motion-graphics-course-in-mumbai.png',
-    },
-    {
-      'id': 2,
-      'title': 'مراجعة: أساسيات البرمجة',
-      'instructor': 'سارة أحمد',
-      'date': '2025-12-19T18:30:00',
-      'duration': '1.5 ساعة',
-      'participants': 89,
-      'status': 'live',
-      'image': 'assets/images/motion-pro-thumbnail.jpg',
-    },
-    {
-      'id': 3,
-      'title': 'جلسة أسئلة وأجوبة: الذكاء الاصطناعي',
-      'instructor': 'محمد علي',
-      'date': '2025-12-21T10:00:00',
-      'duration': '1 ساعة',
-      'participants': 234,
-      'status': 'upcoming',
-      'image': 'assets/images/Full_HD_Cover_2d_to_3d.png',
-    },
-  ];
+  @override
+  State<LiveCoursesScreen> createState() => _LiveCoursesScreenState();
+}
+
+class _LiveCoursesScreenState extends State<LiveCoursesScreen> {
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _upcoming = [];
+  List<Map<String, dynamic>> _liveNow = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLiveCourses();
+  }
+
+  Future<void> _loadLiveCourses() async {
+    setState(() => _isLoading = true);
+    try {
+      final response = await LiveCoursesService.instance.getLiveCourses();
+
+      if (kDebugMode) {
+        print('✅ Live courses loaded:');
+        print('  upcoming: ${response['upcoming']?.length ?? 0}');
+        print('  live_now: ${response['live_now']?.length ?? 0}');
+        print('  past: ${response['past']?.length ?? 0}');
+      }
+
+      setState(() {
+        if (response['upcoming'] is List) {
+          _upcoming = List<Map<String, dynamic>>.from(
+            response['upcoming'] as List,
+          );
+        }
+        if (response['live_now'] is List) {
+          _liveNow = List<Map<String, dynamic>>.from(
+            response['live_now'] as List,
+          );
+        }
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error loading live courses: $e');
+      }
+      setState(() {
+        _upcoming = [];
+        _liveNow = [];
+        _isLoading = false;
+      });
+    }
+  }
+
+  List<Map<String, dynamic>> get _allCourses {
+    final all = <Map<String, dynamic>>[];
+    // Add live_now first (highest priority)
+    for (var course in _liveNow) {
+      all.add({...course, 'status': 'live'});
+    }
+    // Add upcoming
+    for (var course in _upcoming) {
+      all.add({...course, 'status': 'upcoming'});
+    }
+    // Add past (optional, if you want to show them)
+    // for (var course in _past) {
+    //   all.add({...course, 'status': 'past'});
+    // }
+    return all;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,8 +94,8 @@ class LiveCoursesScreen extends StatelessWidget {
           children: [
             // Header - Orange gradient like exams page
             Container(
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [Color(0xFFF97316), Color(0xFFEA580C)],
@@ -82,7 +122,7 @@ class LiveCoursesScreen extends StatelessWidget {
                         child: Container(
                           width: 40, // w-10
                           height: 40, // h-10
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             color: AppColors.whiteOverlay20, // bg-white/20
                             shape: BoxShape.circle,
                           ),
@@ -95,7 +135,7 @@ class LiveCoursesScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 16), // gap-4
                       Text(
-                        'الكورسات اللايف',
+                        context.l10n.liveCourses,
                         style: AppTextStyles.h3(color: Colors.white),
                       ),
                     ],
@@ -111,7 +151,12 @@ class LiveCoursesScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 8), // gap-2
                       Text(
-                        '${_liveCourses.length} جلسات قادمة',
+                        context.l10n.liveSessionsCount(
+                          _upcoming.length + _liveNow.length,
+                          _liveNow.isNotEmpty
+                              ? context.l10n.live
+                              : context.l10n.upcoming,
+                        ),
                         style: AppTextStyles.bodyMedium(
                           color: Colors.white.withOpacity(0.7), // white/70
                         ),
@@ -126,28 +171,42 @@ class LiveCoursesScreen extends StatelessWidget {
             Expanded(
               child: Transform.translate(
                 offset: const Offset(0, -16), // -mt-4
-                child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16), // px-4
-                  itemCount: _liveCourses.length,
-                  itemBuilder: (context, index) {
-                    final course = _liveCourses[index];
-                    return TweenAnimationBuilder<double>(
-                      tween: Tween(begin: 0.0, end: 1.0),
-                      duration: Duration(milliseconds: 500 + (index * 100)),
-                      curve: Curves.easeOut,
-                      builder: (context, value, child) {
-                        return Transform.translate(
-                          offset: Offset(0, 20 * (1 - value)),
-                          child: Opacity(
-                            opacity: value,
-                            child: child,
+                child: _isLoading
+                    ? _buildLoadingState()
+                    : _allCourses.isEmpty
+                        ? _buildEmptyState()
+                        : RefreshIndicator(
+                            onRefresh: _loadLiveCourses,
+                            child: ListView.builder(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16), // px-4
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              itemCount: _allCourses.length,
+                              itemBuilder: (context, index) {
+                                final course = _allCourses[index];
+                                return TweenAnimationBuilder<double>(
+                                  tween: Tween(begin: 0.0, end: 1.0),
+                                  duration: Duration(
+                                      milliseconds: 500 + (index * 100)),
+                                  curve: Curves.easeOut,
+                                  builder: (context, value, child) {
+                                    return Transform.translate(
+                                      offset: Offset(0, 20 * (1 - value)),
+                                      child: Opacity(
+                                        opacity: value,
+                                        child: child,
+                                      ),
+                                    );
+                                  },
+                                  child: _LiveCourseCard(
+                                    course: course,
+                                    onRegister: () => _handleRegister(course),
+                                    onJoin: () => _handleJoin(course),
+                                  ),
+                                );
+                              },
+                            ),
                           ),
-                        );
-                      },
-                      child: _LiveCourseCard(course: course),
-                    );
-                  },
-                ),
               ),
             ),
           ],
@@ -155,17 +214,193 @@ class LiveCoursesScreen extends StatelessWidget {
       ),
     );
   }
+
+  Future<void> _handleRegister(Map<String, dynamic> course) async {
+    final sessionId = course['id']?.toString();
+    if (sessionId == null || sessionId.isEmpty) return;
+
+    try {
+      final result =
+          await LiveCoursesService.instance.registerForLiveCourse(sessionId);
+      if (kDebugMode) {
+        print('✅ Registered for live course: $result');
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              context.l10n.registeredForSession,
+              style: GoogleFonts.cairo(),
+            ),
+            backgroundColor: const Color(0xFF10B981),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
+
+      // Refresh the list
+      _loadLiveCourses();
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error registering for live course: $e');
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              e.toString().contains('401') ||
+                      e.toString().contains('Unauthorized')
+                  ? context.l10n.mustLoginFirst
+                  : context.l10n.errorRegistering,
+              style: GoogleFonts.cairo(),
+            ),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  void _handleJoin(Map<String, dynamic> course) {
+    final joinUrl =
+        course['join_url']?.toString() ?? course['meeting_url']?.toString();
+    if (joinUrl != null && joinUrl.isNotEmpty) {
+      // TODO: Open URL in browser or app
+      if (kDebugMode) {
+        print('🔗 Join URL: $joinUrl');
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.l10n.willOpenSessionLink,
+            style: GoogleFonts.cairo(),
+          ),
+          backgroundColor: AppColors.purple,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.l10n.sessionLinkUnavailable,
+            style: GoogleFonts.cairo(),
+          ),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+    }
+  }
+
+  Widget _buildLoadingState() {
+    return Skeletonizer(
+      enabled: true,
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: 3,
+        itemBuilder: (context, index) {
+          return Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            height: 300,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              color: AppColors.orange.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.videocam_off_rounded,
+              size: 60,
+              color: AppColors.orange,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            context.l10n.noLiveSessions,
+            style: AppTextStyles.h2(
+              color: AppColors.foreground,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            context.l10n.sessionsComingSoon,
+            style: AppTextStyles.bodyMedium(
+              color: AppColors.mutedForeground,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _LiveCourseCard extends StatelessWidget {
   final Map<String, dynamic> course;
+  final VoidCallback? onRegister;
+  final VoidCallback? onJoin;
 
-  const _LiveCourseCard({required this.course});
+  const _LiveCourseCard({
+    required this.course,
+    this.onRegister,
+    this.onJoin,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final isLive = course['status'] == 'live';
-    final isUpcoming = course['status'] == 'upcoming';
+    final isLive = course['status'] == 'live' ||
+        course['status'] == 'live_now' ||
+        course['is_live'] == true;
+    final isUpcoming =
+        course['status'] == 'upcoming' || course['status'] == 'scheduled';
+    final courseTitle = course['title']?.toString() ?? context.l10n.liveSession;
+    final instructor = course['instructor'] is Map
+        ? (course['instructor'] as Map)['name']?.toString() ?? ''
+        : course['instructor']?.toString() ?? context.l10n.instructor;
+    final startDate = course['start_date']?.toString() ??
+        course['date']?.toString() ??
+        course['scheduled_at']?.toString();
+    final duration = course['duration']?.toString() ??
+        course['duration_minutes']?.toString() ??
+        context.l10n.oneHour;
+    final participants = course['participants'] as int? ??
+        course['participants_count'] as int? ??
+        0;
+    final thumbnail = course['thumbnail']?.toString() ??
+        course['image']?.toString() ??
+        course['banner']?.toString();
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16), // space-y-4
@@ -197,18 +432,28 @@ class _LiveCourseCard extends StatelessWidget {
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(24),
                   ),
-                  child: Image.asset(
-                    course['image'] as String,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      color: AppColors.purple.withOpacity(0.1),
-                      child: const Icon(
-                        Icons.video_library,
-                        size: 48,
-                        color: AppColors.purple,
-                      ),
-                    ),
-                  ),
+                  child: thumbnail != null && thumbnail.isNotEmpty
+                      ? Image.network(
+                          thumbnail,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
+                            color: AppColors.purple.withOpacity(0.1),
+                            child: const Icon(
+                              Icons.video_library,
+                              size: 48,
+                              color: AppColors.purple,
+                            ),
+                          ),
+                        )
+                      : Container(
+                          color: AppColors.purple.withOpacity(0.1),
+                          child: const Icon(
+                            Icons.video_library,
+                            size: 48,
+                            color: AppColors.purple,
+                          ),
+                        ),
                 ),
               ),
               // Status badge - matches React
@@ -238,7 +483,7 @@ class _LiveCourseCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 4), // gap-1
                         Text(
-                          'مباشر الآن',
+                          context.l10n.liveNow,
                           style: AppTextStyles.bodySmall(
                             color: Colors.white,
                           ).copyWith(fontWeight: FontWeight.w500),
@@ -261,7 +506,7 @@ class _LiveCourseCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(999), // rounded-full
                     ),
                     child: Text(
-                      'قريباً',
+                      context.l10n.comingSoon,
                       style: AppTextStyles.bodySmall(
                         color: Colors.white,
                       ).copyWith(fontWeight: FontWeight.w500),
@@ -278,14 +523,14 @@ class _LiveCourseCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  course['title'] as String,
+                  courseTitle,
                   style: AppTextStyles.bodyMedium(
                     color: AppColors.foreground,
                   ).copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8), // mb-2
                 Text(
-                  course['instructor'] as String,
+                  instructor,
                   style: AppTextStyles.bodySmall(
                     color: AppColors.purple,
                   ),
@@ -306,7 +551,9 @@ class _LiveCourseCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 4), // gap-1
                           Text(
-                            _formatDate(course['date'] as String),
+                            startDate != null
+                                ? _formatDate(context, startDate)
+                                : context.l10n.undefinedDate,
                             style: AppTextStyles.labelSmall(
                               color: AppColors.mutedForeground,
                             ),
@@ -323,7 +570,7 @@ class _LiveCourseCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 4), // gap-1
                           Text(
-                            course['duration'] as String,
+                            duration,
                             style: AppTextStyles.labelSmall(
                               color: AppColors.mutedForeground,
                             ),
@@ -340,7 +587,7 @@ class _LiveCourseCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 4), // gap-1
                           Text(
-                            '${course['participants']}',
+                            '$participants',
                             style: AppTextStyles.labelSmall(
                               color: AppColors.mutedForeground,
                             ),
@@ -358,57 +605,65 @@ class _LiveCourseCard extends StatelessWidget {
                     child: Column(
                       children: [
                         Text(
-                          'يبدأ خلال',
+                          context.l10n.startsIn,
                           style: AppTextStyles.labelSmall(
                             color: AppColors.mutedForeground,
                           ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 8), // mb-2
-                        _CountdownTimer(targetDate: course['date'] as String),
+                        startDate != null
+                            ? _CountdownTimer(targetDate: startDate)
+                            : const SizedBox.shrink(),
                       ],
                     ),
                   ),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 12), // py-3
-                    decoration: BoxDecoration(
-                      color: AppColors.purple,
-                      borderRadius: BorderRadius.circular(16), // rounded-2xl
-                    ),
-                    child: Center(
-                      child: Text(
-                        'تذكيري',
-                        style: AppTextStyles.bodyMedium(
-                          color: Colors.white,
-                        ).copyWith(fontWeight: FontWeight.bold),
+                  GestureDetector(
+                    onTap: onRegister,
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 12), // py-3
+                      decoration: BoxDecoration(
+                        color: AppColors.purple,
+                        borderRadius: BorderRadius.circular(16), // rounded-2xl
                       ),
-                    ),
-                  ),
-                ] else ...[
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 12), // py-3
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(16), // rounded-2xl
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.play_arrow,
-                          size: 20, // w-5 h-5
-                          color: Colors.white,
-                        ),
-                        const SizedBox(width: 8), // gap-2
-                        Text(
-                          'انضم الآن',
+                      child: Center(
+                        child: Text(
+                          context.l10n.remindMe,
                           style: AppTextStyles.bodyMedium(
                             color: Colors.white,
                           ).copyWith(fontWeight: FontWeight.bold),
                         ),
-                      ],
+                      ),
+                    ),
+                  ),
+                ] else ...[
+                  GestureDetector(
+                    onTap: onJoin,
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 12), // py-3
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(16), // rounded-2xl
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.play_arrow,
+                            size: 20, // w-5 h-5
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 8), // gap-2
+                          Text(
+                            context.l10n.joinNow,
+                            style: AppTextStyles.bodyMedium(
+                              color: Colors.white,
+                            ).copyWith(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -420,31 +675,31 @@ class _LiveCourseCard extends StatelessWidget {
     );
   }
 
-  String _formatDate(String dateStr) {
+  String _formatDate(BuildContext context, String dateStr) {
     try {
       final date = DateTime.parse(dateStr);
       final weekdays = [
-        'الأحد',
-        'الإثنين',
-        'الثلاثاء',
-        'الأربعاء',
-        'الخميس',
-        'الجمعة',
-        'السبت'
+        context.l10n.sunday,
+        context.l10n.monday,
+        context.l10n.tuesday,
+        context.l10n.wednesday,
+        context.l10n.thursday,
+        context.l10n.friday,
+        context.l10n.saturday,
       ];
       final months = [
-        'يناير',
-        'فبراير',
-        'مارس',
-        'أبريل',
-        'مايو',
-        'يونيو',
-        'يوليو',
-        'أغسطس',
-        'سبتمبر',
-        'أكتوبر',
-        'نوفمبر',
-        'ديسمبر'
+        context.l10n.monthJanuary,
+        context.l10n.monthFebruary,
+        context.l10n.monthMarch,
+        context.l10n.monthApril,
+        context.l10n.monthMay,
+        context.l10n.monthJune,
+        context.l10n.monthJuly,
+        context.l10n.monthAugust,
+        context.l10n.monthSeptember,
+        context.l10n.monthOctober,
+        context.l10n.monthNovember,
+        context.l10n.monthDecember,
       ];
       return '${weekdays[date.weekday % 7]}، ${date.day} ${months[date.month - 1]}';
     } catch (e) {
@@ -506,18 +761,18 @@ class _CountdownTimerState extends State<_CountdownTimer> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _buildTimeUnit(days, 'يوم'),
+        _buildTimeUnit(context, days, context.l10n.day),
         const SizedBox(width: 8), // gap-2
-        _buildTimeUnit(hours, 'ساعة'),
+        _buildTimeUnit(context, hours, context.l10n.hour),
         const SizedBox(width: 8), // gap-2
-        _buildTimeUnit(minutes, 'دقيقة'),
+        _buildTimeUnit(context, minutes, context.l10n.minute),
         const SizedBox(width: 8), // gap-2
-        _buildTimeUnit(seconds, 'ثانية'),
+        _buildTimeUnit(context, seconds, context.l10n.second),
       ],
     );
   }
 
-  Widget _buildTimeUnit(int value, String label) {
+  Widget _buildTimeUnit(BuildContext context, int value, String label) {
     return Container(
       width: 50, // min-w-[50px]
       padding: const EdgeInsets.all(8), // p-2

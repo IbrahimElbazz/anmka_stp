@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import '../../core/design/app_colors.dart';
 import '../../core/design/app_text_styles.dart';
 import '../../core/design/app_radius.dart';
 import '../../core/navigation/route_names.dart';
 import '../../widgets/bottom_nav.dart';
+import '../../services/courses_service.dart';
 
 /// Categories Screen - Pixel-perfect match to React version
 /// Matches: components/screens/categories-screen.tsx
@@ -17,81 +20,9 @@ class CategoriesScreen extends StatefulWidget {
 
 class _CategoriesScreenState extends State<CategoriesScreen>
     with SingleTickerProviderStateMixin {
-  int? _selectedCategory;
   late AnimationController _animationController;
-
-  final _categories = [
-    {
-      'id': 1,
-      'icon': Icons.menu_book,
-      'label': 'الأدب العربي',
-      'courses': 24,
-      'color': AppColors.purple,
-    },
-    {
-      'id': 2,
-      'icon': Icons.calculate,
-      'label': 'الرياضيات',
-      'courses': 32,
-      'color': AppColors.orange,
-    },
-    {
-      'id': 3,
-      'icon': Icons.science,
-      'label': 'الكيمياء',
-      'courses': 18,
-      'color': AppColors.purple,
-    },
-    {
-      'id': 4,
-      'icon': Icons.language,
-      'label': 'اللغة الإنجليزية',
-      'courses': 45,
-      'color': AppColors.orange,
-    },
-    {
-      'id': 5,
-      'icon': Icons.bolt,
-      'label': 'الفيزياء',
-      'courses': 21,
-      'color': AppColors.purple,
-    },
-    {
-      'id': 6,
-      'icon': Icons.code,
-      'label': 'البرمجة',
-      'courses': 38,
-      'color': AppColors.orange,
-    },
-    {
-      'id': 7,
-      'icon': Icons.palette,
-      'label': 'التصميم',
-      'courses': 27,
-      'color': AppColors.purple,
-    },
-    {
-      'id': 8,
-      'icon': Icons.music_note,
-      'label': 'الموسيقى',
-      'courses': 15,
-      'color': AppColors.orange,
-    },
-    {
-      'id': 9,
-      'icon': Icons.business,
-      'label': 'إدارة الأعمال',
-      'courses': 30,
-      'color': AppColors.purple,
-    },
-    {
-      'id': 10,
-      'icon': Icons.favorite,
-      'label': 'التنمية البشرية',
-      'courses': 22,
-      'color': AppColors.orange,
-    },
-  ];
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _categories = [];
 
   @override
   void initState() {
@@ -100,6 +31,120 @@ class _CategoriesScreenState extends State<CategoriesScreen>
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    setState(() => _isLoading = true);
+    try {
+      final categories = await CoursesService.instance.getCategories();
+
+      if (kDebugMode) {
+        print('✅ Categories loaded: ${categories.length}');
+      }
+
+      setState(() {
+        _categories = categories;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error loading categories: $e');
+      }
+      setState(() {
+        _categories = [];
+        _isLoading = false;
+      });
+    }
+  }
+
+  Color _parseColor(dynamic colorValue) {
+    // Return default if null
+    if (colorValue == null) {
+      return AppColors.purple;
+    }
+
+    // If already a Color, return it
+    if (colorValue is Color) {
+      return colorValue;
+    }
+
+    // If it's a String, try to parse it
+    if (colorValue is String) {
+      try {
+        // Remove # if present and trim whitespace
+        String hex = colorValue.replaceAll('#', '').trim();
+
+        // Handle empty string
+        if (hex.isEmpty) {
+          return AppColors.purple;
+        }
+
+        // Parse hex color
+        if (hex.length == 6) {
+          return Color(int.parse('FF$hex', radix: 16));
+        } else if (hex.length == 8) {
+          return Color(int.parse(hex, radix: 16));
+        } else {
+          if (kDebugMode) {
+            print(
+                '⚠️ Invalid hex color length: $hex (expected 6 or 8 characters)');
+          }
+          return AppColors.purple;
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('⚠️ Error parsing color "$colorValue": $e');
+        }
+        return AppColors.purple;
+      }
+    }
+
+    // For any other type, return default
+    if (kDebugMode) {
+      print('⚠️ Unknown color type: ${colorValue.runtimeType}');
+    }
+    return AppColors.purple;
+  }
+
+  IconData _getCategoryIcon(String? iconUrl) {
+    // Map common icon names to IconData
+    if (iconUrl == null || iconUrl.isEmpty) {
+      return Icons.category_rounded;
+    }
+
+    // If it's a URL, return default icon
+    if (iconUrl.startsWith('http')) {
+      return Icons.category_rounded;
+    }
+
+    // Map string names to icons
+    final iconMap = {
+      'book': Icons.menu_book,
+      'calculate': Icons.calculate,
+      'science': Icons.science,
+      'language': Icons.language,
+      'bolt': Icons.bolt,
+      'code': Icons.code,
+      'palette': Icons.palette,
+      'music': Icons.music_note,
+      'business': Icons.business,
+      'favorite': Icons.favorite,
+      'design': Icons.palette,
+      'math': Icons.calculate,
+      'chemistry': Icons.science,
+      'physics': Icons.bolt,
+      'programming': Icons.code,
+    };
+
+    final lowerIcon = iconUrl.toLowerCase();
+    for (var entry in iconMap.entries) {
+      if (lowerIcon.contains(entry.key)) {
+        return entry.value;
+      }
+    }
+
+    return Icons.category_rounded;
   }
 
   @override
@@ -109,52 +154,18 @@ class _CategoriesScreenState extends State<CategoriesScreen>
   }
 
   void _handleCategoryClick(Map<String, dynamic> category) {
-    setState(() {
-      _selectedCategory = category['id'] as int;
-    });
+    final categoryId = category['id']?.toString();
+    if (categoryId == null || categoryId.isEmpty) return;
 
     Future.delayed(const Duration(milliseconds: 300), () {
-      final course = {
-        'id': category['id'],
-        'title': 'دورة ${category['label']}',
-        'category': category['label'],
-        'instructor': 'محمد أحمد',
-        'rating': 4.8,
-        'hours': 48,
-        'price': 35.0,
-        'lessons': [
-          {
-            'id': 1,
-            'title': 'المقدمة',
-            'duration': '2 دقيقة 18 ثانية',
-            'completed': true,
-            'locked': false,
-          },
-          {
-            'id': 2,
-            'title': 'الدرس الأول',
-            'duration': '18 دقيقة 46 ثانية',
-            'completed': false,
-            'locked': true,
-          },
-          {
-            'id': 3,
-            'title': 'الدرس الثاني',
-            'duration': '20 دقيقة 58 ثانية',
-            'completed': false,
-            'locked': true,
-          },
-          {
-            'id': 4,
-            'title': 'الدرس الثالث',
-            'duration': '15 دقيقة 30 ثانية',
-            'completed': false,
-            'locked': true,
-          },
-        ],
-      };
       if (mounted) {
-        context.push(RouteNames.courseDetails, extra: course);
+        // Navigate to all courses screen with category filter
+        context.push(RouteNames.allCourses, extra: {
+          'categoryId': categoryId,
+          'categoryName': category['name']?.toString() ??
+              category['name_ar']?.toString() ??
+              'التصنيف',
+        });
       }
     });
   }
@@ -177,7 +188,7 @@ class _CategoriesScreenState extends State<CategoriesScreen>
                 children: [
                   // Header - matches React: bg-[var(--purple)] rounded-b-[3rem] pt-4 pb-8 px-4
                   Container(
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: AppColors.purple,
                       borderRadius: BorderRadius.only(
                         bottomLeft: Radius.circular(AppRadius.largeCard),
@@ -200,8 +211,9 @@ class _CategoriesScreenState extends State<CategoriesScreen>
                               child: Container(
                                 width: 40, // w-10
                                 height: 40, // h-10
-                                decoration: BoxDecoration(
-                                  color: AppColors.whiteOverlay20, // bg-white/20
+                                decoration: const BoxDecoration(
+                                  color:
+                                      AppColors.whiteOverlay20, // bg-white/20
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
@@ -237,134 +249,218 @@ class _CategoriesScreenState extends State<CategoriesScreen>
                   Expanded(
                     child: Transform.translate(
                       offset: const Offset(0, -24), // -mt-6 = -24px
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.symmetric(horizontal: 16), // px-4
-                        child: GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 16, // gap-4
-                            mainAxisSpacing: 16, // gap-4
-                            childAspectRatio: 0.85,
-                          ),
-                          itemCount: _categories.length,
-                          itemBuilder: (context, index) {
-                            final category = _categories[index];
-                            final isSelected = _selectedCategory == category['id'];
-                            final color = category['color'] as Color;
-
-                            return TweenAnimationBuilder<double>(
-                              tween: Tween(begin: 0.0, end: 1.0),
-                              duration: Duration(milliseconds: 500 + (index * 50)),
-                              builder: (context, value, child) {
-                                return Opacity(
-                                  opacity: value,
-                                  child: Transform.scale(
-                                    scale: 0.8 + (value * 0.2),
-                                    child: child,
-                                  ),
-                                );
-                              },
-                              child: GestureDetector(
-                                onTap: () => _handleCategoryClick(category),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(24), // rounded-3xl
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.05), // shadow-sm
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2),
+                      child: _isLoading
+                          ? _buildLoadingState()
+                          : _categories.isEmpty
+                              ? _buildEmptyState()
+                              : RefreshIndicator(
+                                  onRefresh: _loadCategories,
+                                  child: SingleChildScrollView(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16), // px-4
+                                    physics:
+                                        const AlwaysScrollableScrollPhysics(),
+                                    child: GridView.builder(
+                                      shrinkWrap: true,
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      gridDelegate:
+                                          const SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: 2,
+                                        crossAxisSpacing: 16, // gap-4
+                                        mainAxisSpacing: 16, // gap-4
+                                        childAspectRatio: 0.85,
                                       ),
-                                    ],
-                                  ),
-                                  child: Stack(
-                                    children: [
-                                      // Gradient overlay on hover (simulated)
-                                      Positioned.fill(
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(24),
-                                            gradient: LinearGradient(
-                                              begin: Alignment.topLeft,
-                                              end: Alignment.bottomRight,
-                                              colors: [
-                                                color.withOpacity(0.1),
-                                                color.withOpacity(0.05),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
+                                      itemCount: _categories.length,
+                                      itemBuilder: (context, index) {
+                                        final category = _categories[index];
+                                        final colorValue = category['color'];
+                                        final Color color =
+                                            _parseColor(colorValue);
+                                        final iconUrl =
+                                            category['icon']?.toString();
+                                        final icon = _getCategoryIcon(iconUrl);
+                                        final name =
+                                            category['name_ar']?.toString() ??
+                                                category['name']?.toString() ??
+                                                'التصنيف';
+                                        final coursesCount =
+                                            (category['courses_count'] as num?)
+                                                    ?.toInt() ??
+                                                0;
 
-                                      // Content - matches React: p-5
-                                      Padding(
-                                        padding: const EdgeInsets.all(20), // p-5
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            // Icon - matches React: w-16 h-16 rounded-2xl mb-4
-                                            Container(
-                                              width: 64, // w-16
-                                              height: 64, // h-16
+                                        return TweenAnimationBuilder<double>(
+                                          tween: Tween(begin: 0.0, end: 1.0),
+                                          duration: Duration(
+                                              milliseconds: 500 + (index * 50)),
+                                          builder: (context, value, child) {
+                                            return Opacity(
+                                              opacity: value,
+                                              child: Transform.scale(
+                                                scale: 0.8 + (value * 0.2),
+                                                child: child,
+                                              ),
+                                            );
+                                          },
+                                          child: GestureDetector(
+                                            onTap: () =>
+                                                _handleCategoryClick(category),
+                                            child: Container(
                                               decoration: BoxDecoration(
-                                                color: color.withOpacity(0.15), // color15
+                                                color: Colors.white,
                                                 borderRadius:
-                                                    BorderRadius.circular(16), // rounded-2xl
+                                                    BorderRadius.circular(
+                                                        24), // rounded-3xl
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black
+                                                        .withOpacity(
+                                                            0.05), // shadow-sm
+                                                    blurRadius: 4,
+                                                    offset: const Offset(0, 2),
+                                                  ),
+                                                ],
                                               ),
-                                              child: Icon(
-                                                category['icon'] as IconData,
-                                                size: 32, // w-8 h-8
-                                                color: color,
+                                              child: Stack(
+                                                children: [
+                                                  // Gradient overlay on hover (simulated)
+                                                  Positioned.fill(
+                                                    child: Container(
+                                                      decoration: BoxDecoration(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(24),
+                                                        gradient:
+                                                            LinearGradient(
+                                                          begin:
+                                                              Alignment.topLeft,
+                                                          end: Alignment
+                                                              .bottomRight,
+                                                          colors: [
+                                                            color.withOpacity(
+                                                                0.1),
+                                                            color.withOpacity(
+                                                                0.05),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+
+                                                  // Content - matches React: p-5
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            20), // p-5
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        // Icon - matches React: w-16 h-16 rounded-2xl mb-4
+                                                        Container(
+                                                          width: 64, // w-16
+                                                          height: 64, // h-16
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: color
+                                                                .withOpacity(
+                                                                    0.15), // color15
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        16), // rounded-2xl
+                                                          ),
+                                                          child: iconUrl != null &&
+                                                                  iconUrl
+                                                                      .isNotEmpty &&
+                                                                  iconUrl
+                                                                      .startsWith(
+                                                                          'http')
+                                                              ? ClipRRect(
+                                                                  borderRadius:
+                                                                      BorderRadius
+                                                                          .circular(
+                                                                              16),
+                                                                  child: Image
+                                                                      .network(
+                                                                    iconUrl,
+                                                                    width: 32,
+                                                                    height: 32,
+                                                                    fit: BoxFit
+                                                                        .cover,
+                                                                    errorBuilder: (context,
+                                                                            error,
+                                                                            stackTrace) =>
+                                                                        Icon(
+                                                                      icon,
+                                                                      size: 32,
+                                                                      color:
+                                                                          color,
+                                                                    ),
+                                                                  ),
+                                                                )
+                                                              : Icon(
+                                                                  icon,
+                                                                  size:
+                                                                      32, // w-8 h-8
+                                                                  color: color,
+                                                                ),
+                                                        ),
+                                                        const SizedBox(
+                                                            height: 16), // mb-4
+
+                                                        // Title - matches React: font-bold text-lg mb-1
+                                                        Text(
+                                                          name,
+                                                          style:
+                                                              AppTextStyles.h4(
+                                                            color: AppColors
+                                                                .foreground,
+                                                          ),
+                                                          maxLines: 2,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                        ),
+                                                        const SizedBox(
+                                                            height: 4), // mb-1
+
+                                                        // Courses count - matches React: text-sm
+                                                        Text(
+                                                          '$coursesCount ${coursesCount == 1 ? 'دورة' : 'دورات'}',
+                                                          style: AppTextStyles
+                                                              .bodySmall(
+                                                            color: AppColors
+                                                                .mutedForeground,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+
+                                                  // Animated corner accent
+                                                  Positioned(
+                                                    bottom: -16,
+                                                    left: -16,
+                                                    child: Container(
+                                                      width: 64, // w-16
+                                                      height: 64, // h-16
+                                                      decoration: BoxDecoration(
+                                                        color: color
+                                                            .withOpacity(0.2),
+                                                        shape: BoxShape.circle,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ),
-                                            const SizedBox(height: 16), // mb-4
-
-                                            // Title - matches React: font-bold text-lg mb-1
-                                            Text(
-                                              category['label'] as String,
-                                              style: AppTextStyles.h4(
-                                                color: AppColors.foreground,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 4), // mb-1
-
-                                            // Courses count - matches React: text-sm
-                                            Text(
-                                              '${category['courses']} دورة',
-                                              style: AppTextStyles.bodySmall(
-                                                color: AppColors.mutedForeground,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-
-                                      // Animated corner accent
-                                      Positioned(
-                                        bottom: -16,
-                                        left: -16,
-                                        child: Container(
-                                          width: 64, // w-16
-                                          height: 64, // h-16
-                                          decoration: BoxDecoration(
-                                            color: color.withOpacity(0.2),
-                                            shape: BoxShape.circle,
                                           ),
-                                        ),
-                                      ),
-                                    ],
+                                        );
+                                      },
+                                    ),
                                   ),
                                 ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
                     ),
                   ),
                 ],
@@ -373,6 +469,106 @@ class _CategoriesScreenState extends State<CategoriesScreen>
 
             // Bottom Navigation
             const BottomNav(activeTab: 'home'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return Skeletonizer(
+      enabled: true,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+            childAspectRatio: 0.85,
+          ),
+          itemCount: 6,
+          itemBuilder: (context, index) {
+            return Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    height: 16,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Container(
+                    height: 12,
+                    width: 60,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 80),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 96,
+              height: 96,
+              decoration: BoxDecoration(
+                color: AppColors.purple.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.category_rounded,
+                size: 48,
+                color: AppColors.purple,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'لا توجد تصنيفات',
+              style: AppTextStyles.h4(
+                color: AppColors.foreground,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'سيتم إضافة التصنيفات قريباً',
+              style: AppTextStyles.bodyMedium(
+                color: AppColors.mutedForeground,
+              ),
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
       ),

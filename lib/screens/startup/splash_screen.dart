@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/design/app_colors.dart';
 import '../../core/navigation/route_names.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Splash Screen - Premium & Elegant Design with Smart Idea
 /// Features: Animated book opening effect that reveals knowledge
@@ -36,11 +37,14 @@ class _SplashScreenState extends State<SplashScreen>
 
   // Smart idea: Educational tips that rotate
   int _currentTipIndex = 0;
-  final List<Map<String, dynamic>> _educationalTips = [
-    {'icon': Icons.lightbulb_outline, 'text': 'العلم نور يضيء طريقك'},
-    {'icon': Icons.trending_up, 'text': 'كل يوم فرصة جديدة للتعلم'},
-    {'icon': Icons.emoji_events_outlined, 'text': 'النجاح يبدأ بخطوة'},
-  ];
+  List<Map<String, dynamic>> get _educationalTips {
+    final l10n = AppLocalizations.of(context)!;
+    return [
+      {'icon': Icons.lightbulb_outline, 'text': l10n.science},
+      {'icon': Icons.trending_up, 'text': l10n.everyDayNewOpportunity},
+      {'icon': Icons.emoji_events_outlined, 'text': l10n.success},
+    ];
+  }
   Timer? _tipTimer;
 
   @override
@@ -548,7 +552,7 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'منصة التعليم الذكية',
+                  AppLocalizations.of(context)!.smartLearningPlatform,
                   style: GoogleFonts.cairo(
                     fontSize: 16,
                     color: Colors.white.withOpacity(0.95),
@@ -707,7 +711,7 @@ class _SplashScreenState extends State<SplashScreen>
               ),
               const SizedBox(width: 6),
               Text(
-                'منصة معتمدة وآمنة',
+                AppLocalizations.of(context)!.certifiedAndSecure,
                 style: GoogleFonts.cairo(
                   fontSize: 12,
                   color: Colors.white.withOpacity(0.6),
