@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/design/app_colors.dart';
 import '../../core/navigation/route_names.dart';
 import '../../services/auth_service.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Forgot Password Screen
 class ForgotPasswordScreen extends StatefulWidget {
@@ -62,6 +63,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -109,7 +111,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         ),
                         const Spacer(),
                         Text(
-                          'نسيت كلمة المرور',
+                          l10n.forgotPasswordTitle,
                           style: GoogleFonts.cairo(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -137,7 +139,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'استعادة كلمة المرور',
+                      l10n.resetPasswordTitle,
                       style: GoogleFonts.cairo(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -146,7 +148,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'أدخل بريدك الإلكتروني لإرسال رابط إعادة تعيين',
+                      l10n.resetPasswordDescription,
                       textAlign: TextAlign.center,
                       style: GoogleFonts.cairo(
                         fontSize: 14,
@@ -172,7 +174,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 ),
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(24, 40, 24, 24),
-                  child: _emailSent ? _buildSuccessView() : _buildForm(),
+                  child: _emailSent
+                      ? _buildSuccessView(context)
+                      : _buildForm(context),
                 ),
               ),
             ),
@@ -182,20 +186,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
-  Widget _buildForm() {
+  Widget _buildForm(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Form(
       key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Email Field
-          _buildLabel('البريد الإلكتروني'),
+          _buildLabel(l10n.email),
           const SizedBox(height: 8),
           _buildTextField(
             controller: _emailController,
-            hint: 'أدخل بريدك الإلكتروني',
+            hint: l10n.enterEmail,
             icon: Icons.email_outlined,
             keyboardType: TextInputType.emailAddress,
+            context: context,
           ),
           const SizedBox(height: 32),
 
@@ -223,7 +229,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       ),
                     )
                   : Text(
-                      'إرسال الرابط',
+                      l10n.sendResetLink,
                       style: GoogleFonts.cairo(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -238,7 +244,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             child: TextButton(
               onPressed: () => context.go(RouteNames.login),
               child: Text(
-                'العودة لتسجيل الدخول',
+                l10n.backToLogin,
                 style: GoogleFonts.cairo(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -252,7 +258,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
-  Widget _buildSuccessView() {
+  Widget _buildSuccessView(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
         const SizedBox(height: 40),
@@ -271,7 +278,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ),
         const SizedBox(height: 24),
         Text(
-          'تم الإرسال بنجاح!',
+          l10n.sentSuccessfully,
           style: GoogleFonts.cairo(
             fontSize: 22,
             fontWeight: FontWeight.bold,
@@ -280,7 +287,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ),
         const SizedBox(height: 12),
         Text(
-          'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني',
+          l10n.resetPasswordSent,
           textAlign: TextAlign.center,
           style: GoogleFonts.cairo(
             fontSize: 14,
@@ -312,7 +319,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               elevation: 0,
             ),
             child: Text(
-              'العودة لتسجيل الدخول',
+              l10n.backToLogin,
               style: GoogleFonts.cairo(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -329,7 +336,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             });
           },
           child: Text(
-            'إرسال إلى بريد إلكتروني آخر',
+            l10n.sendToAnotherEmail,
             style: GoogleFonts.cairo(
               fontSize: 14,
               color: AppColors.mutedForeground,
@@ -356,7 +363,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     required String hint,
     required IconData icon,
     TextInputType? keyboardType,
+    required BuildContext context,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -389,12 +398,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ),
         validator: (value) {
           if (value == null || value.isEmpty) {
-            return 'هذا الحقل مطلوب';
+            return l10n.fieldRequired;
           }
           if (keyboardType == TextInputType.emailAddress) {
             final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
             if (!emailRegex.hasMatch(value)) {
-              return 'البريد الإلكتروني غير صحيح';
+              return l10n.invalidEmail;
             }
           }
           return null;

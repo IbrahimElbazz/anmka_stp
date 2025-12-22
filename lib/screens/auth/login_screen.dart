@@ -18,7 +18,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _emailOrPhoneController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _showPassword = false;
   bool _isLoading = false;
@@ -29,7 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       try {
         await AuthService.instance.login(
-          email: _emailController.text.trim(),
+          emailOrPhone: _emailOrPhoneController.text.trim(),
           password: _passwordController.text,
         );
 
@@ -66,7 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _emailOrPhoneController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -196,14 +196,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Email Field
-                        _buildLabel(AppLocalizations.of(context)!.email),
+                        // Email or Phone Field
+                        _buildLabel(AppLocalizations.of(context)!.emailOrPhone),
                         const SizedBox(height: 8),
                         _buildTextField(
-                          controller: _emailController,
-                          hint: AppLocalizations.of(context)!.enterEmail,
-                          icon: Icons.email_outlined,
-                          keyboardType: TextInputType.emailAddress,
+                          controller: _emailOrPhoneController,
+                          hint: AppLocalizations.of(context)!.enterEmailOrPhone,
+                          icon: Icons.alternate_email_rounded,
+                          keyboardType: TextInputType.text,
                         ),
                         const SizedBox(height: 20),
 
@@ -410,12 +410,7 @@ class _LoginScreenState extends State<LoginScreen> {
           if (value == null || value.isEmpty) {
             return AppLocalizations.of(context)!.fieldRequired;
           }
-          if (keyboardType == TextInputType.emailAddress) {
-            final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-            if (!emailRegex.hasMatch(value)) {
-              return AppLocalizations.of(context)!.invalidEmail;
-            }
-          }
+          // Accept any input (email or phone) - validation will be done by backend
           return null;
         },
       ),

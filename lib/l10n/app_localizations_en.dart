@@ -65,6 +65,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get email => 'Email';
 
   @override
+  String get emailOrPhone => 'Email or Phone Number';
+
+  @override
+  String get enterEmailOrPhone => 'Enter your email or phone number';
+
+  @override
+  String get invalidEmailOrPhone => 'Invalid email or phone number';
+
+  @override
   String get password => 'Password';
 
   @override
@@ -515,6 +524,19 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get resetPasswordSent =>
       'Password reset link has been sent to your email';
+
+  @override
+  String get resetPasswordTitle => 'Reset Password';
+
+  @override
+  String get resetPasswordDescription =>
+      'Enter your email to send a reset link';
+
+  @override
+  String get sendResetLink => 'Send Link';
+
+  @override
+  String get sendToAnotherEmail => 'Send to another email';
 
   @override
   String get exams => 'Exam';

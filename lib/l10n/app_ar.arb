@@ -79,6 +79,18 @@
   "@email": {
     "description": "حقل البريد الإلكتروني"
   },
+  "emailOrPhone": "البريد الإلكتروني أو رقم الهاتف",
+  "@emailOrPhone": {
+    "description": "حقل البريد الإلكتروني أو رقم الهاتف"
+  },
+  "enterEmailOrPhone": "أدخل بريدك الإلكتروني أو رقم هاتفك",
+  "@enterEmailOrPhone": {
+    "description": "نص placeholder البريد الإلكتروني أو رقم الهاتف"
+  },
+  "invalidEmailOrPhone": "البريد الإلكتروني أو رقم الهاتف غير صحيح",
+  "@invalidEmailOrPhone": {
+    "description": "رسالة خطأ البريد الإلكتروني أو رقم الهاتف"
+  },
   "password": "كلمة المرور",
   "@password": {
     "description": "حقل كلمة المرور"
@@ -722,6 +734,22 @@
   "resetPasswordSent": "تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني",
   "@resetPasswordSent": {
     "description": "رسالة إرسال رابط إعادة التعيين"
+  },
+  "resetPasswordTitle": "استعادة كلمة المرور",
+  "@resetPasswordTitle": {
+    "description": "عنوان استعادة كلمة المرور"
+  },
+  "resetPasswordDescription": "أدخل بريدك الإلكتروني لإرسال رابط إعادة تعيين",
+  "@resetPasswordDescription": {
+    "description": "وصف استعادة كلمة المرور"
+  },
+  "sendResetLink": "إرسال الرابط",
+  "@sendResetLink": {
+    "description": "زر إرسال رابط إعادة التعيين"
+  },
+  "sendToAnotherEmail": "إرسال إلى بريد إلكتروني آخر",
+  "@sendToAnotherEmail": {
+    "description": "إرسال إلى بريد إلكتروني آخر"
   },
   
   "exams": "الاختبار",

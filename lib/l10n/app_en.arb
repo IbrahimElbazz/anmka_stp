@@ -79,6 +79,18 @@
   "@email": {
     "description": "Email field"
   },
+  "emailOrPhone": "Email or Phone Number",
+  "@emailOrPhone": {
+    "description": "Email or phone number field"
+  },
+  "enterEmailOrPhone": "Enter your email or phone number",
+  "@enterEmailOrPhone": {
+    "description": "Enter email or phone placeholder text"
+  },
+  "invalidEmailOrPhone": "Invalid email or phone number",
+  "@invalidEmailOrPhone": {
+    "description": "Invalid email or phone error message"
+  },
   "password": "Password",
   "@password": {
     "description": "Password field"
@@ -722,6 +734,22 @@
   "resetPasswordSent": "Password reset link has been sent to your email",
   "@resetPasswordSent": {
     "description": "Password reset link sent message"
+  },
+  "resetPasswordTitle": "Reset Password",
+  "@resetPasswordTitle": {
+    "description": "Reset password title"
+  },
+  "resetPasswordDescription": "Enter your email to send a reset link",
+  "@resetPasswordDescription": {
+    "description": "Reset password description"
+  },
+  "sendResetLink": "Send Link",
+  "@sendResetLink": {
+    "description": "Send reset link button"
+  },
+  "sendToAnotherEmail": "Send to another email",
+  "@sendToAnotherEmail": {
+    "description": "Send to another email"
   },
   
   "exams": "Exam",

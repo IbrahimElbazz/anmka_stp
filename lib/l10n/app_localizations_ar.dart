@@ -65,6 +65,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get email => 'البريد الإلكتروني';
 
   @override
+  String get emailOrPhone => 'البريد الإلكتروني أو رقم الهاتف';
+
+  @override
+  String get enterEmailOrPhone => 'أدخل بريدك الإلكتروني أو رقم هاتفك';
+
+  @override
+  String get invalidEmailOrPhone => 'البريد الإلكتروني أو رقم الهاتف غير صحيح';
+
+  @override
   String get password => 'كلمة المرور';
 
   @override
@@ -514,6 +523,19 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get resetPasswordSent =>
       'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني';
+
+  @override
+  String get resetPasswordTitle => 'استعادة كلمة المرور';
+
+  @override
+  String get resetPasswordDescription =>
+      'أدخل بريدك الإلكتروني لإرسال رابط إعادة تعيين';
+
+  @override
+  String get sendResetLink => 'إرسال الرابط';
+
+  @override
+  String get sendToAnotherEmail => 'إرسال إلى بريد إلكتروني آخر';
 
   @override
   String get exams => 'الاختبار';

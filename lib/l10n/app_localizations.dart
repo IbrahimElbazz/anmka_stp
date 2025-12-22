@@ -206,6 +206,24 @@ abstract class AppLocalizations {
   /// **'Email'**
   String get email;
 
+  /// Email or phone number field
+  ///
+  /// In en, this message translates to:
+  /// **'Email or Phone Number'**
+  String get emailOrPhone;
+
+  /// Enter email or phone placeholder text
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email or phone number'**
+  String get enterEmailOrPhone;
+
+  /// Invalid email or phone error message
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid email or phone number'**
+  String get invalidEmailOrPhone;
+
   /// Password field
   ///
   /// In en, this message translates to:
@@ -1045,6 +1063,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Password reset link has been sent to your email'**
   String get resetPasswordSent;
+
+  /// Reset password title
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Password'**
+  String get resetPasswordTitle;
+
+  /// Reset password description
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email to send a reset link'**
+  String get resetPasswordDescription;
+
+  /// Send reset link button
+  ///
+  /// In en, this message translates to:
+  /// **'Send Link'**
+  String get sendResetLink;
+
+  /// Send to another email
+  ///
+  /// In en, this message translates to:
+  /// **'Send to another email'**
+  String get sendToAnotherEmail;
 
   /// Exam
   ///

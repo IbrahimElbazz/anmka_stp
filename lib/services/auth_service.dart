@@ -11,18 +11,35 @@ class AuthService {
 
   static final AuthService instance = AuthService._();
 
-  /// Login user
+  /// Check if input is email or phone
+  bool _isEmail(String input) {
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    return emailRegex.hasMatch(input);
+  }
+
+  /// Login user with email or phone
   Future<AuthResponse> login({
-    required String email,
+    required String emailOrPhone,
     required String password,
   }) async {
     try {
+      // Determine if input is email or phone
+      final isEmail = _isEmail(emailOrPhone.trim());
+
+      // Build request body with appropriate key
+      final Map<String, dynamic> requestBody = {
+        'password': password,
+      };
+
+      if (isEmail) {
+        requestBody['email'] = emailOrPhone.trim();
+      } else {
+        requestBody['phone'] = emailOrPhone.trim();
+      }
+
       final response = await ApiClient.instance.post(
         ApiEndpoints.login,
-        body: {
-          'email': email,
-          'password': password,
-        },
+        body: requestBody,
         requireAuth: false, // Login doesn't need auth
       );
 
