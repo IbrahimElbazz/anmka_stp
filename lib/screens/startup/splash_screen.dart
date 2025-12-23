@@ -45,6 +45,7 @@ class _SplashScreenState extends State<SplashScreen>
       {'icon': Icons.emoji_events_outlined, 'text': l10n.success},
     ];
   }
+
   Timer? _tipTimer;
 
   @override
@@ -412,7 +413,7 @@ class _SplashScreenState extends State<SplashScreen>
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(35),
                     child: Image.asset(
-                      'assets/images/company-logo.jpeg',
+                      'assets/images/play_store_512.png',
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => Container(
                         decoration: BoxDecoration(
@@ -517,7 +518,7 @@ class _SplashScreenState extends State<SplashScreen>
               colors: [Colors.white, Color(0xFFE0D4FF)],
             ).createShader(bounds),
             child: Text(
-              'Anmka LMS',
+              'STP',
               style: GoogleFonts.cairo(
                 fontSize: 38,
                 fontWeight: FontWeight.bold,
@@ -552,7 +553,7 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  AppLocalizations.of(context)!.smartLearningPlatform,
+                  'تعلم الهندسة بلغة المستقبل',
                   style: GoogleFonts.cairo(
                     fontSize: 16,
                     color: Colors.white.withOpacity(0.95),

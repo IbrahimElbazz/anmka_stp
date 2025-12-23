@@ -22,6 +22,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _showPassword = false;
   bool _isLoading = false;
+  bool _googleLoading = false;
+  bool _appleLoading = false;
 
   Future<void> _handleLogin() async {
     if (_formKey.currentState!.validate()) {
@@ -60,6 +62,80 @@ class _LoginScreenState extends State<LoginScreen> {
         if (mounted) {
           setState(() => _isLoading = false);
         }
+      }
+    }
+  }
+
+  Future<void> _handleGoogleLogin() async {
+    if (_googleLoading || _appleLoading) return;
+    setState(() {
+      _googleLoading = true;
+      _appleLoading = false;
+    });
+
+    try {
+      await AuthService.instance.signInWithGoogle();
+
+      if (!mounted) return;
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('hasLaunched', true);
+
+      if (mounted) {
+        context.go(RouteNames.home);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString().replaceFirst('Exception: ', ''),
+            style: GoogleFonts.cairo(),
+          ),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _googleLoading = false);
+      }
+    }
+  }
+
+  Future<void> _handleAppleLogin() async {
+    if (_appleLoading || _googleLoading) return;
+    setState(() {
+      _appleLoading = true;
+      _googleLoading = false;
+    });
+
+    try {
+      await AuthService.instance.signInWithApple();
+
+      if (!mounted) return;
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('hasLaunched', true);
+
+      if (mounted) {
+        context.go(RouteNames.home);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString().replaceFirst('Exception: ', ''),
+            style: GoogleFonts.cairo(),
+          ),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _appleLoading = false);
       }
     }
   }
@@ -153,7 +229,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       child: ClipOval(
                         child: Image.asset(
-                          'assets/images/company-logo.jpeg',
+                          'assets/images/play_store_512.png',
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => const Icon(
                             Icons.school_rounded,
@@ -297,12 +373,23 @@ class _LoginScreenState extends State<LoginScreen> {
                           children: [
                             Expanded(
                                 child: _buildSocialButton(
-                                    Icons.g_mobiledata_rounded,
-                                    AppLocalizations.of(context)!.google)),
+                              icon: Icons.g_mobiledata_rounded,
+                              label: AppLocalizations.of(context)!.google,
+                              onPressed: (_isLoading || _appleLoading)
+                                  ? null
+                                  : _handleGoogleLogin,
+                              isLoading: _googleLoading,
+                            )),
                             const SizedBox(width: 12),
                             Expanded(
-                                child: _buildSocialButton(Icons.apple_rounded,
-                                    AppLocalizations.of(context)!.apple)),
+                                child: _buildSocialButton(
+                              icon: Icons.apple_rounded,
+                              label: AppLocalizations.of(context)!.apple,
+                              onPressed: (_isLoading || _googleLoading)
+                                  ? null
+                                  : _handleAppleLogin,
+                              isLoading: _appleLoading,
+                            )),
                           ],
                         ),
                         const SizedBox(height: 32),
@@ -417,34 +504,57 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildSocialButton(IconData icon, String label) {
-    return Container(
-      height: 50,
-      decoration: BoxDecoration(
-        color: Colors.white,
+  Widget _buildSocialButton({
+    required IconData icon,
+    required String label,
+    VoidCallback? onPressed,
+    bool isLoading = false,
+  }) {
+    final isDisabled = onPressed == null || isLoading;
+    return Opacity(
+      opacity: isDisabled ? 0.6 : 1,
+      child: InkWell(
+        onTap: isDisabled ? null : onPressed,
         borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+        child: Container(
+          height: 50,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 24, color: AppColors.foreground),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: GoogleFonts.cairo(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.foreground,
-            ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (isLoading)
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.purple,
+                  ),
+                )
+              else
+                Icon(icon, size: 24, color: AppColors.foreground),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: GoogleFonts.cairo(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.foreground,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

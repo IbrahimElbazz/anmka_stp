@@ -24,6 +24,10 @@ import '../../screens/secondary/settings_screen.dart';
 import '../../screens/secondary/all_courses_screen.dart';
 import '../../screens/secondary/edit_profile_screen.dart';
 import '../../screens/secondary/change_password_screen.dart';
+import '../../screens/secondary/pdf_viewer_screen.dart';
+import '../../screens/secondary/center_attendance_screen.dart';
+import '../../screens/secondary/teachers_screen.dart';
+import '../../screens/secondary/teacher_details_screen.dart';
 import 'route_names.dart';
 
 class AppRouter {
@@ -114,6 +118,20 @@ class AppRouter {
           child: const AllCoursesScreen(),
         ),
       ),
+      GoRoute(
+        path: RouteNames.teachers,
+        pageBuilder: (context, state) {
+          final extra = state.extra;
+          List<Map<String, dynamic>>? teachers;
+          if (extra is List) {
+            teachers = extra.cast<Map<String, dynamic>>();
+          }
+          return _buildPageWithTransition(
+            key: state.pageKey,
+            child: TeachersScreen(teachers: teachers),
+          );
+        },
+      ),
 
       // Secondary screens
       GoRoute(
@@ -133,13 +151,40 @@ class AppRouter {
         ),
       ),
       GoRoute(
-        path: RouteNames.lessonViewer,
+        path: RouteNames.teacherDetails,
         pageBuilder: (context, state) => _buildPageWithTransition(
           key: state.pageKey,
-          child: LessonViewerScreen(
-            lesson: state.extra as Map<String, dynamic>?,
+          child: TeacherDetailsScreen(
+            teacher: state.extra as Map<String, dynamic>?,
           ),
         ),
+      ),
+      GoRoute(
+        path: RouteNames.lessonViewer,
+        pageBuilder: (context, state) {
+          final extra = state.extra;
+          Map<String, dynamic>? lesson;
+          String? courseId;
+          
+          if (extra is Map<String, dynamic>) {
+            // Check if it's a wrapper map with lesson and courseId
+            if (extra.containsKey('lesson')) {
+              lesson = extra['lesson'] as Map<String, dynamic>?;
+              courseId = extra['courseId']?.toString();
+            } else {
+              // It's the lesson object itself
+              lesson = extra;
+            }
+          }
+          
+          return _buildPageWithTransition(
+            key: state.pageKey,
+            child: LessonViewerScreen(
+              lesson: lesson,
+              courseId: courseId,
+            ),
+          );
+        },
       ),
       GoRoute(
         path: RouteNames.exams,
@@ -220,6 +265,36 @@ class AppRouter {
         pageBuilder: (context, state) => _buildPageWithTransition(
           key: state.pageKey,
           child: const ChangePasswordScreen(),
+        ),
+      ),
+      GoRoute(
+        path: RouteNames.pdfViewer,
+        pageBuilder: (context, state) {
+          final extra = state.extra;
+          String pdfUrl = '';
+          String? title;
+          
+          if (extra is Map<String, dynamic>) {
+            pdfUrl = extra['pdfUrl']?.toString() ?? '';
+            title = extra['title']?.toString();
+          } else if (extra is String) {
+            pdfUrl = extra;
+          }
+          
+          return _buildPageWithTransition(
+            key: state.pageKey,
+            child: PdfViewerScreen(
+              pdfUrl: pdfUrl,
+              title: title,
+            ),
+          );
+        },
+      ),
+      GoRoute(
+        path: RouteNames.centerAttendance,
+        pageBuilder: (context, state) => _buildPageWithTransition(
+          key: state.pageKey,
+          child: const CenterAttendanceScreen(),
         ),
       ),
     ],

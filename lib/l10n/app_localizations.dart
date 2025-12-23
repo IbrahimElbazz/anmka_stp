@@ -344,6 +344,36 @@ abstract class AppLocalizations {
   /// **'01xxxxxxxxx'**
   String get phonePlaceholder;
 
+  /// Student type label
+  ///
+  /// In en, this message translates to:
+  /// **'Student type'**
+  String get studentType;
+
+  /// On-campus student option
+  ///
+  /// In en, this message translates to:
+  /// **'In-class student'**
+  String get inPersonStudent;
+
+  /// Online student option
+  ///
+  /// In en, this message translates to:
+  /// **'Online student'**
+  String get onlineStudent;
+
+  /// Both option
+  ///
+  /// In en, this message translates to:
+  /// **'Both'**
+  String get bothStudentTypes;
+
+  /// Validation message for student type
+  ///
+  /// In en, this message translates to:
+  /// **'Please choose your student type'**
+  String get selectStudentType;
+
   /// Invalid phone number error message
   ///
   /// In en, this message translates to:
@@ -1172,7 +1202,7 @@ abstract class AppLocalizations {
   /// **'{count} lessons'**
   String lessonsCount(int count);
 
-  /// Number of courses
+  /// Courses count label
   ///
   /// In en, this message translates to:
   /// **'{count} courses'**
@@ -2401,6 +2431,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Verification Link'**
   String get verificationLinkLabel;
+
+  /// Center Attendance
+  ///
+  /// In en, this message translates to:
+  /// **'Center Attendance'**
+  String get centerAttendance;
+
+  /// Center attendance description
+  ///
+  /// In en, this message translates to:
+  /// **'Show this QR code at the center to mark your attendance'**
+  String get centerAttendanceDescription;
+
+  /// Loading QR code
+  ///
+  /// In en, this message translates to:
+  /// **'Loading QR code...'**
+  String get loadingQrCode;
+
+  /// Error loading QR code
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading QR code'**
+  String get errorLoadingQrCode;
+
+  /// Scan QR code instruction
+  ///
+  /// In en, this message translates to:
+  /// **'Show this QR code to the center staff to mark your attendance'**
+  String get scanQrCodeInstruction;
+
+  /// Refresh QR Code
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh QR Code'**
+  String get refreshQrCode;
+
+  /// Retry
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// Unknown error
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown error occurred'**
+  String get unknownError;
+
+  /// Teachers section title
+  ///
+  /// In en, this message translates to:
+  /// **'Teachers'**
+  String get teachers;
+
+  /// All teachers page title
+  ///
+  /// In en, this message translates to:
+  /// **'All Teachers'**
+  String get allTeachers;
+
+  /// Fallback teacher title
+  ///
+  /// In en, this message translates to:
+  /// **'Teacher'**
+  String get teacherFallback;
+
+  /// Title for teacher courses section
+  ///
+  /// In en, this message translates to:
+  /// **'Courses offered'**
+  String get teacherCoursesTitle;
+
+  /// Students count label
+  ///
+  /// In en, this message translates to:
+  /// **'{count} students'**
+  String studentsCount(int count);
 }
 
 class _AppLocalizationsDelegate

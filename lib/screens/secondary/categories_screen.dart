@@ -41,6 +41,16 @@ class _CategoriesScreenState extends State<CategoriesScreen>
 
       if (kDebugMode) {
         print('✅ Categories loaded: ${categories.length}');
+        print('📋 Categories data in screen:');
+        for (var i = 0; i < categories.length; i++) {
+          final cat = categories[i];
+          print('  Category ${i + 1}:');
+          print('    id: ${cat['id']}');
+          print('    name: ${cat['name']} / ${cat['name_ar']}');
+          print('    icon: ${cat['icon']}');
+          print('    icon type: ${cat['icon']?.runtimeType}');
+          print('    color: ${cat['color']}');
+        }
       }
 
       setState(() {
@@ -147,6 +157,89 @@ class _CategoriesScreenState extends State<CategoriesScreen>
     return Icons.category_rounded;
   }
 
+  Widget _buildCategoryIcon({
+    required String? iconUrl,
+    required IconData icon,
+    required Color color,
+  }) {
+    // If iconUrl is null or empty, show default icon
+    if (iconUrl == null || iconUrl.isEmpty) {
+      if (kDebugMode) {
+        print('📌 No icon URL, showing default icon');
+      }
+      return Icon(
+        icon,
+        size: 32,
+        color: color,
+      );
+    }
+
+    // Check if it's a URL (http/https) or relative path (/path)
+    final isUrl = iconUrl.startsWith('http://') ||
+        iconUrl.startsWith('https://') ||
+        iconUrl.startsWith('/');
+
+    if (kDebugMode) {
+      print('🖼️ Building category icon:');
+      print('   URL: $iconUrl');
+      print('   Is URL: $isUrl');
+    }
+
+    if (isUrl) {
+      // Display image from URL
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Image.network(
+          iconUrl,
+          width: 64,
+          height: 64,
+          fit: BoxFit.contain, // Use contain instead of cover for icons
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) {
+              if (kDebugMode) {
+                print('✅ Icon loaded successfully: $iconUrl');
+              }
+              return child;
+            }
+            return Center(
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded /
+                        loadingProgress.expectedTotalBytes!
+                    : null,
+                strokeWidth: 2,
+                color: color,
+              ),
+            );
+          },
+          errorBuilder: (context, error, stackTrace) {
+            if (kDebugMode) {
+              print('❌ Error loading category icon: $iconUrl');
+              print('   Error: $error');
+              print('   StackTrace: $stackTrace');
+            }
+            // Fallback to default icon on error
+            return Icon(
+              icon,
+              size: 32,
+              color: color,
+            );
+          },
+        ),
+      );
+    } else {
+      // Not a URL, show default icon
+      if (kDebugMode) {
+        print('📌 Icon is not a URL, showing default icon');
+      }
+      return Icon(
+        icon,
+        size: 32,
+        color: color,
+      );
+    }
+  }
+
   @override
   void dispose() {
     _animationController.dispose();
@@ -174,303 +267,308 @@ class _CategoriesScreenState extends State<CategoriesScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.beige,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Container(
-              constraints: const BoxConstraints(maxWidth: 400),
-              margin: EdgeInsets.symmetric(
-                horizontal: MediaQuery.of(context).size.width > 400
-                    ? (MediaQuery.of(context).size.width - 400) / 2
-                    : 0,
-              ),
-              child: Column(
-                children: [
-                  // Header - matches React: bg-[var(--purple)] rounded-b-[3rem] pt-4 pb-8 px-4
-                  Container(
-                    decoration: const BoxDecoration(
-                      color: AppColors.purple,
-                      borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(AppRadius.largeCard),
-                        bottomRight: Radius.circular(AppRadius.largeCard),
-                      ),
-                    ),
-                    padding: const EdgeInsets.only(
-                      top: 16, // pt-4
-                      bottom: 32, // pb-8
-                      left: 16, // px-4
-                      right: 16,
-                    ),
-                    child: Column(
-                      children: [
-                        // Back button and title - matches React: gap-4 mb-4
-                        Row(
-                          children: [
-                            GestureDetector(
-                              onTap: () => context.pop(),
-                              child: Container(
-                                width: 40, // w-10
-                                height: 40, // h-10
-                                decoration: const BoxDecoration(
-                                  color:
-                                      AppColors.whiteOverlay20, // bg-white/20
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.chevron_right,
-                                  color: Colors.white,
-                                  size: 20, // w-5 h-5
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 16), // gap-4
-                            Text(
-                              'التصنيفات',
-                              style: AppTextStyles.h2(color: Colors.white),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16), // mb-4
-                        // Subtitle
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: Text(
-                            'اختر المادة التي تريد تعلمها',
-                            style: AppTextStyles.bodyMedium(
-                              color: Colors.white.withOpacity(0.7), // white/70
-                            ),
-                          ),
-                        ),
-                      ],
+      body: Stack(
+        children: [
+          Container(
+            constraints: const BoxConstraints(maxWidth: 400),
+            margin: EdgeInsets.symmetric(
+              horizontal: MediaQuery.of(context).size.width > 400
+                  ? (MediaQuery.of(context).size.width - 400) / 2
+                  : 0,
+            ),
+            child: Column(
+              children: [
+                // Header - matches React: bg-[var(--purple)] rounded-b-[3rem] pt-4 pb-8 px-4
+                Container(
+                  decoration: const BoxDecoration(
+                    color: AppColors.purple,
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(AppRadius.largeCard),
+                      bottomRight: Radius.circular(AppRadius.largeCard),
                     ),
                   ),
+                  padding: const EdgeInsets.only(
+                    top: 16, // pt-4
+                    bottom: 32, // pb-8
+                    left: 16, // px-4
+                    right: 16,
+                  ),
+                  child: Column(
+                    children: [
+                      // Back button and title - matches React: gap-4 mb-4
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () => context.pop(),
+                            child: Container(
+                              width: 40, // w-10
+                              height: 100, // h-10
+                              decoration: const BoxDecoration(
+                                color: AppColors.whiteOverlay20, // bg-white/20
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.arrow_back_ios_new_rounded,
+                                color: Colors.white,
+                                size: 20, // w-5 h-5
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16), // gap-4
+                          Text(
+                            'التصنيفات',
+                            style: AppTextStyles.h2(color: Colors.white),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16), // mb-4
+                      // Subtitle
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          'اختر المادة التي تريد تعلمها',
+                          style: AppTextStyles.bodyMedium(
+                            color: Colors.white.withOpacity(0.7), // white/70
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
-                  // Categories Grid - matches React: px-4 -mt-6
-                  Expanded(
-                    child: Transform.translate(
-                      offset: const Offset(0, -24), // -mt-6 = -24px
-                      child: _isLoading
-                          ? _buildLoadingState()
-                          : _categories.isEmpty
-                              ? _buildEmptyState()
-                              : RefreshIndicator(
-                                  onRefresh: _loadCategories,
-                                  child: SingleChildScrollView(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 16), // px-4
-                                    physics:
-                                        const AlwaysScrollableScrollPhysics(),
-                                    child: GridView.builder(
-                                      shrinkWrap: true,
-                                      physics:
-                                          const NeverScrollableScrollPhysics(),
-                                      gridDelegate:
-                                          const SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount: 2,
-                                        crossAxisSpacing: 16, // gap-4
-                                        mainAxisSpacing: 16, // gap-4
-                                        childAspectRatio: 0.85,
-                                      ),
-                                      itemCount: _categories.length,
-                                      itemBuilder: (context, index) {
-                                        final category = _categories[index];
-                                        final colorValue = category['color'];
-                                        final Color color =
-                                            _parseColor(colorValue);
-                                        final iconUrl =
-                                            category['icon']?.toString();
-                                        final icon = _getCategoryIcon(iconUrl);
-                                        final name =
-                                            category['name_ar']?.toString() ??
-                                                category['name']?.toString() ??
-                                                'التصنيف';
-                                        final coursesCount =
-                                            (category['courses_count'] as num?)
-                                                    ?.toInt() ??
-                                                0;
+                // Categories Grid - matches React: px-4 -mt-6
+                SizedBox(
+                  height: 700,
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Column(
+                      children: [
+                        SizedBox(
+                          child: Transform.translate(
+                            offset: const Offset(0, -24), // -mt-6 = -24px
+                            child: _isLoading
+                                ? _buildLoadingState()
+                                : _categories.isEmpty
+                                    ? _buildEmptyState()
+                                    : RefreshIndicator(
+                                        onRefresh: _loadCategories,
+                                        child: SingleChildScrollView(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 16), // px-4
+                                          physics:
+                                              const AlwaysScrollableScrollPhysics(),
+                                          child: GridView.builder(
+                                            shrinkWrap: true,
+                                            physics:
+                                                const NeverScrollableScrollPhysics(),
+                                            gridDelegate:
+                                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                              crossAxisCount: 2,
+                                              crossAxisSpacing: 16, // gap-4
+                                              mainAxisSpacing: 16, // gap-4
+                                              childAspectRatio: 0.85,
+                                            ),
+                                            itemCount: _categories.length,
+                                            itemBuilder: (context, index) {
+                                              final category =
+                                                  _categories[index];
+                                              final colorValue =
+                                                  category['color'];
+                                              final Color color =
+                                                  _parseColor(colorValue);
+                                              final iconUrl =
+                                                  category['icon']?.toString();
+                                              final icon =
+                                                  _getCategoryIcon(iconUrl);
+                                              final name = category['name_ar']
+                                                      ?.toString() ??
+                                                  category['name']
+                                                      ?.toString() ??
+                                                  'التصنيف';
+                                              final coursesCount =
+                                                  (category['courses_count']
+                                                              as num?)
+                                                          ?.toInt() ??
+                                                      0;
 
-                                        return TweenAnimationBuilder<double>(
-                                          tween: Tween(begin: 0.0, end: 1.0),
-                                          duration: Duration(
-                                              milliseconds: 500 + (index * 50)),
-                                          builder: (context, value, child) {
-                                            return Opacity(
-                                              opacity: value,
-                                              child: Transform.scale(
-                                                scale: 0.8 + (value * 0.2),
-                                                child: child,
-                                              ),
-                                            );
-                                          },
-                                          child: GestureDetector(
-                                            onTap: () =>
-                                                _handleCategoryClick(category),
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color: Colors.white,
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                        24), // rounded-3xl
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: Colors.black
-                                                        .withOpacity(
-                                                            0.05), // shadow-sm
-                                                    blurRadius: 4,
-                                                    offset: const Offset(0, 2),
-                                                  ),
-                                                ],
-                                              ),
-                                              child: Stack(
-                                                children: [
-                                                  // Gradient overlay on hover (simulated)
-                                                  Positioned.fill(
-                                                    child: Container(
-                                                      decoration: BoxDecoration(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(24),
-                                                        gradient:
-                                                            LinearGradient(
-                                                          begin:
-                                                              Alignment.topLeft,
-                                                          end: Alignment
-                                                              .bottomRight,
-                                                          colors: [
-                                                            color.withOpacity(
-                                                                0.1),
-                                                            color.withOpacity(
-                                                                0.05),
-                                                          ],
-                                                        ),
-                                                      ),
+                                              return TweenAnimationBuilder<
+                                                  double>(
+                                                tween:
+                                                    Tween(begin: 0.0, end: 1.0),
+                                                duration: Duration(
+                                                    milliseconds:
+                                                        500 + (index * 50)),
+                                                builder:
+                                                    (context, value, child) {
+                                                  return Opacity(
+                                                    opacity: value,
+                                                    child: Transform.scale(
+                                                      scale:
+                                                          0.8 + (value * 0.2),
+                                                      child: child,
                                                     ),
-                                                  ),
-
-                                                  // Content - matches React: p-5
-                                                  Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            20), // p-5
-                                                    child: Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
+                                                  );
+                                                },
+                                                child: GestureDetector(
+                                                  onTap: () =>
+                                                      _handleCategoryClick(
+                                                          category),
+                                                  child: Container(
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.white,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              24), // rounded-3xl
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: Colors.black
+                                                              .withOpacity(
+                                                                  0.05), // shadow-sm
+                                                          blurRadius: 4,
+                                                          offset: const Offset(
+                                                              0, 2),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    child: Stack(
                                                       children: [
-                                                        // Icon - matches React: w-16 h-16 rounded-2xl mb-4
-                                                        Container(
-                                                          width: 64, // w-16
-                                                          height: 64, // h-16
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            color: color
-                                                                .withOpacity(
-                                                                    0.15), // color15
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        16), // rounded-2xl
+                                                        // Gradient overlay on hover (simulated)
+                                                        Positioned.fill(
+                                                          child: Container(
+                                                            decoration:
+                                                                BoxDecoration(
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          24),
+                                                              gradient:
+                                                                  LinearGradient(
+                                                                begin: Alignment
+                                                                    .topLeft,
+                                                                end: Alignment
+                                                                    .bottomRight,
+                                                                colors: [
+                                                                  color
+                                                                      .withOpacity(
+                                                                          0.1),
+                                                                  color
+                                                                      .withOpacity(
+                                                                          0.05),
+                                                                ],
+                                                              ),
+                                                            ),
                                                           ),
-                                                          child: iconUrl != null &&
-                                                                  iconUrl
-                                                                      .isNotEmpty &&
-                                                                  iconUrl
-                                                                      .startsWith(
-                                                                          'http')
-                                                              ? ClipRRect(
+                                                        ),
+
+                                                        // Content - matches React: p-5
+                                                        Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(
+                                                                  20), // p-5
+                                                          child: Column(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .start,
+                                                            children: [
+                                                              // Icon - matches React: w-16 h-16 rounded-2xl mb-4
+                                                              Container(
+                                                                width:
+                                                                    64, // w-16
+                                                                height:
+                                                                    64, // h-16
+                                                                decoration:
+                                                                    BoxDecoration(
+                                                                  color: color
+                                                                      .withOpacity(
+                                                                          0.15), // color15
                                                                   borderRadius:
                                                                       BorderRadius
                                                                           .circular(
-                                                                              16),
-                                                                  child: Image
-                                                                      .network(
-                                                                    iconUrl,
-                                                                    width: 32,
-                                                                    height: 32,
-                                                                    fit: BoxFit
-                                                                        .cover,
-                                                                    errorBuilder: (context,
-                                                                            error,
-                                                                            stackTrace) =>
-                                                                        Icon(
-                                                                      icon,
-                                                                      size: 32,
-                                                                      color:
-                                                                          color,
-                                                                    ),
-                                                                  ),
-                                                                )
-                                                              : Icon(
-                                                                  icon,
-                                                                  size:
-                                                                      32, // w-8 h-8
+                                                                              16), // rounded-2xl
+                                                                ),
+                                                                child:
+                                                                    _buildCategoryIcon(
+                                                                  iconUrl:
+                                                                      iconUrl,
+                                                                  icon: icon,
                                                                   color: color,
                                                                 ),
-                                                        ),
-                                                        const SizedBox(
-                                                            height: 16), // mb-4
+                                                              ),
+                                                              const SizedBox(
+                                                                  height:
+                                                                      16), // mb-4
 
-                                                        // Title - matches React: font-bold text-lg mb-1
-                                                        Text(
-                                                          name,
-                                                          style:
-                                                              AppTextStyles.h4(
-                                                            color: AppColors
-                                                                .foreground,
+                                                              // Title - matches React: font-bold text-lg mb-1
+                                                              Text(
+                                                                name,
+                                                                style:
+                                                                    AppTextStyles
+                                                                        .h4(
+                                                                  color: AppColors
+                                                                      .foreground,
+                                                                ),
+                                                                maxLines: 2,
+                                                                overflow:
+                                                                    TextOverflow
+                                                                        .ellipsis,
+                                                              ),
+                                                              const SizedBox(
+                                                                  height:
+                                                                      4), // mb-1
+
+                                                              // Courses count - matches React: text-sm
+                                                              Text(
+                                                                '$coursesCount ${coursesCount == 1 ? 'دورة' : 'دورات'}',
+                                                                style: AppTextStyles
+                                                                    .bodySmall(
+                                                                  color: AppColors
+                                                                      .mutedForeground,
+                                                                ),
+                                                              ),
+                                                            ],
                                                           ),
-                                                          maxLines: 2,
-                                                          overflow: TextOverflow
-                                                              .ellipsis,
                                                         ),
-                                                        const SizedBox(
-                                                            height: 4), // mb-1
 
-                                                        // Courses count - matches React: text-sm
-                                                        Text(
-                                                          '$coursesCount ${coursesCount == 1 ? 'دورة' : 'دورات'}',
-                                                          style: AppTextStyles
-                                                              .bodySmall(
-                                                            color: AppColors
-                                                                .mutedForeground,
+                                                        // Animated corner accent
+                                                        Positioned(
+                                                          bottom: -16,
+                                                          left: -16,
+                                                          child: Container(
+                                                            width: 64, // w-16
+                                                            height: 64, // h-16
+                                                            decoration:
+                                                                BoxDecoration(
+                                                              color: color
+                                                                  .withOpacity(
+                                                                      0.2),
+                                                              shape: BoxShape
+                                                                  .circle,
+                                                            ),
                                                           ),
                                                         ),
                                                       ],
                                                     ),
                                                   ),
-
-                                                  // Animated corner accent
-                                                  Positioned(
-                                                    bottom: -16,
-                                                    left: -16,
-                                                    child: Container(
-                                                      width: 64, // w-16
-                                                      height: 64, // h-16
-                                                      decoration: BoxDecoration(
-                                                        color: color
-                                                            .withOpacity(0.2),
-                                                        shape: BoxShape.circle,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
+                                                ),
+                                              );
+                                            },
                                           ),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ),
+                                        ),
+                                      ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
+          ),
 
-            // Bottom Navigation
-            const BottomNav(activeTab: 'home'),
-          ],
-        ),
+          // Bottom Navigation
+          const BottomNav(activeTab: 'home'),
+        ],
       ),
     );
   }

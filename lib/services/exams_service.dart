@@ -86,5 +86,49 @@ class ExamsService {
       rethrow;
     }
   }
+
+  /// Get course exams
+  Future<List<Map<String, dynamic>>> getCourseExams(String courseId) async {
+    try {
+      final response = await ApiClient.instance.get(
+        ApiEndpoints.courseExams(courseId),
+        requireAuth: false, // Allow unauthenticated access
+      );
+      
+      if (response['success'] == true && response['data'] != null) {
+        final data = response['data'];
+        if (data is List) {
+          return data.map((exam) => exam as Map<String, dynamic>).toList();
+        } else {
+          return [];
+        }
+      } else {
+        throw Exception(response['message'] ?? 'Failed to fetch course exams');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Get course exam details
+  Future<Map<String, dynamic>> getCourseExamDetails(
+    String courseId,
+    String examId,
+  ) async {
+    try {
+      final response = await ApiClient.instance.get(
+        ApiEndpoints.courseExamDetails(courseId, examId),
+        requireAuth: false, // Allow unauthenticated access
+      );
+      
+      if (response['success'] == true && response['data'] != null) {
+        return response['data'] as Map<String, dynamic>;
+      } else {
+        throw Exception(response['message'] ?? 'Failed to fetch exam details');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
 }
 

@@ -13,6 +13,7 @@ import '../../services/home_service.dart';
 import '../../services/profile_service.dart';
 import '../../services/notifications_service.dart';
 import '../../l10n/app_localizations.dart';
+import '../../data/sample_teachers.dart';
 
 /// Home Screen - Enhanced with 3D Banner & Modern Design
 class HomeScreen extends StatefulWidget {
@@ -37,6 +38,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   List<Map<String, dynamic>> _popularCourses = [];
   List<Map<String, dynamic>> _continueLearning = [];
   List<Map<String, dynamic>> _categories = [];
+  final List<Map<String, dynamic>> _teachers = List<Map<String, dynamic>>.from(
+    kSampleTeachers,
+  );
 
   @override
   void initState() {
@@ -123,10 +127,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   List<Map<String, dynamic>> get _allCourses =>
       [..._featuredCourses, ..._popularCourses, ..._continueLearning];
 
+  void _handleTeacherTap(Map<String, dynamic> teacher) {
+    if (!mounted) return;
+    context.push(RouteNames.teacherDetails, extra: teacher);
+  }
+
   void _handleCourseClick(Map<String, dynamic> course) async {
     final prefs = await SharedPreferences.getInstance();
     final isLoggedIn = prefs.getBool('hasLaunched') ?? false;
-    final isFree = course['isFree'] == true;
+    final isFree = course['isFree'] == true || course['is_free'] == true;
 
     if (!isFree && !isLoggedIn) {
       if (mounted) {
@@ -160,45 +169,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       return;
     }
 
-    final courseData = {
-      ...course,
-      'lessons': [
-        {
-          'id': 1,
-          'title': 'المقدمة',
-          'duration': '2 دقيقة 18 ثانية',
-          'completed': true,
-          'locked': false,
-          'youtubeVideoId': course['youtubeVideoId'] ?? 'AevtORdu4pc'
-        },
-        {
-          'id': 2,
-          'title': 'الدرس الأول',
-          'duration': '18 دقيقة 46 ثانية',
-          'completed': false,
-          'locked': false,
-          'youtubeVideoId': course['youtubeVideoId'] ?? 'AevtORdu4pc'
-        },
-        {
-          'id': 3,
-          'title': 'الدرس الثاني',
-          'duration': '20 دقيقة 58 ثانية',
-          'completed': false,
-          'locked': !isFree,
-          'youtubeVideoId': course['youtubeVideoId'] ?? 'AevtORdu4pc'
-        },
-        {
-          'id': 4,
-          'title': 'اختبار الفصل الأول',
-          'duration': '15 دقيقة',
-          'completed': false,
-          'locked': !isFree,
-          'isExam': true
-        },
-      ],
-    };
     if (mounted) {
-      context.push(RouteNames.courseDetails, extra: courseData);
+      context.push(RouteNames.courseDetails, extra: course);
     }
   }
 
@@ -212,6 +184,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
 
     final statusBarHeight = MediaQuery.of(context).padding.top;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: AppColors.beige,
@@ -242,18 +215,43 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 // 3D Banner
-                                _build3DBanner(),
+                                if (_isLoading)
+                                  _build3DBannerSkeleton()
+                                else
+                                  _build3DBanner(),
 
                                 const SizedBox(height: 24),
 
                                 // Quick Stats Row
-                                _buildQuickStats(),
+                                if (_isLoading)
+                                  _buildQuickStatsSkeleton()
+                                else
+                                  _buildQuickStats(),
+
+                                const SizedBox(height: 24),
+
+                                // Teachers slider (static until API ready)
+                                _buildSectionHeader(l10n.teachers, () {
+                                  context.push(
+                                    RouteNames.teachers,
+                                    extra: _teachers,
+                                  );
+                                }),
+                                const SizedBox(height: 16),
+                                _buildTeachersSlider(l10n),
 
                                 const SizedBox(height: 28),
 
                                 // Featured Courses
-                                if (!_isLoading &&
-                                    _featuredCourses.isNotEmpty) ...[
+                                if (_isLoading) ...[
+                                  _buildSectionHeader(
+                                      AppLocalizations.of(context)!
+                                          .featuredCourses,
+                                      () {}),
+                                  const SizedBox(height: 16),
+                                  _buildFeaturedCoursesSkeleton(),
+                                  const SizedBox(height: 28),
+                                ] else if (_featuredCourses.isNotEmpty) ...[
                                   _buildSectionHeader(
                                       AppLocalizations.of(context)!
                                           .featuredCourses, () {
@@ -265,7 +263,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 ],
 
                                 // Categories
-                                if (!_isLoading && _categories.isNotEmpty) ...[
+                                if (_isLoading) ...[
+                                  _buildSectionHeader(
+                                      AppLocalizations.of(context)!.categories,
+                                      () {}),
+                                  const SizedBox(height: 16),
+                                  _buildCategoriesSkeleton(),
+                                  const SizedBox(height: 28),
+                                ] else if (_categories.isNotEmpty) ...[
                                   _buildSectionHeader(
                                       AppLocalizations.of(context)!.categories,
                                       () {
@@ -277,8 +282,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 ],
 
                                 // Continue Learning
-                                if (!_isLoading &&
-                                    _continueLearning.isNotEmpty) ...[
+                                if (_isLoading) ...[
+                                  _buildSectionHeader(
+                                      AppLocalizations.of(context)!
+                                          .continueLearning,
+                                      () {}),
+                                  const SizedBox(height: 16),
+                                  _buildContinueLearningSkeleton(),
+                                  const SizedBox(height: 28),
+                                ] else if (_continueLearning.isNotEmpty) ...[
                                   _buildSectionHeader(
                                       AppLocalizations.of(context)!
                                           .continueLearning, () {
@@ -290,8 +302,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 ],
 
                                 // Popular Courses
-                                if (!_isLoading &&
-                                    _popularCourses.isNotEmpty) ...[
+                                if (_isLoading) ...[
+                                  _buildSectionHeader(
+                                      AppLocalizations.of(context)!
+                                          .recommendedCourses,
+                                      () {}),
+                                  const SizedBox(height: 16),
+                                  _buildRecommendedCoursesSkeleton(),
+                                ] else if (_popularCourses.isNotEmpty) ...[
                                   _buildSectionHeader(
                                       AppLocalizations.of(context)!
                                           .recommendedCourses, () {
@@ -299,36 +317,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   }),
                                   const SizedBox(height: 16),
                                   _buildRecommendedCourses(),
-                                ],
-
-                                // Loading skeletons
-                                if (_isLoading) ...[
-                                  _buildSectionHeader(
-                                      AppLocalizations.of(context)!
-                                          .featuredCourses,
-                                      () {}),
-                                  const SizedBox(height: 16),
-                                  _buildFeaturedCoursesSkeleton(),
-                                  const SizedBox(height: 28),
-                                  _buildSectionHeader(
-                                      AppLocalizations.of(context)!.categories,
-                                      () {}),
-                                  const SizedBox(height: 16),
-                                  _buildCategoriesSkeleton(),
-                                  const SizedBox(height: 28),
-                                  _buildSectionHeader(
-                                      AppLocalizations.of(context)!
-                                          .continueLearning,
-                                      () {}),
-                                  const SizedBox(height: 16),
-                                  _buildContinueLearningSkeleton(),
-                                  const SizedBox(height: 28),
-                                  _buildSectionHeader(
-                                      AppLocalizations.of(context)!
-                                          .recommendedCourses,
-                                      () {}),
-                                  const SizedBox(height: 16),
-                                  _buildRecommendedCoursesSkeleton(),
                                 ],
 
                                 const SizedBox(height: 140),
@@ -670,6 +658,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _build3DBanner() {
+    final heroBanner = _homeData?['hero_banner'] as Map<String, dynamic>?;
+    final title = heroBanner?['title']?.toString();
+    final subtitle = heroBanner?['subtitle']?.toString();
+    final buttonText = heroBanner?['button_text']?.toString();
+    final imageUrl = heroBanner?['image']?.toString();
+
+    // Don't show banner if no data
+    if (title == null && subtitle == null) {
+      return const SizedBox.shrink();
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: AnimatedBuilder(
@@ -690,7 +689,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           );
         },
         child: Container(
-          // height: 165,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
@@ -748,22 +746,43 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       flex: 4,
                       child: Transform.translate(
                         offset: const Offset(-10, 10),
-                        child: Image.asset(
-                          'assets/images/student-character.png',
-                          fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => Container(
-                            margin: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: const Icon(
-                              Icons.school_rounded,
-                              size: 60,
-                              color: Colors.white54,
-                            ),
-                          ),
-                        ),
+                        child: imageUrl != null && imageUrl.isNotEmpty
+                            ? Image.network(
+                                imageUrl,
+                                fit: BoxFit.contain,
+                                errorBuilder: (_, __, ___) => Image.asset(
+                                  'assets/images/student-character.png',
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (_, __, ___) => Container(
+                                    margin: const EdgeInsets.all(20),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: const Icon(
+                                      Icons.school_rounded,
+                                      size: 60,
+                                      color: Colors.white54,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : Image.asset(
+                                'assets/images/student-character.png',
+                                fit: BoxFit.contain,
+                                errorBuilder: (_, __, ___) => Container(
+                                  margin: const EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: const Icon(
+                                    Icons.school_rounded,
+                                    size: 60,
+                                    color: Colors.white54,
+                                  ),
+                                ),
+                              ),
                       ),
                     ),
 
@@ -776,73 +795,166 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.local_fire_department,
-                                      color: Colors.orange, size: 14),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    AppLocalizations.of(context)!.specialOffer,
-                                    style: GoogleFonts.cairo(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
+                            if (heroBanner?['badge'] != null)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.local_fire_department,
+                                        color: Colors.orange, size: 14),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      heroBanner?['badge']?.toString() ??
+                                          AppLocalizations.of(context)!
+                                              .specialOffer,
+                                      style: GoogleFonts.cairo(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              _homeData?['hero_banner']?['title'] ??
-                                  AppLocalizations.of(context)!
-                                      .startLearningJourney,
-                              style: GoogleFonts.cairo(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                height: 1.2,
-                              ),
-                            ),
-                            Text(
-                              _homeData?['hero_banner']?['subtitle'] ??
-                                  AppLocalizations.of(context)!.discount50,
-                              style: GoogleFonts.cairo(
-                                fontSize: 12,
-                                color: Colors.white.withOpacity(0.85),
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                AppLocalizations.of(context)!
-                                    .subscribeNowButton,
-                                style: GoogleFonts.cairo(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF7C3AED),
+                                  ],
                                 ),
                               ),
-                            ),
+                            if (title != null) ...[
+                              if (heroBanner?['badge'] != null)
+                                const SizedBox(height: 8),
+                              Text(
+                                title,
+                                style: GoogleFonts.cairo(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  height: 1.2,
+                                ),
+                              ),
+                            ],
+                            if (subtitle != null) ...[
+                              if (title != null) const SizedBox(height: 4),
+                              Text(
+                                subtitle,
+                                style: GoogleFonts.cairo(
+                                  fontSize: 12,
+                                  color: Colors.white.withOpacity(0.85),
+                                ),
+                              ),
+                            ],
+                            if (buttonText != null) ...[
+                              const SizedBox(height: 10),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  buttonText,
+                                  style: GoogleFonts.cairo(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF7C3AED),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ),
                     ),
                   ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _build3DBannerSkeleton() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Skeletonizer(
+        enabled: true,
+        child: Container(
+          height: 165,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF7C3AED),
+                Color(0xFF5B21B6),
+                Color(0xFF4C1D95),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 4,
+                  child: Container(
+                    height: 120,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  flex: 6,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        height: 20,
+                        width: 80,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        height: 18,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        height: 14,
+                        width: 120,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        height: 32,
+                        width: 100,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.4),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -884,6 +996,138 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             color: const Color(0xFF6366F1),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildQuickStatsSkeleton() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Skeletonizer(
+        enabled: true,
+        child: Row(
+          children: [
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      height: 20,
+                      width: 30,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      height: 11,
+                      width: 60,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      height: 20,
+                      width: 30,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      height: 11,
+                      width: 60,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      height: 20,
+                      width: 30,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      height: 11,
+                      width: 60,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -981,6 +1225,142 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTeachersSlider(AppLocalizations l10n) {
+    return SizedBox(
+      height: 220,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.only(left: 20, right: 8),
+        itemCount: _teachers.length,
+        itemBuilder: (context, index) {
+          final teacher = _teachers[index];
+          return Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: GestureDetector(
+              onTap: () => _handleTeacherTap(teacher),
+              child: Container(
+                width: 220,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 26,
+                          backgroundColor: AppColors.purple.withOpacity(0.1),
+                          backgroundImage: NetworkImage(
+                            teacher['avatar']?.toString() ?? '',
+                          ),
+                          onBackgroundImageError: (_, __) {},
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                teacher['name']?.toString() ?? '',
+                                style: GoogleFonts.cairo(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.foreground,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                teacher['title']?.toString() ?? '',
+                                style: GoogleFonts.cairo(
+                                  fontSize: 12,
+                                  color: AppColors.mutedForeground,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      teacher['bio']?.toString() ?? '',
+                      style: GoogleFonts.cairo(
+                        fontSize: 12,
+                        color: AppColors.mutedForeground,
+                      ),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const Spacer(),
+                    Row(
+                      children: [
+                        const Icon(Icons.star_rounded,
+                            size: 16, color: Colors.amber),
+                        const SizedBox(width: 4),
+                        Text(
+                          (teacher['rating'] ?? 0).toString(),
+                          style: GoogleFonts.cairo(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Icon(Icons.people_alt_rounded,
+                            size: 16, color: AppColors.purple),
+                        const SizedBox(width: 4),
+                        Text(
+                          l10n.studentsCount(
+                              (teacher['students'] as int?) ?? 0),
+                          style: GoogleFonts.cairo(
+                            fontSize: 12,
+                            color: AppColors.mutedForeground,
+                          ),
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.purple.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            l10n.coursesCount(
+                              (teacher['courses'] as List?)?.length ?? 0,
+                            ),
+                            style: GoogleFonts.cairo(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.purple,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -1113,6 +1493,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         'restaurant': Icons.restaurant,
         'local_movies': Icons.local_movies,
         'photo_camera': Icons.photo_camera,
+        'briefcase': Icons.business_center,
+        'book': Icons.menu_book,
+        'calculate': Icons.calculate,
+        'bolt': Icons.bolt,
       };
 
       // Try to find the icon by name (case-insensitive)
@@ -1123,9 +1507,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         return Icon(iconData, color: color, size: 26);
       }
 
-      // If icon is a URL, show an image icon
-      if (iconValue.startsWith('http://') || iconValue.startsWith('https://')) {
-        return Icon(Icons.image, color: color, size: 26);
+      // If icon is a URL, try to load the image, fallback to default icon on error
+      if (iconValue.startsWith('http://') ||
+          iconValue.startsWith('https://') ||
+          iconValue.startsWith('/')) {
+        return Image.network(
+          iconValue,
+          width: 26,
+          height: 26,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) {
+            // Return default icon on error, not an image
+            return Icon(Icons.category, color: color, size: 26);
+          },
+        );
       }
     }
 
@@ -1993,3 +2388,7 @@ class _SearchOverlayState extends State<_SearchOverlay> {
     );
   }
 }
+
+
+// 1- وفيها زرار عرض المزيد تدخلك علي صفحه كل المعلمين  اعمل سلايدر المعلمون
+// 2- لو ضغط علي اي معلم يفتح صفحه سينجل للمدرس تعرض الصوره واسمو بشكل رايق ونبذه عنو وتحتها كورساتو 

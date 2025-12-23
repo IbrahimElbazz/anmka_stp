@@ -1,3 +1,5 @@
+import 'dart:developer';
+import 'package:educational_app/core/notification_service/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:screen_protector/screen_protector.dart';
@@ -6,9 +8,16 @@ import 'core/navigation/app_router.dart';
 import 'core/config/app_config_provider.dart';
 import 'core/config/theme_provider.dart';
 import 'l10n/app_localizations.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  await FirebaseNotification.initializeNotifications();
+  log('FCM Token: ${FirebaseNotification.fcmToken}');
 
   // Initialize screen protection (prevent screenshots and screen recording)
   try {

@@ -134,6 +134,21 @@ class AppLocalizationsAr extends AppLocalizations {
   String get phonePlaceholder => '01xxxxxxxxx';
 
   @override
+  String get studentType => 'نوع الطالب';
+
+  @override
+  String get inPersonStudent => 'طالب محاضري';
+
+  @override
+  String get onlineStudent => 'طالب أونلاين';
+
+  @override
+  String get bothStudentTypes => ' كلاهما';
+
+  @override
+  String get selectStudentType => 'يرجى اختيار نوع الطالب';
+
+  @override
   String get invalidPhone => 'رقم الهاتف غير صحيح';
 
   @override
@@ -585,7 +600,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String coursesCount(int count) {
-    return '$count دورة';
+    return '$count دورات';
   }
 
   @override
@@ -1282,4 +1297,47 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get verificationLinkLabel => 'رابط التحقق';
+
+  @override
+  String get centerAttendance => 'حضور السنتر';
+
+  @override
+  String get centerAttendanceDescription =>
+      'اعرض هذا الكود عند السنتر لتسجيل حضورك';
+
+  @override
+  String get loadingQrCode => 'جاري تحميل الكود...';
+
+  @override
+  String get errorLoadingQrCode => 'حدث خطأ أثناء تحميل الكود';
+
+  @override
+  String get scanQrCodeInstruction =>
+      'اعرض هذا الكود لموظفي السنتر لتسجيل حضورك';
+
+  @override
+  String get refreshQrCode => 'تحديث الكود';
+
+  @override
+  String get retry => 'إعادة المحاولة';
+
+  @override
+  String get unknownError => 'حدث خطأ غير معروف';
+
+  @override
+  String get teachers => 'المعلمون';
+
+  @override
+  String get allTeachers => 'جميع المعلمين';
+
+  @override
+  String get teacherFallback => 'المعلم';
+
+  @override
+  String get teacherCoursesTitle => 'الدورات المقدمة';
+
+  @override
+  String studentsCount(int count) {
+    return '$count طالب';
+  }
 }

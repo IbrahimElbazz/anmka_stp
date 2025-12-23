@@ -1,14 +1,15 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:pod_player/pod_player.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import '../../core/design/app_colors.dart';
 import '../../core/navigation/route_names.dart';
 import '../../services/courses_service.dart';
 import '../../services/exams_service.dart';
+import '../../core/api/api_client.dart';
 import '../../services/wishlist_service.dart';
 
 /// Modern Course Details Screen with Beautiful UI
@@ -24,15 +25,13 @@ class CourseDetailsScreen extends StatefulWidget {
 class _CourseDetailsScreenState extends State<CourseDetailsScreen>
     with TickerProviderStateMixin {
   late TabController _tabController;
-  PodPlayerController? _podController;
   int _selectedLessonIndex = 0;
-  bool _isVideoLoading = true;
   bool _isLoading = false;
   bool _isEnrolling = false;
   bool _isEnrolled = false;
   Map<String, dynamic>? _courseData;
-  Map<String, dynamic>? _trialExamData;
-  bool _isLoadingExam = false;
+  List<Map<String, dynamic>> _courseExams = [];
+  bool _isLoadingExams = false;
   bool _isInWishlist = false;
   bool _isTogglingWishlist = false;
 
@@ -53,122 +52,299 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen>
         try {
           final courseDetails =
               await CoursesService.instance.getCourseDetails(courseId);
+
+          // Print detailed response
+          if (kDebugMode) {
+            print(
+                '═══════════════════════════════════════════════════════════');
+            print('📋 COURSE DETAILS RESPONSE (getCourseDetails)');
+            print(
+                '═══════════════════════════════════════════════════════════');
+            print('Course ID: $courseId');
+            print('Response Type: ${courseDetails.runtimeType}');
+            print('Response Keys: ${courseDetails.keys.toList()}');
+            print(
+                '───────────────────────────────────────────────────────────');
+            print('Full Response JSON:');
+            try {
+              const encoder = JsonEncoder.withIndent('  ');
+              print(encoder.convert(courseDetails));
+            } catch (e) {
+              print('Could not convert to JSON: $e');
+              print('Raw Response: $courseDetails');
+            }
+            print(
+                '───────────────────────────────────────────────────────────');
+            print('Key Fields:');
+            print('  - id: ${courseDetails['id']}');
+            print('  - title: ${courseDetails['title']}');
+            print('  - price: ${courseDetails['price']}');
+            print('  - is_free: ${courseDetails['is_free']}');
+            print('  - is_enrolled: ${courseDetails['is_enrolled']}');
+            print('  - is_in_wishlist: ${courseDetails['is_in_wishlist']}');
+            print('  - rating: ${courseDetails['rating']}');
+            print('  - students_count: ${courseDetails['students_count']}');
+            print('  - duration_hours: ${courseDetails['duration_hours']}');
+            print(
+                '  - curriculum length: ${(courseDetails['curriculum'] as List?)?.length ?? 0}');
+            print(
+                '  - lessons length: ${(courseDetails['lessons'] as List?)?.length ?? 0}');
+            print(
+                '───────────────────────────────────────────────────────────');
+            print('📚 CURRICULUM DETAILS:');
+            final curriculum = courseDetails['curriculum'] as List?;
+            if (curriculum != null && curriculum.isNotEmpty) {
+              print('  Total Items: ${curriculum.length}');
+
+              // First, show summary of all topics
+              print('');
+              print('📁 ALL TOPICS FROM API:');
+              print(
+                  '═══════════════════════════════════════════════════════════');
+              int topicCount = 0;
+              for (int i = 0; i < curriculum.length; i++) {
+                final item = curriculum[i];
+                if (item is Map) {
+                  // Check if this is a topic (has lessons field, even if empty)
+                  // A topic is identified by having a 'lessons' field (can be empty list)
+                  // OR by not having video/youtube_id fields (which indicate it's a lesson)
+                  final nestedLessons = item['lessons'] as List?;
+                  final hasVideo = item['video'] != null;
+                  final hasYoutubeId = item['youtube_id'] != null ||
+                      item['youtubeVideoId'] != null;
+
+                  // It's a topic if:
+                  // 1. It has a 'lessons' field (even if empty), OR
+                  // 2. It doesn't have video/youtube_id (meaning it's a container, not a lesson)
+                  final isTopic =
+                      nestedLessons != null || (!hasVideo && !hasYoutubeId);
+
+                  if (isTopic) {
+                    topicCount++;
+                    final lessonsCount = nestedLessons?.length ?? 0;
+                    print('📁 TOPIC $topicCount:');
+                    print('  - ID: ${item['id']}');
+                    print('  - Title: ${item['title']}');
+                    print('  - Order: ${item['order']}');
+                    print('  - Type: ${item['type']}');
+                    print('  - Lessons Count: $lessonsCount');
+                    print('  - Duration Minutes: ${item['duration_minutes']}');
+                    print('  - Has Lessons Field: ${nestedLessons != null}');
+                    print('  - All Topic Keys: ${item.keys.toList()}');
+
+                    // If it has lessons, show them
+                    if (nestedLessons != null && nestedLessons.isNotEmpty) {
+                      print('  - Lessons:');
+                      for (int j = 0; j < nestedLessons.length; j++) {
+                        final lesson = nestedLessons[j];
+                        if (lesson is Map) {
+                          print(
+                              '      Lesson ${j + 1}: ${lesson['title'] ?? lesson['id']}');
+                        }
+                      }
+                    } else if (nestedLessons != null && nestedLessons.isEmpty) {
+                      print('  - ⚠️ This topic has an empty lessons array');
+                    } else {
+                      print('  - ⚠️ This topic does not have a lessons field');
+                    }
+                    print('');
+                  }
+                }
+              }
+              print(
+                  '═══════════════════════════════════════════════════════════');
+              print('Total Topics Found: $topicCount');
+              print('Total Curriculum Items: ${curriculum.length}');
+              print(
+                  '═══════════════════════════════════════════════════════════');
+              print('');
+
+              // Then show all items in detail
+              print('📋 ALL CURRICULUM ITEMS (DETAILED):');
+              for (int i = 0; i < curriculum.length; i++) {
+                final item = curriculum[i];
+                if (item is Map) {
+                  print(
+                      '───────────────────────────────────────────────────────────');
+                  print('  Item ${i + 1}:');
+                  print('    - id: ${item['id']}');
+                  print('    - title: ${item['title']}');
+                  print('    - order: ${item['order']}');
+                  print('    - type: ${item['type']}');
+                  print('    - video: ${item['video']}');
+                  print('    - youtube_id: ${item['youtube_id']}');
+                  print('    - youtubeVideoId: ${item['youtubeVideoId']}');
+                  print('    - duration_minutes: ${item['duration_minutes']}');
+                  print('    - is_locked: ${item['is_locked']}');
+                  print('    - is_completed: ${item['is_completed']}');
+                  if (item['lessons'] != null) {
+                    final lessonsList = item['lessons'] as List?;
+                    print('    - has lessons: ${lessonsList?.length ?? 0}');
+                    if (lessonsList != null && lessonsList.isNotEmpty) {
+                      print('    - Lessons in this topic:');
+                      for (int j = 0; j < lessonsList.length; j++) {
+                        final lesson = lessonsList[j];
+                        if (lesson is Map) {
+                          print('      Lesson ${j + 1}:');
+                          print('        - id: ${lesson['id']}');
+                          print('        - title: ${lesson['title']}');
+                          print('        - type: ${lesson['type']}');
+                        }
+                      }
+                    }
+                  }
+                  print('    - All Keys: ${item.keys.toList()}');
+
+                  // Print full JSON for topics
+                  final nestedLessons = item['lessons'] as List?;
+                  if (nestedLessons != null && nestedLessons.isNotEmpty) {
+                    try {
+                      const encoder = JsonEncoder.withIndent('    ');
+                      print('    - Full Topic JSON:');
+                      print(encoder.convert(item));
+                    } catch (e) {
+                      print('    - Could not convert topic to JSON: $e');
+                    }
+                  }
+                }
+              }
+            } else {
+              print('  Curriculum is empty or null');
+            }
+            print(
+                '───────────────────────────────────────────────────────────');
+            print('📖 LESSONS DETAILS:');
+            final lessons = courseDetails['lessons'] as List?;
+            if (lessons != null && lessons.isNotEmpty) {
+              print('  Total Lessons: ${lessons.length}');
+              for (int i = 0; i < lessons.length && i < 3; i++) {
+                final lesson = lessons[i];
+                if (lesson is Map) {
+                  print('  Lesson $i:');
+                  print('    - id: ${lesson['id']}');
+                  print('    - title: ${lesson['title']}');
+                  print('    - video: ${lesson['video']}');
+                  print('    - All Keys: ${lesson.keys.toList()}');
+                }
+              }
+            } else {
+              print('  Lessons is empty or null');
+            }
+            print(
+                '═══════════════════════════════════════════════════════════');
+          }
+
           setState(() {
             _courseData = courseDetails;
             _isEnrolled = courseDetails['is_enrolled'] == true;
             _isInWishlist = courseDetails['is_in_wishlist'] == true;
             _isLoading = false;
           });
-          _initializeVideo();
-          _loadTrialExam();
+          _loadCourseExams();
           _checkWishlistStatus();
         } catch (e) {
           if (kDebugMode) {
-            print('❌ Error loading course details: $e');
+            print(
+                '═══════════════════════════════════════════════════════════');
+            print('❌ ERROR LOADING COURSE DETAILS');
+            print(
+                '═══════════════════════════════════════════════════════════');
+            print('Course ID: $courseId');
+            print('Error: $e');
+            print('Error Type: ${e.runtimeType}');
+            print(
+                '═══════════════════════════════════════════════════════════');
           }
           setState(() {
             _courseData = widget.course; // Fallback to provided course
             _isLoading = false;
           });
-          _initializeVideo();
         }
       } else {
         setState(() {
           _courseData = widget.course;
         });
-        _initializeVideo();
       }
     } else {
       setState(() {
         _courseData = widget.course;
       });
-      _initializeVideo();
-    }
-  }
-
-  Future<void> _initializeVideo() async {
-    final course = _courseData ?? widget.course;
-    final curriculum = course?['curriculum'] as List?;
-    final lessons = course?['lessons'] as List?;
-
-    // Try to get video from curriculum first, then lessons
-    String? videoId;
-    if (curriculum != null && curriculum.isNotEmpty) {
-      final firstLesson = curriculum[0];
-      if (firstLesson is Map) {
-        videoId = firstLesson['video']?['youtube_id']?.toString() ??
-            firstLesson['youtubeVideoId']?.toString();
-      }
-    }
-
-    if (videoId == null && lessons != null && lessons.isNotEmpty) {
-      final firstLesson = lessons[0];
-      if (firstLesson is Map) {
-        videoId = firstLesson['video']?['youtube_id']?.toString() ??
-            firstLesson['youtubeVideoId']?.toString();
-      }
-    }
-
-    videoId = videoId ?? 'AevtORdu4pc';
-
-    try {
-      _podController = PodPlayerController(
-        playVideoFrom:
-            PlayVideoFrom.youtube('https://www.youtube.com/watch?v=$videoId'),
-        podPlayerConfig: const PodPlayerConfig(
-          autoPlay: false,
-          isLooping: false,
-        ),
-      )..initialise().then((_) {
-          if (mounted) {
-            setState(() => _isVideoLoading = false);
-          }
-        });
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isVideoLoading = false);
-      }
     }
   }
 
   @override
   void dispose() {
     _tabController.dispose();
-    _podController?.dispose();
     super.dispose();
   }
 
-  void _playLesson(int index, Map<String, dynamic> lesson) async {
-    // Extract video ID from lesson
-    String? videoId;
-    if (lesson['video'] is Map) {
-      videoId = lesson['video']?['youtube_id']?.toString();
+  Map<String, dynamic>? _getFirstLesson() {
+    final course = _courseData ?? widget.course;
+    final curriculum = course?['curriculum'] as List?;
+    final lessons = course?['lessons'] as List?;
+    Map<String, dynamic>? firstLesson;
+
+    if (curriculum != null && curriculum.isNotEmpty) {
+      for (var item in curriculum) {
+        if (item is Map<String, dynamic>) {
+          // Check if this item has nested lessons (it's a topic/section)
+          final nestedLessons = item['lessons'] as List?;
+          if (nestedLessons != null && nestedLessons.isNotEmpty) {
+            // Use first nested lesson
+            final nestedLesson = nestedLessons[0];
+            if (nestedLesson is Map<String, dynamic>) {
+              firstLesson = nestedLesson;
+              break;
+            }
+          } else {
+            // This item is a lesson itself (has video or id)
+            if (item['video'] != null ||
+                item['id'] != null ||
+                item['youtube_id'] != null ||
+                item['youtubeVideoId'] != null) {
+              firstLesson = item;
+              break;
+            }
+          }
+        }
+      }
     }
-    videoId = videoId ?? lesson['youtubeVideoId']?.toString() ?? 'AevtORdu4pc';
+
+    // If no lesson from curriculum, use lessons directly
+    if (firstLesson == null && lessons != null && lessons.isNotEmpty) {
+      final lesson = lessons[0];
+      if (lesson is Map<String, dynamic>) {
+        firstLesson = lesson;
+      }
+    }
+
+    return firstLesson;
+  }
+
+  void _playLesson(int index, Map<String, dynamic> lesson) async {
+    if (kDebugMode) {
+      print('═══════════════════════════════════════════════════════════');
+      print('▶️ NAVIGATING TO LESSON');
+      print('═══════════════════════════════════════════════════════════');
+      print('Lesson Index: $index');
+      print('Lesson ID: ${lesson['id']}');
+      print('Lesson Title: ${lesson['title']}');
+      print('All Lesson Keys: ${lesson.keys.toList()}');
+      print('═══════════════════════════════════════════════════════════');
+    }
+
     setState(() {
       _selectedLessonIndex = index;
-      _isVideoLoading = true;
     });
 
-    _podController?.dispose();
-
-    try {
-      _podController = PodPlayerController(
-        playVideoFrom:
-            PlayVideoFrom.youtube('https://www.youtube.com/watch?v=$videoId'),
-        podPlayerConfig: const PodPlayerConfig(
-          autoPlay: true,
-          isLooping: false,
-        ),
-      )..initialise().then((_) {
-          if (mounted) {
-            setState(() => _isVideoLoading = false);
-          }
-        });
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isVideoLoading = false);
-      }
+    // Navigate to lesson viewer screen
+    if (mounted) {
+      final course = _courseData ?? widget.course;
+      final courseId = course?['id']?.toString();
+      context.push(RouteNames.lessonViewer, extra: {
+        'lesson': lesson,
+        'courseId': courseId,
+      });
     }
   }
 
@@ -222,46 +398,43 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen>
     return Scaffold(
       backgroundColor: AppColors.beige,
       body: SafeArea(
-        child: Column(
-          children: [
-            // Video Player Section
-            _buildVideoSection(),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // Video Player Section
+              _buildVideoSection(),
 
-            // Content Section - Scrollable
-            Expanded(
-              child: Container(
+              // Content Section - Scrollable
+              Container(
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
                 ),
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  child: Column(
-                    children: [
-                      // Course Info Header
-                      _buildCourseHeader(course, finalIsFree, priceValue),
+                child: Column(
+                  children: [
+                    // Course Info Header
+                    _buildCourseHeader(course, finalIsFree, priceValue),
 
-                      // Tabs
-                      _buildTabs(),
+                    // Tabs
+                    _buildTabs(),
 
-                      // Tab Content
-                      SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.5,
-                        child: TabBarView(
-                          controller: _tabController,
-                          children: [
-                            _buildLessonsTab(),
-                            _buildAboutTab(course),
-                            _buildTrialExamTab(),
-                          ],
-                        ),
+                    // Tab Content
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.5,
+                      child: TabBarView(
+                        controller: _tabController,
+                        children: [
+                          _buildLessonsTab(),
+                          _buildAboutTab(course),
+                          _buildExamsTab(),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
 
@@ -271,28 +444,111 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen>
   }
 
   Widget _buildVideoSection() {
+    final course = _courseData ?? widget.course;
+    // Get thumbnail image
+    final thumbnail = course?['thumbnail']?.toString() ??
+        course?['image']?.toString() ??
+        course?['banner']?.toString();
+
     return Container(
       height: 220,
       color: Colors.black,
       child: Stack(
         children: [
-          // Video Player
-          if (_podController != null && !_isVideoLoading)
-            PodVideoPlayer(
-              controller: _podController!,
-              videoAspectRatio: 16 / 9,
-              podProgressBarConfig: const PodProgressBarConfig(
-                playingBarColor: AppColors.purple,
-                circleHandlerColor: AppColors.purple,
-                bufferedBarColor: Colors.white30,
+          // Thumbnail Image
+          if (thumbnail != null && thumbnail.isNotEmpty)
+            Positioned.fill(
+              child: Image.network(
+                thumbnail,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  color: AppColors.purple.withOpacity(0.1),
+                  child: const Center(
+                    child: Icon(
+                      Icons.image,
+                      color: AppColors.purple,
+                      size: 50,
+                    ),
+                  ),
+                ),
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Container(
+                    color: Colors.black,
+                    child: const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.purple,
+                      ),
+                    ),
+                  );
+                },
               ),
             )
           else
             Container(
-              color: Colors.black,
+              color: AppColors.purple.withOpacity(0.1),
               child: const Center(
-                child: CircularProgressIndicator(
+                child: Icon(
+                  Icons.image,
                   color: AppColors.purple,
+                  size: 50,
+                ),
+              ),
+            ),
+
+          // Gradient Overlay
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.3),
+                    Colors.black.withOpacity(0.1),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Play Button Overlay (if enrolled)
+          if (_isEnrolled)
+            Positioned.fill(
+              child: Center(
+                child: GestureDetector(
+                  onTap: () {
+                    // Navigate to first lesson
+                    final firstLesson = _getFirstLesson();
+                    if (firstLesson != null && mounted) {
+                      final course = _courseData ?? widget.course;
+                      final courseId = course?['id']?.toString();
+                      context.push(RouteNames.lessonViewer, extra: {
+                        'lesson': firstLesson,
+                        'courseId': courseId,
+                      });
+                    }
+                  },
+                  child: Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.9),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.play_arrow_rounded,
+                      color: AppColors.purple,
+                      size: 32,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -551,7 +807,7 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen>
         tabs: const [
           Tab(text: 'الدروس'),
           Tab(text: 'نبذة'),
-          Tab(text: 'امتحان تجريبي'),
+          Tab(text: 'الاختبارات'),
         ],
       ),
     );
@@ -594,155 +850,508 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen>
     // Try curriculum first, then lessons
     final curriculum = course?['curriculum'] as List?;
     final lessons = course?['lessons'] as List?;
-    final lessonsList = curriculum ?? lessons ?? [];
 
-    if (lessonsList.isEmpty) {
+    // Build hierarchical structure: topics with nested lessons
+    final List<Map<String, dynamic>> topicsWithLessons = [];
+    final List<Map<String, dynamic>> flatLessonsList = [];
+
+    // First, try to get lessons from curriculum
+    if (curriculum != null && curriculum.isNotEmpty) {
+      for (var item in curriculum) {
+        if (item is Map<String, dynamic>) {
+          // Check if this item has nested lessons (it's a topic/section)
+          final nestedLessons = item['lessons'] as List?;
+          final hasVideo = item['video'] != null;
+          final hasYoutubeId =
+              item['youtube_id'] != null || item['youtubeVideoId'] != null;
+
+          // It's a topic if it has lessons field (even if empty) OR doesn't have video/youtube_id
+          final isTopic = nestedLessons != null || (!hasVideo && !hasYoutubeId);
+
+          if (isTopic) {
+            // This is a topic - add it even if it has no lessons
+            final topicLessons = <Map<String, dynamic>>[];
+            if (nestedLessons != null && nestedLessons.isNotEmpty) {
+              for (var nestedLesson in nestedLessons) {
+                if (nestedLesson is Map<String, dynamic>) {
+                  topicLessons.add(nestedLesson);
+                  // Add to flat list for indexing
+                  flatLessonsList.add(nestedLesson);
+                }
+              }
+            }
+            // Add topic even if it has no lessons (empty array or null)
+            topicsWithLessons.add({
+              'is_topic': true,
+              'topic': item,
+              'lessons': topicLessons,
+            });
+          } else {
+            // This item is a lesson itself (has video or id)
+            if (hasVideo || item['id'] != null || hasYoutubeId) {
+              flatLessonsList.add(item);
+              topicsWithLessons.add({
+                'is_topic': false,
+                'lesson': item,
+              });
+            }
+          }
+        }
+      }
+    }
+
+    // If no lessons from curriculum, use lessons directly
+    if (topicsWithLessons.isEmpty && lessons != null && lessons.isNotEmpty) {
+      for (var lesson in lessons) {
+        if (lesson is Map<String, dynamic>) {
+          flatLessonsList.add(lesson);
+          topicsWithLessons.add({
+            'is_topic': false,
+            'lesson': lesson,
+          });
+        }
+      }
+    }
+
+    if (kDebugMode) {
+      print('═══════════════════════════════════════════════════════════');
+      print('📚 BUILDING LESSONS TAB');
+      print('═══════════════════════════════════════════════════════════');
+      print('Curriculum items: ${curriculum?.length ?? 0}');
+      print('Lessons items: ${lessons?.length ?? 0}');
+      print('Topics with lessons: ${topicsWithLessons.length}');
+      print('Total flat lessons: ${flatLessonsList.length}');
+
+      // Count topics
+      int topicCount = 0;
+      int standaloneLessonCount = 0;
+      for (var item in topicsWithLessons) {
+        if (item['is_topic'] == true) {
+          topicCount++;
+        } else {
+          standaloneLessonCount++;
+        }
+      }
+
+      print('');
+      print('📊 SUMMARY:');
+      print('  - Total Topics: $topicCount');
+      print('  - Standalone Lessons: $standaloneLessonCount');
+      print('  - Total Items: ${topicsWithLessons.length}');
+      print('');
+
+      // Show ALL topics from curriculum (even if they have no lessons)
+      if (curriculum != null && curriculum.isNotEmpty) {
+        print('📁 ALL TOPICS FROM CURRICULUM (COMPLETE LIST):');
+        print('═══════════════════════════════════════════════════════════');
+        int allTopicsCount = 0;
+        for (int i = 0; i < curriculum.length; i++) {
+          final item = curriculum[i];
+          if (item is Map<String, dynamic>) {
+            final nestedLessons = item['lessons'] as List?;
+            final hasVideo = item['video'] != null;
+            final hasYoutubeId =
+                item['youtube_id'] != null || item['youtubeVideoId'] != null;
+
+            // It's a topic if it has lessons field OR doesn't have video/youtube_id
+            final isTopic =
+                nestedLessons != null || (!hasVideo && !hasYoutubeId);
+
+            if (isTopic) {
+              allTopicsCount++;
+              final lessonsCount = nestedLessons?.length ?? 0;
+              print('📁 TOPIC $allTopicsCount:');
+              print('  - ID: ${item['id']}');
+              print('  - Title: ${item['title']}');
+              print('  - Order: ${item['order']}');
+              print('  - Type: ${item['type']}');
+              print('  - Lessons Count: $lessonsCount');
+              print('  - Has Lessons Field: ${nestedLessons != null}');
+              if (nestedLessons == null) {
+                print('  - ⚠️ No lessons field found');
+              } else if (nestedLessons.isEmpty) {
+                print('  - ⚠️ Empty lessons array');
+              }
+              print('  - All Keys: ${item.keys.toList()}');
+              print('');
+            }
+          }
+        }
+        print('═══════════════════════════════════════════════════════════');
+        print('Total Topics in Curriculum: $allTopicsCount');
+        print('═══════════════════════════════════════════════════════════');
+        print('');
+      }
+
+      // Show all topics summary (only topics that have lessons)
+      if (topicCount > 0) {
+        print('📁 TOPICS WITH LESSONS (FOR DISPLAY):');
+        print('═══════════════════════════════════════════════════════════');
+        int currentTopicNum = 0;
+        for (int i = 0; i < topicsWithLessons.length; i++) {
+          final item = topicsWithLessons[i];
+          if (item['is_topic'] == true) {
+            currentTopicNum++;
+            final topic = item['topic'] as Map<String, dynamic>;
+            final topicLessons = item['lessons'] as List<Map<String, dynamic>>;
+            print('📁 TOPIC $currentTopicNum:');
+            print('  - ID: ${topic['id']}');
+            print('  - Title: ${topic['title']}');
+            print('  - Order: ${topic['order']}');
+            print('  - Lessons Count: ${topicLessons.length}');
+            print('');
+          }
+        }
+        print('═══════════════════════════════════════════════════════════');
+        print('');
+      }
+
+      if (topicsWithLessons.isNotEmpty) {
+        print('First item:');
+        final first = topicsWithLessons[0];
+        if (first['is_topic'] == true) {
+          print('  - Type: Topic');
+          print('  - Topic Title: ${first['topic']?['title']}');
+          print(
+              '  - Lessons Count: ${(first['lessons'] as List?)?.length ?? 0}');
+        } else {
+          print('  - Type: Lesson');
+          print('  - Lesson Title: ${first['lesson']?['title']}');
+        }
+      }
+      print('═══════════════════════════════════════════════════════════');
+      print('📖 DETAILED LESSONS DATA:');
+      print('═══════════════════════════════════════════════════════════');
+      for (int i = 0; i < topicsWithLessons.length; i++) {
+        final item = topicsWithLessons[i];
+        final isTopic = item['is_topic'] == true;
+
+        if (isTopic) {
+          final topic = item['topic'] as Map<String, dynamic>;
+          final topicLessons = item['lessons'] as List<Map<String, dynamic>>;
+
+          print('───────────────────────────────────────────────────────────');
+          print('📁 TOPIC ${i + 1}:');
+          print('  - ID: ${topic['id']}');
+          print('  - Title: ${topic['title']}');
+          print('  - Order: ${topic['order']}');
+          print('  - Type: ${topic['type']}');
+          print('  - Lessons Count: ${topicLessons.length}');
+          print('  - All Topic Keys: ${topic.keys.toList()}');
+          print('');
+          print('  📚 LESSONS IN THIS TOPIC:');
+
+          for (int j = 0; j < topicLessons.length; j++) {
+            final lesson = topicLessons[j];
+            print(
+                '    ───────────────────────────────────────────────────────');
+            print('    📝 LESSON ${j + 1}:');
+            print('      - ID: ${lesson['id']}');
+            print('      - Title: ${lesson['title']}');
+            print('      - Order: ${lesson['order']}');
+            print('      - Type: ${lesson['type']}');
+            print('      - Duration Minutes: ${lesson['duration_minutes']}');
+            print('      - Is Locked: ${lesson['is_locked']}');
+            print('      - Is Completed: ${lesson['is_completed']}');
+            print('      - Video: ${lesson['video']}');
+            print('      - YouTube ID: ${lesson['youtube_id']}');
+            print('      - YouTube Video ID: ${lesson['youtubeVideoId']}');
+
+            // Print video object details if exists
+            if (lesson['video'] is Map) {
+              final video = lesson['video'] as Map;
+              print('      - Video Object Keys: ${video.keys.toList()}');
+              video.forEach((key, value) {
+                print('        - video.$key: $value');
+              });
+            }
+
+            print('      - All Lesson Keys: ${lesson.keys.toList()}');
+
+            // Print full lesson JSON
+            try {
+              const encoder = JsonEncoder.withIndent('        ');
+              print('      - Full Lesson JSON:');
+              print(encoder.convert(lesson));
+            } catch (e) {
+              print('      - Could not convert lesson to JSON: $e');
+            }
+          }
+        } else {
+          final lesson = item['lesson'] as Map<String, dynamic>;
+          print('───────────────────────────────────────────────────────────');
+          print('📝 STANDALONE LESSON ${i + 1}:');
+          print('  - ID: ${lesson['id']}');
+          print('  - Title: ${lesson['title']}');
+          print('  - Order: ${lesson['order']}');
+          print('  - Type: ${lesson['type']}');
+          print('  - Duration Minutes: ${lesson['duration_minutes']}');
+          print('  - Is Locked: ${lesson['is_locked']}');
+          print('  - Is Completed: ${lesson['is_completed']}');
+          print('  - Video: ${lesson['video']}');
+          print('  - YouTube ID: ${lesson['youtube_id']}');
+          print('  - YouTube Video ID: ${lesson['youtubeVideoId']}');
+
+          // Print video object details if exists
+          if (lesson['video'] is Map) {
+            final video = lesson['video'] as Map;
+            print('  - Video Object Keys: ${video.keys.toList()}');
+            video.forEach((key, value) {
+              print('    - video.$key: $value');
+            });
+          }
+
+          print('  - All Lesson Keys: ${lesson.keys.toList()}');
+
+          // Print full lesson JSON
+          try {
+            const encoder = JsonEncoder.withIndent('    ');
+            print('  - Full Lesson JSON:');
+            print(encoder.convert(lesson));
+          } catch (e) {
+            print('  - Could not convert lesson to JSON: $e');
+          }
+        }
+      }
+      print('═══════════════════════════════════════════════════════════');
+    }
+
+    if (topicsWithLessons.isEmpty) {
       return _buildEmptyState('لا توجد دروس متاحة', Icons.play_lesson_rounded);
     }
 
     return ListView.builder(
       padding: const EdgeInsets.all(20),
-      physics: const BouncingScrollPhysics(),
-      itemCount: lessonsList.length,
+      // physics: const NeverScrollableScrollPhysics(),
+      itemCount: topicsWithLessons.length,
       itemBuilder: (context, index) {
-        final lesson = lessonsList[index];
-        if (lesson is! Map<String, dynamic>) {
-          return const SizedBox.shrink();
-        }
+        final item = topicsWithLessons[index];
+        final isTopic = item['is_topic'] == true;
 
-        final isLocked =
-            lesson['is_locked'] == true || lesson['locked'] == true;
-        final isCompleted =
-            lesson['is_completed'] == true || lesson['completed'] == true;
-        final isSelected = index == _selectedLessonIndex;
+        if (isTopic) {
+          // Render topic header with nested lessons
+          final topic = item['topic'] as Map<String, dynamic>;
+          final topicLessons = item['lessons'] as List<Map<String, dynamic>>;
+          final topicTitle = topic['title']?.toString() ?? 'الموضوع';
+          final topicOrder = topic['order'] ?? index + 1;
 
-        return GestureDetector(
-          onTap: isLocked
-              ? null
-              : () {
-                  _playLesson(index, lesson);
-                },
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? AppColors.purple.withOpacity(0.08)
-                  : isLocked
-                      ? Colors.grey[50]
-                      : Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: isSelected
-                    ? AppColors.purple
-                    : isCompleted
-                        ? const Color(0xFF10B981)
-                        : Colors.grey.withOpacity(0.15),
-                width: isSelected || isCompleted ? 2 : 1,
-              ),
-            ),
-            child: Row(
-              children: [
-                // Index/Status Circle
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    gradient: isSelected
-                        ? const LinearGradient(
-                            colors: [Color(0xFF7C3AED), Color(0xFF5B21B6)],
-                          )
-                        : isCompleted
-                            ? const LinearGradient(
-                                colors: [Color(0xFF10B981), Color(0xFF059669)],
-                              )
-                            : null,
-                    color: isLocked ? Colors.grey[200] : null,
-                    borderRadius: BorderRadius.circular(12),
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Topic Header
+              Container(
+                margin: EdgeInsets.only(bottom: 12, top: index > 0 ? 16 : 0),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.purple.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppColors.purple.withOpacity(0.3),
+                    width: 1,
                   ),
-                  child: isLocked
-                      ? Icon(Icons.lock_rounded,
-                          color: Colors.grey[400], size: 20)
-                      : isCompleted
-                          ? const Icon(Icons.check_rounded,
-                              color: Colors.white, size: 20)
-                          : isSelected
-                              ? const Icon(Icons.play_arrow_rounded,
-                                  color: Colors.white, size: 22)
-                              : Center(
-                                  child: Text(
-                                    '${index + 1}',
-                                    style: GoogleFonts.cairo(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.purple,
-                                    ),
-                                  ),
-                                ),
                 ),
-                const SizedBox(width: 14),
-
-                // Lesson Info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        lesson['title']?.toString() ?? 'الدرس',
-                        style: GoogleFonts.cairo(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: isLocked
-                              ? Colors.grey[500]
-                              : AppColors.foreground,
+                child: Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: AppColors.purple,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '$topicOrder',
+                          style: GoogleFonts.cairo(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.access_time_rounded,
-                            size: 13,
-                            color: Colors.grey[400],
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            _formatDuration(lesson),
-                            style: GoogleFonts.cairo(
-                              fontSize: 12,
-                              color: AppColors.mutedForeground,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        topicTitle,
+                        style: GoogleFonts.cairo(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.purple,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.purple.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '${topicLessons.length} دروس',
+                        style: GoogleFonts.cairo(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.purple,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Nested Lessons
+              ...topicLessons.map((lesson) {
+                // Find global index for this lesson
+                final globalIndex = flatLessonsList.indexWhere(
+                    (l) => l['id']?.toString() == lesson['id']?.toString());
+                final actualIndex = globalIndex >= 0 ? globalIndex : 0;
+
+                return _buildLessonItem(lesson, actualIndex, flatLessonsList);
+              }),
+            ],
+          );
+        } else {
+          // Render standalone lesson
+          final lesson = item['lesson'] as Map<String, dynamic>;
+          final globalIndex = flatLessonsList.indexWhere(
+              (l) => l['id']?.toString() == lesson['id']?.toString());
+          final actualIndex = globalIndex >= 0 ? globalIndex : 0;
+
+          return _buildLessonItem(lesson, actualIndex, flatLessonsList);
+        }
+      },
+    );
+  }
+
+  Widget _buildLessonItem(Map<String, dynamic> lesson, int index,
+      List<Map<String, dynamic>> allLessons) {
+    final isLocked = lesson['is_locked'] == true || lesson['locked'] == true;
+    final isCompleted =
+        lesson['is_completed'] == true || lesson['completed'] == true;
+    final isSelected = index == _selectedLessonIndex;
+
+    return GestureDetector(
+      onTap: isLocked
+          ? null
+          : () {
+              _playLesson(index, lesson);
+            },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12, left: 16),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.purple.withOpacity(0.08)
+              : isLocked
+                  ? Colors.grey[50]
+                  : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected
+                ? AppColors.purple
+                : isCompleted
+                    ? const Color(0xFF10B981)
+                    : Colors.grey.withOpacity(0.15),
+            width: isSelected || isCompleted ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            // Index/Status Circle
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                gradient: isSelected
+                    ? const LinearGradient(
+                        colors: [Color(0xFF7C3AED), Color(0xFF5B21B6)],
+                      )
+                    : isCompleted
+                        ? const LinearGradient(
+                            colors: [Color(0xFF10B981), Color(0xFF059669)],
+                          )
+                        : null,
+                color: isLocked ? Colors.grey[200] : null,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: isLocked
+                  ? Icon(Icons.lock_rounded, color: Colors.grey[400], size: 20)
+                  : isCompleted
+                      ? const Icon(Icons.check_rounded,
+                          color: Colors.white, size: 20)
+                      : isSelected
+                          ? const Icon(Icons.play_arrow_rounded,
+                              color: Colors.white, size: 22)
+                          : Center(
+                              child: Text(
+                                '${index + 1}',
+                                style: GoogleFonts.cairo(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.purple,
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
+            ),
+            const SizedBox(width: 14),
+
+            // Lesson Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    lesson['title']?.toString() ?? 'الدرس',
+                    style: GoogleFonts.cairo(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: isLocked ? Colors.grey[500] : AppColors.foreground,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.access_time_rounded,
+                        size: 13,
+                        color: Colors.grey[400],
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        _formatDuration(lesson),
+                        style: GoogleFonts.cairo(
+                          fontSize: 12,
+                          color: AppColors.mutedForeground,
+                        ),
                       ),
                     ],
                   ),
-                ),
-
-                // Play Icon
-                if (!isLocked)
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? Colors.white
-                          : AppColors.purple.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      isSelected
-                          ? Icons.pause_rounded
-                          : Icons.play_arrow_rounded,
-                      color: AppColors.purple,
-                      size: 18,
-                    ),
-                  ),
-              ],
+                ],
+              ),
             ),
-          ),
-        );
-      },
+
+            // Play Icon
+            if (!isLocked)
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? Colors.white
+                      : AppColors.purple.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  isSelected ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                  color: AppColors.purple,
+                  size: 18,
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -872,8 +1481,8 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen>
     );
   }
 
-  Widget _buildTrialExamTab() {
-    if (_isLoadingExam) {
+  Widget _buildExamsTab() {
+    if (_isLoadingExams) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -883,7 +1492,7 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen>
             ),
             const SizedBox(height: 16),
             Text(
-              'جاري تحميل الامتحان...',
+              'جاري تحميل الاختبارات...',
               style: GoogleFonts.cairo(
                 fontSize: 14,
                 color: AppColors.mutedForeground,
@@ -894,141 +1503,243 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen>
       );
     }
 
-    if (_trialExamData == null) {
-      return _buildEmptyState('لا يوجد امتحان تجريبي متاح', Icons.quiz_rounded);
+    if (_courseExams.isEmpty) {
+      return _buildEmptyState('لا توجد اختبارات متاحة', Icons.quiz_rounded);
     }
 
-    final canStart = _trialExamData!['can_start'] == true;
-    final isPassed = _trialExamData!['is_passed'] == true;
-    final bestScore = _trialExamData!['best_score'];
-    final questionsCount = _trialExamData!['questions_count'] ?? 0;
-    final durationMinutes = _trialExamData!['duration_minutes'] ?? 15;
-    final passingScore = _trialExamData!['passing_score'] ?? 70;
-
-    return SingleChildScrollView(
+    return ListView.builder(
       padding: const EdgeInsets.all(20),
       physics: const BouncingScrollPhysics(),
-      child: Column(
-        children: [
-          // Exam Card
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
+      itemCount: _courseExams.length,
+      itemBuilder: (context, index) {
+        final exam = _courseExams[index];
+        return _buildExamCard(exam, index);
+      },
+    );
+  }
+
+  Widget _buildExamCard(Map<String, dynamic> exam, int index) {
+    final canStart = exam['can_start'] == true;
+    final isPassed = exam['is_passed'] == true;
+    final bestScore = exam['best_score'];
+    final questionsCount = exam['questions_count'] ?? 0;
+    final durationMinutes = exam['duration_minutes'] ?? 15;
+    final passingScore = exam['passing_score'] ?? 70;
+    final maxAttempts = exam['max_attempts'];
+    final attemptsUsed = exam['attempts_used'] ?? 0;
+    final examId = exam['id']?.toString() ?? '';
+    final examTitle = exam['title']?.toString() ?? 'الاختبار';
+    final examDescription = exam['description']?.toString() ?? '';
+
+    // Determine if it's a trial exam
+    final isTrial = exam['type'] == 'trial' ||
+        exam['type'] == 'trial_exam' ||
+        examTitle.contains('تجريبي') ||
+        examTitle.contains('trial');
+
+    return Container(
+      margin: EdgeInsets.only(bottom: index < _courseExams.length - 1 ? 16 : 0),
+      decoration: BoxDecoration(
+        gradient: isTrial
+            ? const LinearGradient(
                 begin: Alignment.topRight,
                 end: Alignment.bottomLeft,
                 colors: [Color(0xFF7C3AED), Color(0xFF5B21B6)],
+              )
+            : null,
+        color: isTrial ? null : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: isTrial
+            ? null
+            : Border.all(
+                color: AppColors.purple.withOpacity(0.2),
+                width: 1,
               ),
-              borderRadius: BorderRadius.circular(24),
-            ),
+        boxShadow: isTrial
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+      ),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20),
             child: Column(
               children: [
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.quiz_rounded,
-                    size: 40,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  _trialExamData!['title']?.toString() ?? 'امتحان تجريبي',
-                  style: GoogleFonts.cairo(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  _trialExamData!['description']?.toString() ??
-                      'اختبر معلوماتك قبل البدء في الدورة',
-                  style: GoogleFonts.cairo(
-                    fontSize: 14,
-                    color: Colors.white.withOpacity(0.8),
-                  ),
-                  textAlign: TextAlign.center,
+                Row(
+                  children: [
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: isTrial
+                            ? Colors.white.withOpacity(0.2)
+                            : AppColors.purple.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        isTrial ? Icons.quiz_rounded : Icons.assignment_rounded,
+                        size: 28,
+                        color: isTrial ? Colors.white : AppColors.purple,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            examTitle,
+                            style: GoogleFonts.cairo(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color:
+                                  isTrial ? Colors.white : AppColors.foreground,
+                            ),
+                          ),
+                          if (examDescription.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              examDescription,
+                              style: GoogleFonts.cairo(
+                                fontSize: 13,
+                                color: isTrial
+                                    ? Colors.white.withOpacity(0.8)
+                                    : AppColors.mutedForeground,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 // Exam Info
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
                     _buildExamInfoChip(
                       Icons.help_outline,
                       '$questionsCount سؤال',
-                      Colors.white.withOpacity(0.3),
+                      isTrial
+                          ? Colors.white.withOpacity(0.3)
+                          : AppColors.purple.withOpacity(0.1),
+                      isTrial ? Colors.white : AppColors.purple,
                     ),
-                    const SizedBox(width: 12),
                     _buildExamInfoChip(
                       Icons.access_time,
                       '$durationMinutes دقيقة',
-                      Colors.white.withOpacity(0.3),
+                      isTrial
+                          ? Colors.white.withOpacity(0.3)
+                          : AppColors.purple.withOpacity(0.1),
+                      isTrial ? Colors.white : AppColors.purple,
                     ),
-                    const SizedBox(width: 12),
                     _buildExamInfoChip(
                       Icons.star,
                       '$passingScore% للنجاح',
-                      Colors.white.withOpacity(0.3),
+                      isTrial
+                          ? Colors.white.withOpacity(0.3)
+                          : AppColors.purple.withOpacity(0.1),
+                      isTrial ? Colors.white : AppColors.purple,
                     ),
+                    if (maxAttempts != null)
+                      _buildExamInfoChip(
+                        Icons.repeat,
+                        '$attemptsUsed/$maxAttempts محاولات',
+                        isTrial
+                            ? Colors.white.withOpacity(0.3)
+                            : AppColors.purple.withOpacity(0.1),
+                        isTrial ? Colors.white : AppColors.purple,
+                      ),
                   ],
                 ),
                 if (bestScore != null) ...[
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
                       color: isPassed
-                          ? Colors.green.withOpacity(0.3)
-                          : Colors.orange.withOpacity(0.3),
+                          ? Colors.green.withOpacity(isTrial ? 0.3 : 0.1)
+                          : Colors.orange.withOpacity(isTrial ? 0.3 : 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Text(
-                      isPassed
-                          ? 'أفضل نتيجة: $bestScore% ✓'
-                          : 'أفضل نتيجة: $bestScore%',
-                      style: GoogleFonts.cairo(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isPassed ? Icons.check_circle : Icons.info_outline,
+                          size: 16,
+                          color: isTrial
+                              ? Colors.white
+                              : (isPassed ? Colors.green : Colors.orange),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          isPassed
+                              ? 'أفضل نتيجة: $bestScore% ✓'
+                              : 'أفضل نتيجة: $bestScore%',
+                          style: GoogleFonts.cairo(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: isTrial
+                                ? Colors.white
+                                : (isPassed ? Colors.green : Colors.orange),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
                 GestureDetector(
-                  onTap: canStart ? () => _startTrialExam() : null,
+                  onTap: canStart ? () => _startExam(examId, exam) : null,
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
                       color: canStart
-                          ? Colors.white
-                          : Colors.white.withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(16),
+                          ? (isTrial ? Colors.white : AppColors.purple)
+                          : (isTrial
+                              ? Colors.white.withOpacity(0.5)
+                              : Colors.grey[300]),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          Icons.play_arrow_rounded,
-                          color: canStart ? AppColors.purple : Colors.grey,
-                          size: 24,
+                          canStart
+                              ? Icons.play_arrow_rounded
+                              : Icons.lock_rounded,
+                          color: canStart
+                              ? (isTrial ? AppColors.purple : Colors.white)
+                              : Colors.grey,
+                          size: 22,
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          canStart ? 'ابدأ الامتحان' : 'غير متاح',
+                          canStart
+                              ? 'ابدأ الاختبار'
+                              : (maxAttempts != null &&
+                                      attemptsUsed >= maxAttempts
+                                  ? 'تم استنفاد المحاولات'
+                                  : 'غير متاح'),
                           style: GoogleFonts.cairo(
-                            fontSize: 16,
+                            fontSize: 15,
                             fontWeight: FontWeight.bold,
-                            color: canStart ? AppColors.purple : Colors.grey,
+                            color: canStart
+                                ? (isTrial ? AppColors.purple : Colors.white)
+                                : Colors.grey,
                           ),
                         ),
                       ],
@@ -1043,7 +1754,13 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen>
     );
   }
 
-  Widget _buildExamInfoChip(IconData icon, String text, Color bgColor) {
+  Widget _buildExamInfoChip(
+    IconData icon,
+    String text,
+    Color bgColor, [
+    Color? iconColor,
+  ]) {
+    final finalIconColor = iconColor ?? Colors.white;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
@@ -1053,14 +1770,14 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: Colors.white),
+          Icon(icon, size: 14, color: finalIconColor),
           const SizedBox(width: 4),
           Text(
             text,
             style: GoogleFonts.cairo(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: finalIconColor,
             ),
           ),
         ],
@@ -1150,12 +1867,14 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen>
 
                         // If already enrolled, go to first lesson
                         if (_isEnrolled) {
-                          final curriculum = courseData?['curriculum'] as List?;
-                          final lessons = courseData?['lessons'] as List?;
-                          final lessonsList = curriculum ?? lessons ?? [];
-                          if (lessonsList.isNotEmpty) {
-                            context.push(RouteNames.lessonViewer,
-                                extra: lessonsList[0]);
+                          final firstLesson = _getFirstLesson();
+                          if (firstLesson != null && mounted) {
+                            final course = _courseData ?? widget.course;
+                            final courseId = course?['id']?.toString();
+                            context.push(RouteNames.lessonViewer, extra: {
+                              'lesson': firstLesson,
+                              'courseId': courseId,
+                            });
                           }
                           return;
                         }
@@ -1239,8 +1958,30 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen>
 
     try {
       final enrollment = await CoursesService.instance.enrollInCourse(courseId);
+
+      // Print detailed response
       if (kDebugMode) {
-        print('✅ Successfully enrolled in course: $enrollment');
+        print('═══════════════════════════════════════════════════════════');
+        print('✅ ENROLLMENT RESPONSE (enrollInCourse)');
+        print('═══════════════════════════════════════════════════════════');
+        print('Course ID: $courseId');
+        print('Response Type: ${enrollment.runtimeType}');
+        print('Response Keys: ${enrollment.keys.toList()}');
+        print('───────────────────────────────────────────────────────────');
+        print('Full Response JSON:');
+        try {
+          const encoder = JsonEncoder.withIndent('  ');
+          print(encoder.convert(enrollment));
+        } catch (e) {
+          print('Could not convert to JSON: $e');
+          print('Raw Response: $enrollment');
+        }
+        print('───────────────────────────────────────────────────────────');
+        print('Key Fields:');
+        enrollment.forEach((key, value) {
+          print('  - $key: $value (${value.runtimeType})');
+        });
+        print('═══════════════════════════════════════════════════════════');
       }
 
       setState(() {
@@ -1265,11 +2006,14 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen>
       }
 
       // Navigate to first lesson if available
-      final curriculum = course['curriculum'] as List?;
-      final lessons = course['lessons'] as List?;
-      final lessonsList = curriculum ?? lessons ?? [];
-      if (lessonsList.isNotEmpty && mounted) {
-        context.push(RouteNames.lessonViewer, extra: lessonsList[0]);
+      final firstLesson = _getFirstLesson();
+      if (firstLesson != null && mounted) {
+        final course = _courseData ?? widget.course;
+        final courseId = course?['id']?.toString();
+        context.push(RouteNames.lessonViewer, extra: {
+          'lesson': firstLesson,
+          'courseId': courseId,
+        });
       }
     } catch (e) {
       if (kDebugMode) {
@@ -1299,52 +2043,64 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen>
     }
   }
 
-  Future<void> _loadTrialExam() async {
+  Future<void> _loadCourseExams() async {
     final course = _courseData ?? widget.course;
     if (course == null || course['id'] == null) return;
 
-    // Try to get exam_id from course data
-    final examId =
-        course['trial_exam_id']?.toString() ?? course['exam_id']?.toString();
+    final courseId = course['id']?.toString();
+    if (courseId == null || courseId.isEmpty) return;
 
-    if (examId == null || examId.isEmpty) {
-      // Try to find trial exam from course exams list
-      final exams = course['exams'] as List?;
-      if (exams != null && exams.isNotEmpty) {
-        for (var exam in exams) {
-          if (exam is Map &&
-              (exam['type'] == 'trial' || exam['type'] == 'trial_exam')) {
-            try {
-              final examDetails = await ExamsService.instance
-                  .getExamDetails(exam['id']?.toString() ?? '');
-              setState(() {
-                _trialExamData = examDetails;
-              });
-              return;
-            } catch (e) {
-              if (kDebugMode) {
-                print('❌ Error loading trial exam: $e');
-              }
-            }
-          }
-        }
-      }
-      return;
-    }
-
-    setState(() => _isLoadingExam = true);
+    setState(() => _isLoadingExams = true);
 
     try {
-      final examDetails = await ExamsService.instance.getExamDetails(examId);
+      final exams = await ExamsService.instance.getCourseExams(courseId);
+
+      // Print detailed response
+      if (kDebugMode) {
+        print('═══════════════════════════════════════════════════════════');
+        print('📝 COURSE EXAMS RESPONSE (getCourseExams)');
+        print('═══════════════════════════════════════════════════════════');
+        print('Course ID: $courseId');
+        print('Response Type: ${exams.runtimeType}');
+        print('Total Exams: ${exams.length}');
+        print('───────────────────────────────────────────────────────────');
+        print('Full Response JSON:');
+        try {
+          const encoder = JsonEncoder.withIndent('  ');
+          print(encoder.convert(exams));
+        } catch (e) {
+          print('Could not convert to JSON: $e');
+          print('Raw Response: $exams');
+        }
+        print('───────────────────────────────────────────────────────────');
+        print('Exams Summary:');
+        for (int i = 0; i < exams.length; i++) {
+          final exam = exams[i];
+          print('  Exam ${i + 1}:');
+          print('    - ID: ${exam['id']}');
+          print('    - Title: ${exam['title']}');
+          print('    - Type: ${exam['type']}');
+          print('    - Questions Count: ${exam['questions_count']}');
+          print('    - Can Start: ${exam['can_start']}');
+        }
+        print('═══════════════════════════════════════════════════════════');
+      }
+
       setState(() {
-        _trialExamData = examDetails;
-        _isLoadingExam = false;
+        _courseExams = exams;
+        _isLoadingExams = false;
       });
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Error loading trial exam: $e');
+        print('═══════════════════════════════════════════════════════════');
+        print('❌ ERROR LOADING COURSE EXAMS');
+        print('═══════════════════════════════════════════════════════════');
+        print('Course ID: $courseId');
+        print('Error: $e');
+        print('Error Type: ${e.runtimeType}');
+        print('═══════════════════════════════════════════════════════════');
       }
-      setState(() => _isLoadingExam = false);
+      setState(() => _isLoadingExams = false);
     }
   }
 
@@ -1357,6 +2113,39 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen>
 
     try {
       final wishlist = await WishlistService.instance.getWishlist();
+
+      // Print detailed response
+      if (kDebugMode) {
+        print('═══════════════════════════════════════════════════════════');
+        print('❤️ WISHLIST RESPONSE (getWishlist)');
+        print('═══════════════════════════════════════════════════════════');
+        print('Course ID: $courseId');
+        print('Response Type: ${wishlist.runtimeType}');
+        print('Response Keys: ${wishlist.keys.toList()}');
+        print('───────────────────────────────────────────────────────────');
+        print('Full Response JSON:');
+        try {
+          const encoder = JsonEncoder.withIndent('  ');
+          print(encoder.convert(wishlist));
+        } catch (e) {
+          print('Could not convert to JSON: $e');
+          print('Raw Response: $wishlist');
+        }
+        print('───────────────────────────────────────────────────────────');
+        print('Key Fields:');
+        wishlist.forEach((key, value) {
+          if (key == 'data' && value is List) {
+            print('  - $key: List with ${value.length} items');
+            for (int i = 0; i < value.length && i < 3; i++) {
+              print('    Item $i: ${value[i]}');
+            }
+          } else {
+            print('  - $key: $value (${value.runtimeType})');
+          }
+        });
+        print('═══════════════════════════════════════════════════════════');
+      }
+
       final items = wishlist['data'] as List?;
 
       if (items != null) {
@@ -1367,6 +2156,10 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen>
           return itemCourseId == courseId;
         });
 
+        if (kDebugMode) {
+          print('Is Course in Wishlist: $isInWishlist');
+        }
+
         if (mounted) {
           setState(() {
             _isInWishlist = isInWishlist;
@@ -1375,7 +2168,13 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen>
       }
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Error checking wishlist status: $e');
+        print('═══════════════════════════════════════════════════════════');
+        print('❌ ERROR CHECKING WISHLIST STATUS');
+        print('═══════════════════════════════════════════════════════════');
+        print('Course ID: $courseId');
+        print('Error: $e');
+        print('Error Type: ${e.runtimeType}');
+        print('═══════════════════════════════════════════════════════════');
       }
       // Don't update state on error, keep current state
     }
@@ -1392,14 +2191,28 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen>
 
     try {
       if (_isInWishlist) {
+        if (kDebugMode) {
+          print('═══════════════════════════════════════════════════════════');
+          print('🗑️ REMOVING FROM WISHLIST');
+          print('═══════════════════════════════════════════════════════════');
+          print('Course ID: $courseId');
+          print('═══════════════════════════════════════════════════════════');
+        }
         await WishlistService.instance.removeFromWishlist(courseId);
         if (kDebugMode) {
-          print('✅ Removed from wishlist');
+          print('✅ Successfully removed from wishlist');
         }
       } else {
+        if (kDebugMode) {
+          print('═══════════════════════════════════════════════════════════');
+          print('➕ ADDING TO WISHLIST');
+          print('═══════════════════════════════════════════════════════════');
+          print('Course ID: $courseId');
+          print('═══════════════════════════════════════════════════════════');
+        }
         await WishlistService.instance.addToWishlist(courseId);
         if (kDebugMode) {
-          print('✅ Added to wishlist');
+          print('✅ Successfully added to wishlist');
         }
       }
 
@@ -1454,39 +2267,49 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen>
     }
   }
 
-  Future<void> _startTrialExam() async {
-    if (_trialExamData == null) {
-      // Try to load exam first
-      await _loadTrialExam();
-      if (_trialExamData == null) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'لا يوجد امتحان تجريبي متاح',
-                style: GoogleFonts.cairo(),
-              ),
-              backgroundColor: Colors.orange,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          );
-        }
-        return;
-      }
-    }
+  Future<void> _startExam(String examId, Map<String, dynamic> examData) async {
+    if (examId.isEmpty) return;
 
-    final examId = _trialExamData!['id']?.toString();
-    if (examId == null || examId.isEmpty) return;
+    final course = _courseData ?? widget.course;
+    if (course == null || course['id'] == null) return;
+
+    final courseId = course['id']?.toString();
+    if (courseId == null || courseId.isEmpty) return;
 
     try {
       // Start exam via API
       final examSession = await ExamsService.instance.startExam(examId);
 
+      // Print detailed response
       if (kDebugMode) {
-        print('✅ Exam started: $examSession');
+        print('═══════════════════════════════════════════════════════════');
+        print('🚀 START EXAM RESPONSE (startExam)');
+        print('═══════════════════════════════════════════════════════════');
+        print('Exam ID: $examId');
+        print('Response Type: ${examSession.runtimeType}');
+        print('Response Keys: ${examSession.keys.toList()}');
+        print('───────────────────────────────────────────────────────────');
+        print('Full Response JSON:');
+        try {
+          const encoder = JsonEncoder.withIndent('  ');
+          print(encoder.convert(examSession));
+        } catch (e) {
+          print('Could not convert to JSON: $e');
+          print('Raw Response: $examSession');
+        }
+        print('───────────────────────────────────────────────────────────');
+        print('Key Fields:');
+        examSession.forEach((key, value) {
+          if (key == 'questions' && value is List) {
+            print('  - $key: List with ${value.length} questions');
+            for (int i = 0; i < value.length && i < 2; i++) {
+              print('    Question $i: ${value[i]}');
+            }
+          } else {
+            print('  - $key: $value (${value.runtimeType})');
+          }
+        });
+        print('═══════════════════════════════════════════════════════════');
       }
 
       final questions = examSession['questions'] as List?;
@@ -1521,7 +2344,7 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen>
               courseName:
                   (_courseData ?? widget.course)?['title']?.toString() ??
                       'الدورة',
-              examData: _trialExamData,
+              examData: examData,
               examSession: examSession,
             ),
           ),
@@ -1838,14 +2661,64 @@ class _TrialExamScreenState extends State<TrialExamScreen> {
         throw Exception('Attempt ID is missing');
       }
 
+      // Print answers before submission
+      if (kDebugMode) {
+        print('═══════════════════════════════════════════════════════════');
+        print('📤 SUBMITTING EXAM');
+        print('═══════════════════════════════════════════════════════════');
+        print('Exam ID: ${widget.examId}');
+        print('Attempt ID: $_attemptId');
+        print('Total Questions: ${_questions.length}');
+        print('Answers to Submit:');
+        try {
+          const encoder = JsonEncoder.withIndent('  ');
+          print(encoder.convert(answers));
+        } catch (e) {
+          print('Could not convert answers to JSON: $e');
+          print('Raw Answers: $answers');
+        }
+        print('═══════════════════════════════════════════════════════════');
+      }
+
       final result = await ExamsService.instance.submitExam(
         widget.examId,
         attemptId: _attemptId!,
         answers: answers,
       );
 
+      // Print detailed response
       if (kDebugMode) {
-        print('✅ Exam submitted: $result');
+        print('═══════════════════════════════════════════════════════════');
+        print('✅ EXAM SUBMISSION RESPONSE (submitExam)');
+        print('═══════════════════════════════════════════════════════════');
+        print('Exam ID: ${widget.examId}');
+        print('Attempt ID: $_attemptId');
+        print('Response Type: ${result.runtimeType}');
+        print('Response Keys: ${result.keys.toList()}');
+        print('───────────────────────────────────────────────────────────');
+        print('Full Response JSON:');
+        try {
+          const encoder = JsonEncoder.withIndent('  ');
+          print(encoder.convert(result));
+        } catch (e) {
+          print('Could not convert to JSON: $e');
+          print('Raw Response: $result');
+        }
+        print('───────────────────────────────────────────────────────────');
+        print('Key Fields:');
+        result.forEach((key, value) {
+          print('  - $key: $value (${value.runtimeType})');
+        });
+        print('───────────────────────────────────────────────────────────');
+        print('Summary:');
+        print('  - Score: ${result['score']}%');
+        print('  - Is Passed: ${result['is_passed']}');
+        print(
+            '  - Correct Answers: ${result['correct_answers']}/${result['total_questions']}');
+        if (result['time_taken_minutes'] != null) {
+          print('  - Time Taken: ${result['time_taken_minutes']} minutes');
+        }
+        print('═══════════════════════════════════════════════════════════');
       }
 
       setState(() {
@@ -1860,16 +2733,24 @@ class _TrialExamScreenState extends State<TrialExamScreen> {
 
       setState(() => _isSubmitting = false);
 
+      final errorMessage = () {
+        if (e is ApiException && e.message.isNotEmpty) {
+          return e.message;
+        }
+
+        final message = e.toString();
+        if (message.contains('401') ||
+            message.toLowerCase().contains('unauthorized')) {
+          return 'يجب تسجيل الدخول أولاً';
+        }
+
+        return message.isNotEmpty ? message : 'حدث خطأ أثناء تقديم الامتحان';
+      }();
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              e.toString().contains('401') ||
-                      e.toString().contains('Unauthorized')
-                  ? 'يجب تسجيل الدخول أولاً'
-                  : 'حدث خطأ أثناء تقديم الامتحان',
-              style: GoogleFonts.cairo(),
-            ),
+            content: Text(errorMessage, style: GoogleFonts.cairo()),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(

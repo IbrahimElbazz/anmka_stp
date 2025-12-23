@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -40,26 +41,125 @@ class _EnrolledScreenState extends State<EnrolledScreen> {
       );
 
       if (kDebugMode) {
-        print('✅ Enrollments loaded: ${response['data']?.length ?? 0}');
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        print('📋 ENROLLMENTS SCREEN - PROCESSING RESPONSE');
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        print('📦 Full Response Received:');
+        try {
+          const encoder = JsonEncoder.withIndent('  ');
+          print(encoder.convert(response));
+        } catch (e) {
+          print('  Error formatting JSON: $e');
+          print('  Raw response: $response');
+        }
+        print('');
+        print('📊 Response Analysis:');
+        print('  📋 response keys: ${response.keys.toList()}');
+        print('  📦 data type: ${response['data']?.runtimeType}');
+        print('  📋 data is List: ${response['data'] is List}');
+        print('  📋 data is Map: ${response['data'] is Map}');
+        print('  📋 data is Null: ${response['data'] == null}');
+
+        if (response['data'] is List) {
+          final dataList = response['data'] as List;
+          print('  📏 data length: ${dataList.length}');
+          if (dataList.isNotEmpty) {
+            print('  📄 First Enrollment Details:');
+            final first = dataList[0];
+            if (first is Map) {
+              print('     All Keys: ${first.keys.toList()}');
+              first.forEach((key, value) {
+                if (key == 'course' && value is Map) {
+                  print('     📚 $key:');
+                  print('        Keys: ${value.keys.toList()}');
+                  value.forEach((courseKey, courseValue) {
+                    if (courseValue is Map) {
+                      print(
+                          '        $courseKey: Map with keys: ${courseValue.keys.toList()}');
+                    } else if (courseValue is List) {
+                      print(
+                          '        $courseKey: List with ${courseValue.length} items');
+                    } else {
+                      print(
+                          '        $courseKey: ${courseValue.runtimeType} = $courseValue');
+                    }
+                  });
+                } else if (value is Map) {
+                  print('     $key: Map with keys: ${value.keys.toList()}');
+                } else if (value is List) {
+                  print('     $key: List with ${value.length} items');
+                } else {
+                  print('     $key: ${value.runtimeType} = $value');
+                }
+              });
+            }
+          }
+        } else if (response['data'] is Map) {
+          print('  📋 Data is Map structure');
+          final dataMap = response['data'] as Map;
+          print('     Keys: ${dataMap.keys.toList()}');
+        }
+
+        if (response['meta'] != null) {
+          print('  📊 meta: ${response['meta']}');
+        }
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       }
 
       setState(() {
-        if (response['data'] is List) {
-          _enrolledCourses = List<Map<String, dynamic>>.from(
-            response['data'] as List,
-          );
+        if (response['data'] != null) {
+          if (response['data'] is List) {
+            final dataList = response['data'] as List;
+            _enrolledCourses = dataList
+                .whereType<Map<String, dynamic>>()
+                .map((item) => Map<String, dynamic>.from(item as Map))
+                .toList();
+
+            if (kDebugMode) {
+              print('✅ Loaded ${_enrolledCourses.length} enrolled courses');
+            }
+          } else if (response['data'] is Map<String, dynamic>) {
+            // Try to extract from Map structure
+            final dataMap = response['data'] as Map<String, dynamic>;
+            if (dataMap['courses'] != null && dataMap['courses'] is List) {
+              _enrolledCourses = List<Map<String, dynamic>>.from(
+                dataMap['courses']!,
+              );
+              if (kDebugMode) {
+                print(
+                    '✅ Loaded ${_enrolledCourses.length} courses from Map structure');
+              }
+            } else {
+              _enrolledCourses = [];
+              if (kDebugMode) {
+                print('⚠️ Data is Map but no courses found');
+              }
+            }
+          } else {
+            _enrolledCourses = [];
+            if (kDebugMode) {
+              print(
+                  '⚠️ Data is not List or Map: ${response['data']?.runtimeType}');
+            }
+          }
         } else {
           _enrolledCourses = [];
+          if (kDebugMode) {
+            print('⚠️ Response data is null');
+          }
         }
+
         _meta = response['meta'] as Map<String, dynamic>?;
         _isLoading = false;
       });
     } catch (e) {
       if (kDebugMode) {
         print('❌ Error loading enrollments: $e');
+        print('  Error type: ${e.runtimeType}');
       }
       setState(() {
         _enrolledCourses = [];
+        _meta = null;
         _isLoading = false;
       });
     }
@@ -167,7 +267,7 @@ class _EnrolledScreenState extends State<EnrolledScreen> {
     final totalProgress = _enrolledCourses.isEmpty
         ? 0
         : (_enrolledCourses
-                    .map((c) => (c['progress'] as num?)?.toInt() ?? 0)
+                    .map((c) => _parseInt(c['progress']))
                     .reduce((a, b) => a + b) /
                 _enrolledCourses.length)
             .round();
@@ -283,7 +383,7 @@ class _EnrolledScreenState extends State<EnrolledScreen> {
                       child: _buildStatItem(
                         icon: Icons.emoji_events_rounded,
                         value:
-                            '${_meta?['completed'] ?? _enrolledCourses.where((c) => (c['progress'] as num? ?? 0) >= 100).length}',
+                            '${_meta?['completed'] ?? _enrolledCourses.where((c) => _parseInt(c['progress']) >= 100).length}',
                         label: context.l10n.completed,
                       ),
                     ),
@@ -322,23 +422,44 @@ class _EnrolledScreenState extends State<EnrolledScreen> {
     );
   }
 
+  // Helper function to safely convert to num (handles both String and num)
+  num _parseNum(dynamic value, [num defaultValue = 0]) {
+    if (value == null) return defaultValue;
+    if (value is num) return value;
+    if (value is String) {
+      final parsed = num.tryParse(value);
+      return parsed ?? defaultValue;
+    }
+    return defaultValue;
+  }
+
+  // Helper function to safely convert to int
+  int _parseInt(dynamic value, [int defaultValue = 0]) {
+    return _parseNum(value, defaultValue).toInt();
+  }
+
+  // Helper function to safely convert to double
+  double _parseDouble(dynamic value, [double defaultValue = 0.0]) {
+    return _parseNum(value, defaultValue).toDouble();
+  }
+
   Widget _buildCourseCard(
       BuildContext context, Map<String, dynamic> enrollment) {
     // Extract course data from enrollment
     final course = enrollment['course'] as Map<String, dynamic>?;
     if (course == null) return const SizedBox.shrink();
 
-    final progress = (enrollment['progress'] as num?)?.toInt() ?? 0;
-    final completedLessons = enrollment['completed_lessons'] as int? ?? 0;
-    final totalLessons = enrollment['total_lessons'] as int? ??
-        course['lessons_count'] as int? ??
-        0;
+    final progress = _parseInt(enrollment['progress']);
+    final completedLessons = _parseInt(enrollment['completed_lessons']);
+    final totalLessons = _parseInt(enrollment['total_lessons']) != 0
+        ? _parseInt(enrollment['total_lessons'])
+        : _parseInt(course['lessons_count']);
     final courseTitle = course['title']?.toString() ?? '';
     final instructor = course['instructor'] is Map
         ? (course['instructor'] as Map)['name']?.toString() ?? ''
         : course['instructor']?.toString() ?? '';
-    final rating = course['rating'] as num? ?? 0.0;
-    final durationHours = course['duration_hours'] as num? ?? 0;
+    final rating = _parseDouble(course['rating'], 0.0);
+    final durationHours = _parseNum(course['duration_hours']);
     final thumbnail = course['thumbnail']?.toString();
     final category = course['category'] is Map
         ? (course['category'] as Map)['name']?.toString() ?? ''

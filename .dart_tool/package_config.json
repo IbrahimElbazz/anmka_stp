@@ -140,6 +140,24 @@
       "languageVersion": "3.8"
     },
     {
+      "name": "firebase_auth",
+      "rootUri": "file:///C:/Users/IBRAHIM/AppData/Local/Pub/Cache/hosted/pub.dev/firebase_auth-5.7.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
+      "name": "firebase_auth_platform_interface",
+      "rootUri": "file:///C:/Users/IBRAHIM/AppData/Local/Pub/Cache/hosted/pub.dev/firebase_auth_platform_interface-7.7.3",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
+      "name": "firebase_auth_web",
+      "rootUri": "file:///C:/Users/IBRAHIM/AppData/Local/Pub/Cache/hosted/pub.dev/firebase_auth_web-5.15.3",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
       "name": "firebase_core",
       "rootUri": "file:///C:/Users/IBRAHIM/AppData/Local/Pub/Cache/hosted/pub.dev/firebase_core-3.15.2",
       "packageUri": "lib/",
@@ -224,6 +242,12 @@
       "languageVersion": "3.8"
     },
     {
+      "name": "flutter_pdfview",
+      "rootUri": "file:///C:/Users/IBRAHIM/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_pdfview-1.4.3",
+      "packageUri": "lib/",
+      "languageVersion": "2.17"
+    },
+    {
       "name": "flutter_plugin_android_lifecycle",
       "rootUri": "file:///C:/Users/IBRAHIM/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_plugin_android_lifecycle-2.0.33",
       "packageUri": "lib/",
@@ -270,6 +294,42 @@
       "rootUri": "file:///C:/Users/IBRAHIM/AppData/Local/Pub/Cache/hosted/pub.dev/google_fonts-6.3.0",
       "packageUri": "lib/",
       "languageVersion": "2.14"
+    },
+    {
+      "name": "google_identity_services_web",
+      "rootUri": "file:///C:/Users/IBRAHIM/AppData/Local/Pub/Cache/hosted/pub.dev/google_identity_services_web-0.3.3+1",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "google_sign_in",
+      "rootUri": "file:///C:/Users/IBRAHIM/AppData/Local/Pub/Cache/hosted/pub.dev/google_sign_in-6.3.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.6"
+    },
+    {
+      "name": "google_sign_in_android",
+      "rootUri": "file:///C:/Users/IBRAHIM/AppData/Local/Pub/Cache/hosted/pub.dev/google_sign_in_android-6.2.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.6"
+    },
+    {
+      "name": "google_sign_in_ios",
+      "rootUri": "file:///C:/Users/IBRAHIM/AppData/Local/Pub/Cache/hosted/pub.dev/google_sign_in_ios-5.9.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "google_sign_in_platform_interface",
+      "rootUri": "file:///C:/Users/IBRAHIM/AppData/Local/Pub/Cache/hosted/pub.dev/google_sign_in_platform_interface-2.5.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "google_sign_in_web",
+      "rootUri": "file:///C:/Users/IBRAHIM/AppData/Local/Pub/Cache/hosted/pub.dev/google_sign_in_web-0.12.4+4",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
     },
     {
       "name": "html",
@@ -536,6 +596,18 @@
       "languageVersion": "3.0"
     },
     {
+      "name": "qr",
+      "rootUri": "file:///C:/Users/IBRAHIM/AppData/Local/Pub/Cache/hosted/pub.dev/qr-3.0.2",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "qr_flutter",
+      "rootUri": "file:///C:/Users/IBRAHIM/AppData/Local/Pub/Cache/hosted/pub.dev/qr_flutter-4.1.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.19"
+    },
+    {
       "name": "screen_protector",
       "rootUri": "file:///C:/Users/IBRAHIM/AppData/Local/Pub/Cache/hosted/pub.dev/screen_protector-1.4.11",
       "packageUri": "lib/",
@@ -592,6 +664,24 @@
     {
       "name": "shared_preferences_windows",
       "rootUri": "file:///C:/Users/IBRAHIM/AppData/Local/Pub/Cache/hosted/pub.dev/shared_preferences_windows-2.4.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.3"
+    },
+    {
+      "name": "sign_in_with_apple",
+      "rootUri": "file:///C:/Users/IBRAHIM/AppData/Local/Pub/Cache/hosted/pub.dev/sign_in_with_apple-7.0.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.3"
+    },
+    {
+      "name": "sign_in_with_apple_platform_interface",
+      "rootUri": "file:///C:/Users/IBRAHIM/AppData/Local/Pub/Cache/hosted/pub.dev/sign_in_with_apple_platform_interface-2.0.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.3"
+    },
+    {
+      "name": "sign_in_with_apple_web",
+      "rootUri": "file:///C:/Users/IBRAHIM/AppData/Local/Pub/Cache/hosted/pub.dev/sign_in_with_apple_web-3.0.0",
       "packageUri": "lib/",
       "languageVersion": "3.3"
     },
@@ -810,6 +900,30 @@
       "rootUri": "file:///C:/Users/IBRAHIM/AppData/Local/Pub/Cache/hosted/pub.dev/web-1.1.1",
       "packageUri": "lib/",
       "languageVersion": "3.4"
+    },
+    {
+      "name": "webview_flutter",
+      "rootUri": "file:///C:/Users/IBRAHIM/AppData/Local/Pub/Cache/hosted/pub.dev/webview_flutter-4.13.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.6"
+    },
+    {
+      "name": "webview_flutter_android",
+      "rootUri": "file:///C:/Users/IBRAHIM/AppData/Local/Pub/Cache/hosted/pub.dev/webview_flutter_android-4.10.11",
+      "packageUri": "lib/",
+      "languageVersion": "3.9"
+    },
+    {
+      "name": "webview_flutter_platform_interface",
+      "rootUri": "file:///C:/Users/IBRAHIM/AppData/Local/Pub/Cache/hosted/pub.dev/webview_flutter_platform_interface-2.14.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.6"
+    },
+    {
+      "name": "webview_flutter_wkwebview",
+      "rootUri": "file:///C:/Users/IBRAHIM/AppData/Local/Pub/Cache/hosted/pub.dev/webview_flutter_wkwebview-3.23.5",
+      "packageUri": "lib/",
+      "languageVersion": "3.9"
     },
     {
       "name": "win32",

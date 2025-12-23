@@ -27,6 +27,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _showPasswordConfirmation = false;
   bool _isLoading = false;
   bool _acceptTerms = false;
+  String? _studentType;
 
   Future<void> _handleRegister() async {
     if (!_acceptTerms) {
@@ -53,6 +54,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
         return;
       }
 
+      if (_studentType == null || _studentType!.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.selectStudentType,
+                style: GoogleFonts.cairo()),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
       setState(() => _isLoading = true);
 
       try {
@@ -63,6 +75,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           password: _passwordController.text,
           passwordConfirmation: _passwordConfirmationController.text,
           acceptTerms: _acceptTerms,
+          studentType: _studentType!,
         );
 
         if (!mounted) return;
@@ -226,6 +239,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           icon: Icons.phone_outlined,
                           keyboardType: TextInputType.phone,
                         ),
+                        const SizedBox(height: 16),
+
+                        // Student Type Selector
+                        _buildLabel(AppLocalizations.of(context)!.studentType),
+                        const SizedBox(height: 8),
+                        _buildStudentTypeSelector(context),
                         const SizedBox(height: 16),
 
                         // Password Field
@@ -398,6 +417,91 @@ class _RegisterScreenState extends State<RegisterScreen> {
           fontSize: 14,
           fontWeight: FontWeight.w600,
           color: AppColors.foreground),
+    );
+  }
+
+  Widget _buildStudentTypeSelector(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final options = [
+      (label: l10n.inPersonStudent, value: 'in_person'),
+      (label: l10n.onlineStudent, value: 'online'),
+      (label: l10n.bothStudentTypes, value: 'both'),
+    ];
+
+    return Row(
+      children: [
+        for (int i = 0; i < options.length; i++) ...[
+          Expanded(
+            child: _buildStudentTypeOption(
+              label: options[i].label,
+              value: options[i].value,
+              isSelected: _studentType == options[i].value,
+            ),
+          ),
+          if (i != options.length - 1) const SizedBox(width: 8),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildStudentTypeOption({
+    required String label,
+    required String value,
+    required bool isSelected,
+  }) {
+    return GestureDetector(
+      onTap: () => setState(() => _studentType = value),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.purple.withOpacity(0.08) : Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isSelected ? AppColors.purple : AppColors.mutedForeground,
+            width: 1.2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 18,
+              height: 18,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color:
+                      isSelected ? AppColors.purple : AppColors.mutedForeground,
+                  width: 2,
+                ),
+                color: isSelected ? AppColors.purple : Colors.transparent,
+              ),
+              child: isSelected
+                  ? const Icon(Icons.check, size: 12, color: Colors.white)
+                  : null,
+            ),
+            const SizedBox(width: 10),
+            Flexible(
+              child: Text(
+                label,
+                style: GoogleFonts.cairo(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color:
+                      isSelected ? AppColors.purple : AppColors.mutedForeground,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

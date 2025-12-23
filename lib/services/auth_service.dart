@@ -1,7 +1,13 @@
 import 'dart:convert';
+import 'dart:io';
+import 'dart:math';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../core/api/api_client.dart';
 import '../core/api/api_endpoints.dart';
+import '../core/notification_service/notification_service.dart';
 import '../models/auth_response.dart';
 import 'token_storage_service.dart';
 
@@ -42,6 +48,17 @@ class AuthService {
         body: requestBody,
         requireAuth: false, // Login doesn't need auth
       );
+
+      // Print full response for debugging
+      if (kDebugMode) {
+        print('📦 Full Login Response:');
+        print('  Response: $response');
+        print('  Response Type: ${response.runtimeType}');
+        print('  Response Keys: ${response.keys.toList()}');
+        response.forEach((key, value) {
+          print('    $key: $value (${value.runtimeType})');
+        });
+      }
 
       if (response['success'] == true) {
         // Debug: Print raw response to see structure
@@ -136,6 +153,7 @@ class AuthService {
     required String password,
     required String passwordConfirmation,
     required bool acceptTerms,
+    required String studentType,
   }) async {
     try {
       final response = await ApiClient.instance.post(
@@ -147,6 +165,7 @@ class AuthService {
           'password': password,
           'password_confirmation': passwordConfirmation,
           'accept_terms': acceptTerms,
+          'student_type': studentType,
         },
         requireAuth: false, // Register doesn't need auth
       );
@@ -260,5 +279,307 @@ class AuthService {
   /// Check if user is logged in
   Future<bool> isLoggedIn() async {
     return await TokenStorageService.instance.isLoggedIn();
+  }
+
+  /// Google sign-in with API integration
+  Future<AuthResponse> signInWithGoogle() async {
+    try {
+      // Step 1: Get Google credentials
+      GoogleSignIn googleSignIn;
+
+      // Try to initialize GoogleSignIn - on Android it requires OAuth client ID
+      // If oauth_client is empty in google-services.json, this will fail
+      try {
+        googleSignIn = GoogleSignIn(
+          scopes: ['email', 'profile'],
+        );
+      } catch (e) {
+        if (kDebugMode) {
+          print('❌ GoogleSignIn initialization error: $e');
+        }
+        throw Exception(
+            'خطأ في إعدادات Google Sign-In. يرجى التحقق من إعدادات Firebase Console وإضافة OAuth Client ID');
+      }
+
+      final googleUser = await googleSignIn.signIn();
+      if (googleUser == null) {
+        throw Exception('تم إلغاء تسجيل الدخول بواسطة المستخدم');
+      }
+
+      final googleAuth = await googleUser.authentication;
+      if (googleAuth.idToken == null || googleAuth.accessToken == null) {
+        throw Exception('فشل الحصول على بيانات المصادقة من جوجل');
+      }
+
+      // Step 2: Get FCM token
+      String? fcmToken = FirebaseNotification.fcmToken;
+      if (fcmToken == null || fcmToken.isEmpty) {
+        // Try to get token if not available
+        await FirebaseNotification.getFcmToken();
+        fcmToken = FirebaseNotification.fcmToken ?? '';
+      }
+
+      // Step 3: Get device info
+      final platform = Platform.isAndroid
+          ? 'android'
+          : Platform.isIOS
+              ? 'ios'
+              : 'unknown';
+
+      // Step 4: Build request body
+      final requestBody = {
+        'provider': 'google',
+        'id_token': googleAuth.idToken,
+        'access_token': googleAuth.accessToken,
+        'fcm_token': fcmToken,
+        'device': {
+          'platform': platform,
+          'model': 'Unknown', // Can be enhanced with device_info_plus package
+          'app_version': '1.0.0',
+        },
+      };
+
+      if (kDebugMode) {
+        print('🔐 Google Social Login Request:');
+        print('  provider: google');
+        print('  id_token: ${googleAuth.idToken?.substring(0, 20)}...');
+        print('  access_token: ${googleAuth.accessToken?.substring(0, 20)}...');
+        print(
+            '  fcm_token: ${fcmToken.isNotEmpty ? "${fcmToken.substring(0, 20)}..." : "EMPTY"}');
+        print('  platform: $platform');
+      }
+
+      // Step 5: Send request to API
+      final response = await ApiClient.instance.post(
+        ApiEndpoints.socialLogin,
+        body: requestBody,
+        requireAuth: false, // Social login doesn't need auth
+      );
+
+      if (response['success'] == true) {
+        final authResponse = AuthResponse.fromJson(response);
+
+        if (kDebugMode) {
+          print('🔐 Google Social Login successful - Saving tokens...');
+          print('  Token length: ${authResponse.token.length}');
+          print('  Refresh token length: ${authResponse.refreshToken.length}');
+        }
+
+        // Save tokens to cache
+        await TokenStorageService.instance.saveTokens(
+          accessToken: authResponse.token,
+          refreshToken: authResponse.refreshToken,
+        );
+
+        // Verify token was cached
+        final savedToken = await TokenStorageService.instance.getAccessToken();
+        if (savedToken != null &&
+            savedToken.isNotEmpty &&
+            savedToken == authResponse.token) {
+          if (kDebugMode) {
+            print('✅ Token cached successfully (length: ${savedToken.length})');
+          }
+        } else {
+          if (kDebugMode) {
+            print('❌ Token cache verification failed');
+          }
+          throw Exception('Failed to cache token after Google login');
+        }
+
+        return authResponse;
+      } else {
+        throw Exception(response['message'] ?? 'فشل تسجيل الدخول عبر جوجل');
+      }
+    } catch (e) {
+      // Handle PlatformException specifically for Google Sign-In errors
+      if (e.toString().contains('PlatformException') ||
+          e.toString().contains('sign_in_failed') ||
+          e.toString().contains('ApiException')) {
+        if (kDebugMode) {
+          print('❌ Google Sign-In PlatformException: $e');
+        }
+
+        // Check for common OAuth configuration errors
+        if (e.toString().contains('oauth_client') ||
+            e.toString().contains('Api10') ||
+            e.toString().contains('SIGN_IN_REQUIRED') ||
+            e.toString().contains('DEVELOPER_ERROR')) {
+          throw Exception('خطأ في إعدادات Google Sign-In:\n'
+              'يرجى التأكد من:\n'
+              '1. تفعيل Google Sign-In في Firebase Console\n'
+              '2. إضافة OAuth Client ID للـ Android app\n'
+              '3. تحميل ملف google-services.json المحدث\n'
+              '4. التأكد من تطابق package_name مع applicationId');
+        }
+
+        // Generic Google Sign-In error
+        throw Exception('فشل تسجيل الدخول عبر Google. يرجى التحقق من:\n'
+            '- اتصال الإنترنت\n'
+            '- إعدادات Google Sign-In في Firebase Console\n'
+            '- ملف google-services.json يحتوي على OAuth Client IDs');
+      }
+
+      if (e is ApiException) {
+        // Try to parse error message from response body
+        try {
+          final errorBody = e.message;
+          final match = RegExp(r'\{.*\}').firstMatch(errorBody);
+          if (match != null) {
+            final errorJson = jsonDecode(match.group(0)!);
+            final message = errorJson['message'] ??
+                errorJson['error'] ??
+                'فشل تسجيل الدخول عبر جوجل';
+            throw Exception(message);
+          }
+        } catch (_) {}
+        throw Exception('فشل تسجيل الدخول عبر جوجل. يرجى المحاولة مرة أخرى');
+      }
+
+      // Re-throw if it's already a user-friendly Exception
+      final errorString = e.toString();
+      if (e is Exception &&
+          (errorString.contains('خطأ') ||
+              errorString.contains('تم إلغاء') ||
+              errorString.contains('فشل'))) {
+        rethrow;
+      }
+
+      // Generic error fallback
+      throw Exception('فشل تسجيل الدخول عبر Google: ${e.toString()}');
+    }
+  }
+
+  /// Apple sign-in with API integration
+  Future<AuthResponse> signInWithApple() async {
+    try {
+      // Step 1: Generate nonce for Apple sign-in
+      final rawNonce = _generateNonce();
+      final nonce = _sha256ofString(rawNonce);
+
+      // Step 2: Get Apple credentials
+      final appleCredential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+        nonce: nonce,
+      );
+
+      if (appleCredential.identityToken == null) {
+        throw Exception('فشل الحصول على بيانات المصادقة من Apple');
+      }
+
+      // Step 3: Get FCM token
+      String? fcmToken = FirebaseNotification.fcmToken;
+      if (fcmToken == null || fcmToken.isEmpty) {
+        // Try to get token if not available
+        await FirebaseNotification.getFcmToken();
+        fcmToken = FirebaseNotification.fcmToken ?? '';
+      }
+
+      // Step 4: Get device info
+      final platform = Platform.isAndroid
+          ? 'android'
+          : Platform.isIOS
+              ? 'ios'
+              : 'unknown';
+
+      // Step 5: Build request body
+      final requestBody = {
+        'provider': 'apple',
+        'id_token': appleCredential.identityToken,
+        'nonce': rawNonce,
+        'fcm_token': fcmToken,
+        'device': {
+          'platform': platform,
+          'model': 'Unknown', // Can be enhanced with device_info_plus package
+          'app_version': '1.0.0',
+        },
+      };
+
+      if (kDebugMode) {
+        print('🔐 Apple Social Login Request:');
+        print('  provider: apple');
+        print(
+            '  id_token: ${appleCredential.identityToken?.substring(0, 20)}...');
+        print('  nonce: ${rawNonce.substring(0, 20)}...');
+        print(
+            '  fcm_token: ${fcmToken.isNotEmpty ? "${fcmToken.substring(0, 20)}..." : "EMPTY"}');
+        print('  platform: $platform');
+      }
+
+      // Step 6: Send request to API
+      final response = await ApiClient.instance.post(
+        ApiEndpoints.socialLogin,
+        body: requestBody,
+        requireAuth: false, // Social login doesn't need auth
+      );
+
+      if (response['success'] == true) {
+        final authResponse = AuthResponse.fromJson(response);
+
+        if (kDebugMode) {
+          print('🔐 Apple Social Login successful - Saving tokens...');
+          print('  Token length: ${authResponse.token.length}');
+          print('  Refresh token length: ${authResponse.refreshToken.length}');
+        }
+
+        // Save tokens to cache
+        await TokenStorageService.instance.saveTokens(
+          accessToken: authResponse.token,
+          refreshToken: authResponse.refreshToken,
+        );
+
+        // Verify token was cached
+        final savedToken = await TokenStorageService.instance.getAccessToken();
+        if (savedToken != null &&
+            savedToken.isNotEmpty &&
+            savedToken == authResponse.token) {
+          if (kDebugMode) {
+            print('✅ Token cached successfully (length: ${savedToken.length})');
+          }
+        } else {
+          if (kDebugMode) {
+            print('❌ Token cache verification failed');
+          }
+          throw Exception('Failed to cache token after Apple login');
+        }
+
+        return authResponse;
+      } else {
+        throw Exception(response['message'] ?? 'فشل تسجيل الدخول عبر Apple');
+      }
+    } catch (e) {
+      if (e is ApiException) {
+        // Try to parse error message from response body
+        try {
+          final errorBody = e.message;
+          final match = RegExp(r'\{.*\}').firstMatch(errorBody);
+          if (match != null) {
+            final errorJson = jsonDecode(match.group(0)!);
+            final message = errorJson['message'] ??
+                errorJson['error'] ??
+                'فشل تسجيل الدخول عبر Apple';
+            throw Exception(message);
+          }
+        } catch (_) {}
+        throw Exception('فشل تسجيل الدخول عبر Apple. يرجى المحاولة مرة أخرى');
+      }
+      rethrow;
+    }
+  }
+
+  String _generateNonce([int length = 32]) {
+    const charset =
+        '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
+    final random = Random.secure();
+    return List.generate(length, (_) => charset[random.nextInt(charset.length)])
+        .join();
+  }
+
+  String _sha256ofString(String input) {
+    final bytes = utf8.encode(input);
+    final digest = sha256.convert(bytes);
+    return digest.toString();
   }
 }

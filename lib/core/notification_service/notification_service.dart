@@ -4,9 +4,19 @@ import 'dart:math'
     show Random; // For generating random numbers (show only Random class)
 import 'package:firebase_core/firebase_core.dart'; // Firebase core functionality
 import 'package:firebase_messaging/firebase_messaging.dart'; // Firebase Cloud Messaging
+import 'package:educational_app/firebase_options.dart'; // Firebase options
 import 'package:flutter_local_notifications/flutter_local_notifications.dart'; // Local notifications plugin
 
 // Main class for handling Firebase notifications
+/// Top-level background handler required by firebase_messaging
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  log('Background message received: ${message.messageId}');
+  await FirebaseNotification.showBasicNotification(message);
+}
+
 class FirebaseNotification {
   // Firebase Messaging instance for handling FCM
   static final FirebaseMessaging messaging = FirebaseMessaging.instance;
@@ -29,12 +39,25 @@ class FirebaseNotification {
 
   // Main initialization method for notifications
   static Future<void> initializeNotifications() async {
+    // Ensure Firebase is initialized (defensive for any direct calls)
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    }
+
     await requestNotificationPermission(); // Request user permission
     await getFcmToken(); // Get device FCM token
     await initializeLocalNotifications(); // Initialize local notifications
+    await FirebaseMessaging.instance
+        .setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
 
     // Set up background message handler (when app is closed or in background)
-    FirebaseMessaging.onBackgroundMessage(handleBackgroundMessage);
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
     // Set up foreground message listener (when app is open)
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
@@ -86,12 +109,6 @@ class FirebaseNotification {
   }
 
   // Handle background messages (when app is closed or in background)
-  static Future<void> handleBackgroundMessage(RemoteMessage message) async {
-    await Firebase.initializeApp(); // Initialize Firebase in background
-    log('Background message received: ${message.messageId}'); // Log message receipt
-    showBasicNotification(message); // Show notification
-  }
-
   // Random number generator for unique notification IDs
   static final Random random = Random();
 

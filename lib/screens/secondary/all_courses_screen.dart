@@ -22,8 +22,8 @@ class AllCoursesScreen extends StatefulWidget {
 class _AllCoursesScreenState extends State<AllCoursesScreen> {
   bool _isLoading = true;
   String? _selectedCategoryId;
-  String _selectedPrice = 'all'; // all, free, paid
-  String _sortBy = 'newest'; // newest, rating, popular
+  final String _selectedPrice = 'all'; // all, free, paid
+  final String _sortBy = 'newest'; // newest, rating, popular
   final _searchController = TextEditingController();
   String _searchQuery = '';
   Timer? _searchDebounce;
@@ -434,71 +434,71 @@ class _AllCoursesScreenState extends State<AllCoursesScreen> {
                     },
                   ),
           ),
-          const SizedBox(height: 12),
+          // const SizedBox(height: 12),
 
-          // Price & Sort Filters
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: [
-                // Price Filter
-                Expanded(
-                  child: Builder(
-                    builder: (context) {
-                      final priceFilters = _getPriceFilters(context);
-                      return _buildDropdownFilter(
-                        value: priceFilters.firstWhere(
-                          (item) => item['value'] == _selectedPrice,
-                          orElse: () => priceFilters[0],
-                        )['label'] as String,
-                        items: priceFilters
-                            .map((e) => e['label'] as String)
-                            .toList(),
-                        icon: Icons.attach_money_rounded,
-                        onChanged: (value) {
-                          final selected = priceFilters.firstWhere(
-                            (item) => item['label'] == value,
-                          );
-                          setState(() {
-                            _selectedPrice = selected['value'] as String;
-                          });
-                          _loadCourses();
-                        },
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // Sort Filter
-                Expanded(
-                  child: Builder(
-                    builder: (context) {
-                      final sortOptions = _getSortOptions(context);
-                      return _buildDropdownFilter(
-                        value: sortOptions.firstWhere(
-                          (item) => item['value'] == _sortBy,
-                          orElse: () => sortOptions[0],
-                        )['label'] as String,
-                        items: sortOptions
-                            .map((e) => e['label'] as String)
-                            .toList(),
-                        icon: Icons.sort_rounded,
-                        onChanged: (value) {
-                          final selected = sortOptions.firstWhere(
-                            (item) => item['label'] == value,
-                          );
-                          setState(() {
-                            _sortBy = selected['value'] as String;
-                          });
-                          _loadCourses();
-                        },
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
+          // // Price & Sort Filters
+          // Padding(
+          //   padding: const EdgeInsets.symmetric(horizontal: 20),
+          //   child: Row(
+          //     children: [
+          //       // Price Filter
+          //       Expanded(
+          //         child: Builder(
+          //           builder: (context) {
+          //             final priceFilters = _getPriceFilters(context);
+          //             return _buildDropdownFilter(
+          //               value: priceFilters.firstWhere(
+          //                 (item) => item['value'] == _selectedPrice,
+          //                 orElse: () => priceFilters[0],
+          //               )['label'] as String,
+          //               items: priceFilters
+          //                   .map((e) => e['label'] as String)
+          //                   .toList(),
+          //               icon: Icons.attach_money_rounded,
+          //               onChanged: (value) {
+          //                 final selected = priceFilters.firstWhere(
+          //                   (item) => item['label'] == value,
+          //                 );
+          //                 setState(() {
+          //                   _selectedPrice = selected['value'] as String;
+          //                 });
+          //                 _loadCourses();
+          //               },
+          //             );
+          //           },
+          //         ),
+          //       ),
+          //       const SizedBox(width: 12),
+          //       // Sort Filter
+          //       Expanded(
+          //         child: Builder(
+          //           builder: (context) {
+          //             final sortOptions = _getSortOptions(context);
+          //             return _buildDropdownFilter(
+          //               value: sortOptions.firstWhere(
+          //                 (item) => item['value'] == _sortBy,
+          //                 orElse: () => sortOptions[0],
+          //               )['label'] as String,
+          //               items: sortOptions
+          //                   .map((e) => e['label'] as String)
+          //                   .toList(),
+          //               icon: Icons.sort_rounded,
+          //               onChanged: (value) {
+          //                 final selected = sortOptions.firstWhere(
+          //                   (item) => item['label'] == value,
+          //                 );
+          //                 setState(() {
+          //                   _sortBy = selected['value'] as String;
+          //                 });
+          //                 _loadCourses();
+          //               },
+          //             );
+          //           },
+          //         ),
+          //       ),
+          //     ],
+          //   ),
+          // ),
         ],
       ),
     );

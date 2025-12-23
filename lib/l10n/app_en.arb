@@ -172,6 +172,26 @@
   "@phonePlaceholder": {
     "description": "Phone number placeholder"
   },
+  "studentType": "Student type",
+  "@studentType": {
+    "description": "Student type label"
+  },
+  "inPersonStudent": "In-class student",
+  "@inPersonStudent": {
+    "description": "On-campus student option"
+  },
+  "onlineStudent": "Online student",
+  "@onlineStudent": {
+    "description": "Online student option"
+  },
+  "bothStudentTypes": "Both",
+  "@bothStudentTypes": {
+    "description": "Both option"
+  },
+  "selectStudentType": "Please choose your student type",
+  "@selectStudentType": {
+    "description": "Validation message for student type"
+  },
   "invalidPhone": "Invalid phone number",
   "@invalidPhone": {
     "description": "Invalid phone number error message"
@@ -1851,6 +1871,72 @@
   "verificationLinkLabel": "Verification Link",
   "@verificationLinkLabel": {
     "description": "Verification Link"
+  },
+  "centerAttendance": "Center Attendance",
+  "@centerAttendance": {
+    "description": "Center Attendance"
+  },
+  "centerAttendanceDescription": "Show this QR code at the center to mark your attendance",
+  "@centerAttendanceDescription": {
+    "description": "Center attendance description"
+  },
+  "loadingQrCode": "Loading QR code...",
+  "@loadingQrCode": {
+    "description": "Loading QR code"
+  },
+  "errorLoadingQrCode": "Error loading QR code",
+  "@errorLoadingQrCode": {
+    "description": "Error loading QR code"
+  },
+  "scanQrCodeInstruction": "Show this QR code to the center staff to mark your attendance",
+  "@scanQrCodeInstruction": {
+    "description": "Scan QR code instruction"
+  },
+  "refreshQrCode": "Refresh QR Code",
+  "@refreshQrCode": {
+    "description": "Refresh QR Code"
+  },
+  "retry": "Retry",
+  "@retry": {
+    "description": "Retry"
+  },
+  "unknownError": "Unknown error occurred",
+  "@unknownError": {
+    "description": "Unknown error"
+  },
+  "teachers": "Teachers",
+  "@teachers": {
+    "description": "Teachers section title"
+  },
+  "allTeachers": "All Teachers",
+  "@allTeachers": {
+    "description": "All teachers page title"
+  },
+  "teacherFallback": "Teacher",
+  "@teacherFallback": {
+    "description": "Fallback teacher title"
+  },
+  "teacherCoursesTitle": "Courses offered",
+  "@teacherCoursesTitle": {
+    "description": "Title for teacher courses section"
+  },
+  "coursesCount": "{count} courses",
+  "@coursesCount": {
+    "description": "Courses count label",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "studentsCount": "{count} students",
+  "@studentsCount": {
+    "description": "Students count label",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }
 

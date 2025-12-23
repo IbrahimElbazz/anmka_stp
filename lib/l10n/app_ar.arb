@@ -172,6 +172,26 @@
   "@phonePlaceholder": {
     "description": "placeholder رقم الهاتف"
   },
+  "studentType": "نوع الطالب",
+  "@studentType": {
+    "description": "عنوان نوع الطالب"
+  },
+  "inPersonStudent": "طالب محاضري",
+  "@inPersonStudent": {
+    "description": "خيار الطالب المحاضري"
+  },
+  "onlineStudent": "طالب أونلاين",
+  "@onlineStudent": {
+    "description": "خيار الطالب الأونلاين"
+  },
+  "bothStudentTypes": " كلاهما",
+  "@bothStudentTypes": {
+    "description": "خيار كلاهما"
+  },
+  "selectStudentType": "يرجى اختيار نوع الطالب",
+  "@selectStudentType": {
+    "description": "رسالة التحقق لاختيار نوع الطالب"
+  },
   "invalidPhone": "رقم الهاتف غير صحيح",
   "@invalidPhone": {
     "description": "رسالة خطأ رقم الهاتف"
@@ -1851,6 +1871,72 @@
   "verificationLinkLabel": "رابط التحقق",
   "@verificationLinkLabel": {
     "description": "رابط التحقق"
+  },
+  "centerAttendance": "حضور السنتر",
+  "@centerAttendance": {
+    "description": "حضور السنتر"
+  },
+  "centerAttendanceDescription": "اعرض هذا الكود عند السنتر لتسجيل حضورك",
+  "@centerAttendanceDescription": {
+    "description": "وصف حضور السنتر"
+  },
+  "loadingQrCode": "جاري تحميل الكود...",
+  "@loadingQrCode": {
+    "description": "جاري تحميل الكود"
+  },
+  "errorLoadingQrCode": "حدث خطأ أثناء تحميل الكود",
+  "@errorLoadingQrCode": {
+    "description": "خطأ تحميل الكود"
+  },
+  "scanQrCodeInstruction": "اعرض هذا الكود لموظفي السنتر لتسجيل حضورك",
+  "@scanQrCodeInstruction": {
+    "description": "تعليمات عرض الكود"
+  },
+  "refreshQrCode": "تحديث الكود",
+  "@refreshQrCode": {
+    "description": "تحديث الكود"
+  },
+  "retry": "إعادة المحاولة",
+  "@retry": {
+    "description": "إعادة المحاولة"
+  },
+  "unknownError": "حدث خطأ غير معروف",
+  "@unknownError": {
+    "description": "خطأ غير معروف"
+  },
+  "teachers": "المعلمون",
+  "@teachers": {
+    "description": "عنوان قسم المعلمين"
+  },
+  "allTeachers": "جميع المعلمين",
+  "@allTeachers": {
+    "description": "عنوان صفحة جميع المعلمين"
+  },
+  "teacherFallback": "المعلم",
+  "@teacherFallback": {
+    "description": "عنوان افتراضي للمعلم"
+  },
+  "teacherCoursesTitle": "الدورات المقدمة",
+  "@teacherCoursesTitle": {
+    "description": "عنوان قسم دورات المعلم"
+  },
+  "coursesCount": "{count} دورات",
+  "@coursesCount": {
+    "description": "عدد الدورات",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "studentsCount": "{count} طالب",
+  "@studentsCount": {
+    "description": "عدد الطلاب",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }
 

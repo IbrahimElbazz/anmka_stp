@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import '../core/api/api_client.dart';
 import '../core/api/api_endpoints.dart';
@@ -5,8 +6,55 @@ import '../core/api/api_endpoints.dart';
 /// Service for courses, categories, and enrollments
 class CoursesService {
   CoursesService._();
-  
+
   static final CoursesService instance = CoursesService._();
+
+  /// Helper method to process course data and add base URL to images
+  Map<String, dynamic> _processCourseData(Map<String, dynamic> course) {
+    final processedCourse = Map<String, dynamic>.from(course);
+
+    // Add base URL to thumbnail if it exists and is a relative path
+    if (processedCourse['thumbnail'] != null) {
+      processedCourse['thumbnail'] = ApiEndpoints.getImageUrl(
+        processedCourse['thumbnail']?.toString(),
+      );
+    }
+
+    // Add base URL to other image fields if they exist
+    if (processedCourse['image'] != null) {
+      processedCourse['image'] = ApiEndpoints.getImageUrl(
+        processedCourse['image']?.toString(),
+      );
+    }
+
+    if (processedCourse['cover_image'] != null) {
+      processedCourse['cover_image'] = ApiEndpoints.getImageUrl(
+        processedCourse['cover_image']?.toString(),
+      );
+    }
+
+    // Process instructor avatar if exists
+    if (processedCourse['instructor'] != null) {
+      final instructor = processedCourse['instructor'] as Map<String, dynamic>?;
+      if (instructor != null && instructor['avatar'] != null) {
+        instructor['avatar'] = ApiEndpoints.getImageUrl(
+          instructor['avatar']?.toString(),
+        );
+      }
+    }
+
+    return processedCourse;
+  }
+
+  /// Helper method to process list of courses
+  List<Map<String, dynamic>> _processCoursesList(List<dynamic> courses) {
+    return courses.map((course) {
+      if (course is Map<String, dynamic>) {
+        return _processCourseData(course);
+      }
+      return course as Map<String, dynamic>;
+    }).toList();
+  }
 
   /// Get all courses with filters
   Future<Map<String, dynamic>> getCourses({
@@ -52,25 +100,29 @@ class CoursesService {
       // API expects search and category_id even if empty
       final baseUrl = ApiEndpoints.courses;
       final queryParts = <String>[];
-      
+
       queryParts.add('page=${page.toString()}');
       queryParts.add('per_page=${perPage.toString()}');
-      queryParts.add('search=${search != null && search.trim().isNotEmpty ? Uri.encodeComponent(search.trim()) : ''}');
-      queryParts.add('category_id=${categoryId != null && categoryId.trim().isNotEmpty ? Uri.encodeComponent(categoryId.trim()) : ''}');
-      
+      queryParts.add(
+          'search=${search != null && search.trim().isNotEmpty ? Uri.encodeComponent(search.trim()) : ''}');
+      queryParts.add(
+          'category_id=${categoryId != null && categoryId.trim().isNotEmpty ? Uri.encodeComponent(categoryId.trim()) : ''}');
+
       if (subcategoryId != null && subcategoryId.trim().isNotEmpty) {
-        queryParts.add('subcategory_id=${Uri.encodeComponent(subcategoryId.trim())}');
+        queryParts
+            .add('subcategory_id=${Uri.encodeComponent(subcategoryId.trim())}');
       }
-      
+
       if (instructorId != null && instructorId.trim().isNotEmpty) {
-        queryParts.add('instructor_id=${Uri.encodeComponent(instructorId.trim())}');
+        queryParts
+            .add('instructor_id=${Uri.encodeComponent(instructorId.trim())}');
       }
-      
+
       queryParts.add('price=$price');
       queryParts.add('level=$level');
       queryParts.add('sort=$sort');
       queryParts.add('duration=$duration');
-      
+
       final finalUrl = '$baseUrl?${queryParts.join('&')}';
 
       if (kDebugMode) {
@@ -81,10 +133,96 @@ class CoursesService {
 
       final response = await ApiClient.instance.get(
         finalUrl,
-        requireAuth: false,
+        requireAuth: true,
       );
-      
+
+      if (kDebugMode) {
+        print('📦 Courses API Response:');
+        print('  Success: ${response['success']}');
+        print('  Message: ${response['message']}');
+        print('  Full Response: $response');
+
+        // Check if data exists and has courses
+        if (response['data'] != null) {
+          final data = response['data'];
+          print('  Data Type: ${data.runtimeType}');
+
+          if (data is Map<String, dynamic>) {
+            print('  Data Keys: ${data.keys.toList()}');
+
+            // Check for courses list
+            if (data['courses'] != null) {
+              final courses = data['courses'] as List?;
+              print('  Courses Count: ${courses?.length ?? 0}');
+
+              // Print first course details to check for images
+              if (courses != null && courses.isNotEmpty) {
+                final firstCourse = courses[0] as Map<String, dynamic>?;
+                if (firstCourse != null) {
+                  print('  📸 First Course Image Fields:');
+                  print('    All Keys: ${firstCourse.keys.toList()}');
+                  print('    thumbnail: ${firstCourse['thumbnail']}');
+                  print('    image: ${firstCourse['image']}');
+                  print('    thumbnail_url: ${firstCourse['thumbnail_url']}');
+                  print('    image_url: ${firstCourse['image_url']}');
+                  print('    cover_image: ${firstCourse['cover_image']}');
+                  print('    cover: ${firstCourse['cover']}');
+                  print('    Full First Course: $firstCourse');
+                }
+              }
+            } else if (data is List) {
+              // If data is directly a list
+              print('  Courses Count (direct list): ${data.length}');
+              if (data.isNotEmpty) {
+                final firstCourse = data[0] as Map<String, dynamic>?;
+                if (firstCourse != null) {
+                  print('  📸 First Course Image Fields:');
+                  print('    All Keys: ${firstCourse.keys.toList()}');
+                  print('    thumbnail: ${firstCourse['thumbnail']}');
+                  print('    image: ${firstCourse['image']}');
+                  print('    thumbnail_url: ${firstCourse['thumbnail_url']}');
+                  print('    image_url: ${firstCourse['image_url']}');
+                  print('    cover_image: ${firstCourse['cover_image']}');
+                  print('    cover: ${firstCourse['cover']}');
+                  print('    Full First Course: $firstCourse');
+                }
+              }
+            }
+          } else if (data is List) {
+            print('  Courses Count: ${data.length}');
+            if (data.isNotEmpty) {
+              final firstCourse = data[0] as Map<String, dynamic>?;
+              if (firstCourse != null) {
+                print('  📸 First Course Image Fields:');
+                print('    All Keys: ${firstCourse.keys.toList()}');
+                print('    thumbnail: ${firstCourse['thumbnail']}');
+                print('    image: ${firstCourse['image']}');
+                print('    thumbnail_url: ${firstCourse['thumbnail_url']}');
+                print('    image_url: ${firstCourse['image_url']}');
+                print('    cover_image: ${firstCourse['cover_image']}');
+                print('    cover: ${firstCourse['cover']}');
+                print('    Full First Course: $firstCourse');
+              }
+            }
+          }
+        } else {
+          print('  ⚠️ No data in response');
+        }
+      }
+
       if (response['success'] == true) {
+        // Process courses to add base URL to images
+        if (response['data'] != null) {
+          final data = response['data'];
+          if (data is Map<String, dynamic> && data['courses'] != null) {
+            final courses = data['courses'] as List?;
+            if (courses != null) {
+              data['courses'] = _processCoursesList(courses);
+            }
+          } else if (data is List) {
+            response['data'] = _processCoursesList(data);
+          }
+        }
         return response;
       } else {
         throw Exception(response['message'] ?? 'Failed to fetch courses');
@@ -99,13 +237,37 @@ class CoursesService {
     try {
       final response = await ApiClient.instance.get(
         ApiEndpoints.course(courseId),
-        requireAuth: false,
+        requireAuth: true,
       );
-      
+
+      if (kDebugMode) {
+        print('📦 Course Details API Response:');
+        print('  Course ID: $courseId');
+        print('  Success: ${response['success']}');
+        print('  Message: ${response['message']}');
+
+        if (response['data'] != null) {
+          final courseData = response['data'] as Map<String, dynamic>;
+          print('  📸 Course Image Fields:');
+          print('    All Keys: ${courseData.keys.toList()}');
+          print('    thumbnail: ${courseData['thumbnail']}');
+          print('    image: ${courseData['image']}');
+          print('    thumbnail_url: ${courseData['thumbnail_url']}');
+          print('    image_url: ${courseData['image_url']}');
+          print('    cover_image: ${courseData['cover_image']}');
+          print('    cover: ${courseData['cover']}');
+          print('    Full Course Data: $courseData');
+        } else {
+          print('  ⚠️ No course data in response');
+        }
+      }
+
       if (response['success'] == true && response['data'] != null) {
-        return response['data'] as Map<String, dynamic>;
+        final courseData = response['data'] as Map<String, dynamic>;
+        return _processCourseData(courseData);
       } else {
-        throw Exception(response['message'] ?? 'Failed to fetch course details');
+        throw Exception(
+            response['message'] ?? 'Failed to fetch course details');
       }
     } catch (e) {
       rethrow;
@@ -122,13 +284,50 @@ class CoursesService {
         ApiEndpoints.courseLesson(courseId, lessonId),
         requireAuth: true,
       );
-      
+
       if (response['success'] == true && response['data'] != null) {
         return response['data'] as Map<String, dynamic>;
       } else {
-        throw Exception(response['message'] ?? 'Failed to fetch lesson details');
+        throw Exception(
+            response['message'] ?? 'Failed to fetch lesson details');
       }
     } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Get lesson content
+  Future<Map<String, dynamic>> getLessonContent(
+    String courseId,
+    String lessonId,
+  ) async {
+    try {
+      final response = await ApiClient.instance.get(
+        ApiEndpoints.courseLessonContent(courseId, lessonId),
+        requireAuth: true,
+      );
+
+      if (kDebugMode) {
+        print('📦 Lesson Content API Response:');
+        print('  Course ID: $courseId');
+        print('  Lesson ID: $lessonId');
+        print('  Success: ${response['success']}');
+        print('  Message: ${response['message']}');
+        if (response['data'] != null) {
+          print('  Data Keys: ${(response['data'] as Map<String, dynamic>).keys.toList()}');
+        }
+      }
+
+      if (response['success'] == true && response['data'] != null) {
+        return response['data'] as Map<String, dynamic>;
+      } else {
+        throw Exception(
+            response['message'] ?? 'Failed to fetch lesson content');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error fetching lesson content: $e');
+      }
       rethrow;
     }
   }
@@ -149,11 +348,12 @@ class CoursesService {
         },
         requireAuth: true,
       );
-      
+
       if (response['success'] == true) {
         return response['data'] as Map<String, dynamic>;
       } else {
-        throw Exception(response['message'] ?? 'Failed to update lesson progress');
+        throw Exception(
+            response['message'] ?? 'Failed to update lesson progress');
       }
     } catch (e) {
       rethrow;
@@ -165,11 +365,83 @@ class CoursesService {
     try {
       final response = await ApiClient.instance.get(
         ApiEndpoints.categories,
-        requireAuth: false,
+        requireAuth: true,
       );
-      
+
+      if (kDebugMode) {
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        print('📦 CATEGORIES API RESPONSE');
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        print('📦 Full Response JSON:');
+        try {
+          const encoder = JsonEncoder.withIndent('  ');
+          print(encoder.convert(response));
+        } catch (e) {
+          print('  Error formatting JSON: $e');
+          print('  Raw response: $response');
+        }
+        print('');
+        print('📊 Response Structure:');
+        print('  ✅ success: ${response['success']}');
+        print('  📝 message: ${response['message'] ?? 'N/A'}');
+        print('  📦 data type: ${response['data']?.runtimeType}');
+
+        if (response['data'] != null) {
+          if (response['data'] is List) {
+            final categories = response['data'] as List;
+            print('  📏 Categories Count: ${categories.length}');
+            if (categories.isNotEmpty) {
+              print('  📄 First Category Structure:');
+              final first = categories[0];
+              if (first is Map) {
+                print('     Keys: ${first.keys.toList()}');
+                first.forEach((key, value) {
+                  if (key == 'icon') {
+                    print('     🔵 $key: ${value.runtimeType} = $value');
+                  } else {
+                    print('     $key: ${value.runtimeType} = $value');
+                  }
+                });
+              }
+              print('');
+              print('  📋 All Categories Icons:');
+              for (var i = 0; i < categories.length; i++) {
+                final cat = categories[i] as Map<String, dynamic>?;
+                if (cat != null) {
+                  print('     Category ${i + 1}:');
+                  print('       id: ${cat['id']}');
+                  print('       name: ${cat['name']} / ${cat['name_ar']}');
+                  print('       icon: ${cat['icon']}');
+                  print('       icon type: ${cat['icon']?.runtimeType}');
+                  print('       color: ${cat['color']}');
+                }
+              }
+            }
+          }
+        }
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      }
+
       if (response['success'] == true && response['data'] != null) {
-        return List<Map<String, dynamic>>.from(response['data'] as List);
+        final categories =
+            List<Map<String, dynamic>>.from(response['data'] as List);
+
+        // Process categories to add base URL to icons if needed
+        final processedCategories = categories.map((category) {
+          final processedCategory = Map<String, dynamic>.from(category);
+
+          // Add base URL to icon if it exists and is a relative path
+          if (processedCategory['icon'] != null) {
+            final iconValue = processedCategory['icon']?.toString();
+            if (iconValue != null && iconValue.isNotEmpty) {
+              processedCategory['icon'] = ApiEndpoints.getImageUrl(iconValue);
+            }
+          }
+
+          return processedCategory;
+        }).toList();
+
+        return processedCategories;
       } else {
         throw Exception(response['message'] ?? 'Failed to fetch categories');
       }
@@ -195,7 +467,7 @@ class CoursesService {
         'sort': sort,
         'price': price,
         'level': level,
-        if (subcategoryId != null && subcategoryId.isNotEmpty) 
+        if (subcategoryId != null && subcategoryId.isNotEmpty)
           'subcategory_id': subcategoryId,
       };
 
@@ -204,13 +476,46 @@ class CoursesService {
 
       final response = await ApiClient.instance.get(
         url,
-        requireAuth: false,
+        requireAuth: true,
       );
-      
+
+      if (kDebugMode) {
+        print('📦 Category Courses API Response:');
+        print('  Category ID: $categoryId');
+        print('  Success: ${response['success']}');
+        print('  Full Response: $response');
+
+        if (response['data'] != null) {
+          final data = response['data'];
+          if (data is Map<String, dynamic> && data['courses'] != null) {
+            final courses = data['courses'] as List?;
+            if (courses != null && courses.isNotEmpty) {
+              final firstCourse = courses[0] as Map<String, dynamic>?;
+              if (firstCourse != null) {
+                print('  📸 First Course Image Fields:');
+                print('    thumbnail: ${firstCourse['thumbnail']}');
+                print('    image: ${firstCourse['image']}');
+              }
+            }
+          }
+        }
+      }
+
       if (response['success'] == true) {
+        // Process courses to add base URL to images
+        if (response['data'] != null) {
+          final data = response['data'];
+          if (data is Map<String, dynamic> && data['courses'] != null) {
+            final courses = data['courses'] as List?;
+            if (courses != null) {
+              data['courses'] = _processCoursesList(courses);
+            }
+          }
+        }
         return response;
       } else {
-        throw Exception(response['message'] ?? 'Failed to fetch category courses');
+        throw Exception(
+            response['message'] ?? 'Failed to fetch category courses');
       }
     } catch (e) {
       rethrow;
@@ -224,7 +529,7 @@ class CoursesService {
         ApiEndpoints.enrollCourse(courseId),
         requireAuth: true,
       );
-      
+
       if (response['success'] == true) {
         return response['data'] as Map<String, dynamic>;
       } else {
@@ -251,17 +556,163 @@ class CoursesService {
       final queryString = Uri(queryParameters: queryParams).query;
       final url = '${ApiEndpoints.enrollments}?$queryString';
 
+      if (kDebugMode) {
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        print('📤 ENROLLMENTS REQUEST DETAILS');
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        print('🔗 URL: $url');
+        print('📋 Query Parameters:');
+        queryParams.forEach((key, value) {
+          print('   $key: $value');
+        });
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      }
+
       final response = await ApiClient.instance.get(
         url,
         requireAuth: true,
       );
-      
-      if (response['success'] == true) {
+
+      if (kDebugMode) {
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        print('📥 ENROLLMENTS RESPONSE DETAILS');
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        print('📦 Full Response JSON:');
+        try {
+          const encoder = JsonEncoder.withIndent('  ');
+          print(encoder.convert(response));
+        } catch (e) {
+          print('  Error formatting JSON: $e');
+          print('  Raw response: $response');
+        }
+        print('');
+        print('📊 Response Structure:');
+        print('  ✅ success: ${response['success']}');
+        print('  📝 message: ${response['message'] ?? 'N/A'}');
+        print('  📦 data type: ${response['data']?.runtimeType}');
+        print('  📋 data is List: ${response['data'] is List}');
+        print('  📋 data is Map: ${response['data'] is Map}');
+        print('  📋 data is Null: ${response['data'] == null}');
+
+        if (response['data'] != null) {
+          if (response['data'] is List) {
+            final dataList = response['data'] as List;
+            print('  📏 data length: ${dataList.length}');
+            if (dataList.isNotEmpty) {
+              print('  📄 First enrollment structure:');
+              final first = dataList[0];
+              if (first is Map) {
+                print('     Keys: ${first.keys.toList()}');
+                first.forEach((key, value) {
+                  if (value is Map) {
+                    print('     $key: Map with keys: ${value.keys.toList()}');
+                  } else if (value is List) {
+                    print('     $key: List with ${value.length} items');
+                  } else {
+                    print('     $key: ${value.runtimeType} = $value');
+                  }
+                });
+              }
+            }
+          } else if (response['data'] is Map) {
+            final dataMap = response['data'] as Map;
+            print('  📋 data keys: ${dataMap.keys.toList()}');
+            dataMap.forEach((key, value) {
+              if (value is List) {
+                print('     $key: List with ${value.length} items');
+              } else if (value is Map) {
+                print('     $key: Map with keys: ${value.keys.toList()}');
+              } else {
+                print('     $key: ${value.runtimeType} = $value');
+              }
+            });
+          }
+        }
+
+        if (response['meta'] != null) {
+          print('  📊 meta: ${response['meta']}');
+        }
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      }
+
+      // Handle response even if success is not explicitly true
+      // Some APIs might return data without success field
+      final isSuccess = response['success'] == true ||
+          (response['data'] != null && response['error'] == null);
+
+      if (isSuccess) {
+        // Process enrollments courses to add base URL to images
+        if (response['data'] != null) {
+          final data = response['data'];
+
+          if (data is Map<String, dynamic> && data['courses'] != null) {
+            // Case 1: Data is a Map with 'courses' key
+            final courses = data['courses'] as List?;
+            if (courses != null) {
+              data['courses'] = _processCoursesList(courses);
+            }
+            if (kDebugMode) {
+              print(
+                  '  ✅ Processed Map with courses: ${courses?.length ?? 0} courses');
+            }
+          } else if (data is List) {
+            // Case 2: Data is directly a list of enrollments
+            if (kDebugMode) {
+              print('  ✅ Processing List of enrollments: ${data.length} items');
+            }
+
+            final processedData = data.map((enrollment) {
+              if (enrollment is Map<String, dynamic>) {
+                final processedEnrollment =
+                    Map<String, dynamic>.from(enrollment);
+                if (processedEnrollment['course'] != null) {
+                  processedEnrollment['course'] = _processCourseData(
+                    processedEnrollment['course'] as Map<String, dynamic>,
+                  );
+                }
+                return processedEnrollment;
+              }
+              return enrollment;
+            }).toList();
+            response['data'] = processedData;
+
+            if (kDebugMode) {
+              print('  ✅ Processed ${processedData.length} enrollments');
+            }
+          } else if (data is Map<String, dynamic>) {
+            // Case 3: Data is a Map but without 'courses' key
+            // Try to find enrollments in other possible keys
+            if (kDebugMode) {
+              print('  ⚠️ Data is Map but no courses key found');
+              print('  Available keys: ${data.keys.toList()}');
+            }
+          } else {
+            if (kDebugMode) {
+              print('  ⚠️ Unknown data type: ${data.runtimeType}');
+            }
+          }
+        } else {
+          if (kDebugMode) {
+            print('  ⚠️ Response data is null');
+          }
+          // Ensure data is an empty list if null
+          response['data'] = [];
+        }
+
         return response;
       } else {
-        throw Exception(response['message'] ?? 'Failed to fetch enrollments');
+        final errorMessage = response['message'] ??
+            response['error'] ??
+            'Failed to fetch enrollments';
+        if (kDebugMode) {
+          print('  ❌ Error: $errorMessage');
+        }
+        throw Exception(errorMessage);
       }
     } catch (e) {
+      if (kDebugMode) {
+        print('  ❌ Exception in getEnrollments: $e');
+      }
       rethrow;
     }
   }
@@ -285,9 +736,9 @@ class CoursesService {
 
       final response = await ApiClient.instance.get(
         url,
-        requireAuth: false,
+        requireAuth: true,
       );
-      
+
       if (response['success'] == true) {
         return response;
       } else {
@@ -315,7 +766,7 @@ class CoursesService {
         },
         requireAuth: true,
       );
-      
+
       if (response['success'] == true) {
         return response['data'] as Map<String, dynamic>;
       } else {
@@ -326,4 +777,3 @@ class CoursesService {
     }
   }
 }
-

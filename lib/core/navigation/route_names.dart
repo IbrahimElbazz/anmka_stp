@@ -32,4 +32,8 @@ class RouteNames {
   static const String allCourses = '/all-courses';
   static const String editProfile = '/edit-profile';
   static const String changePassword = '/change-password';
+  static const String pdfViewer = '/pdf-viewer';
+  static const String centerAttendance = '/center-attendance';
+  static const String teachers = '/teachers';
+  static const String teacherDetails = '/teacher-details';
 }

@@ -218,6 +218,14 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         'onTap': () => context.push(RouteNames.downloads),
       },
       {
+        'icon': Icons.qr_code_scanner_rounded,
+        'label': l10n.centerAttendance,
+        'subtitle': l10n.scanQrCodeInstruction,
+        'color': const Color(0xFF8B5CF6),
+        'bgColor': const Color(0xFFF3E8FF),
+        'onTap': () => context.push(RouteNames.centerAttendance),
+      },
+      {
         'icon': Icons.settings_rounded,
         'label': l10n.settings,
         'subtitle': l10n.customizeApp,

@@ -134,6 +134,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get phonePlaceholder => '01xxxxxxxxx';
 
   @override
+  String get studentType => 'Student type';
+
+  @override
+  String get inPersonStudent => 'In-class student';
+
+  @override
+  String get onlineStudent => 'Online student';
+
+  @override
+  String get bothStudentTypes => 'Both';
+
+  @override
+  String get selectStudentType => 'Please choose your student type';
+
+  @override
   String get invalidPhone => 'Invalid phone number';
 
   @override
@@ -1292,4 +1307,47 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get verificationLinkLabel => 'Verification Link';
+
+  @override
+  String get centerAttendance => 'Center Attendance';
+
+  @override
+  String get centerAttendanceDescription =>
+      'Show this QR code at the center to mark your attendance';
+
+  @override
+  String get loadingQrCode => 'Loading QR code...';
+
+  @override
+  String get errorLoadingQrCode => 'Error loading QR code';
+
+  @override
+  String get scanQrCodeInstruction =>
+      'Show this QR code to the center staff to mark your attendance';
+
+  @override
+  String get refreshQrCode => 'Refresh QR Code';
+
+  @override
+  String get retry => 'Retry';
+
+  @override
+  String get unknownError => 'Unknown error occurred';
+
+  @override
+  String get teachers => 'Teachers';
+
+  @override
+  String get allTeachers => 'All Teachers';
+
+  @override
+  String get teacherFallback => 'Teacher';
+
+  @override
+  String get teacherCoursesTitle => 'Courses offered';
+
+  @override
+  String studentsCount(int count) {
+    return '$count students';
+  }
 }
