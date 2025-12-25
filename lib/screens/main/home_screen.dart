@@ -12,6 +12,7 @@ import '../../widgets/premium_course_card.dart';
 import '../../services/home_service.dart';
 import '../../services/profile_service.dart';
 import '../../services/notifications_service.dart';
+import '../../services/teachers_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../data/sample_teachers.dart';
 
@@ -38,9 +39,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   List<Map<String, dynamic>> _popularCourses = [];
   List<Map<String, dynamic>> _continueLearning = [];
   List<Map<String, dynamic>> _categories = [];
-  final List<Map<String, dynamic>> _teachers = List<Map<String, dynamic>>.from(
-    kSampleTeachers,
-  );
+  List<Map<String, dynamic>> _teachers = [];
 
   @override
   void initState() {
@@ -87,6 +86,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         // User might not be logged in, continue
       }
 
+      // Load teachers from API
+      List<Map<String, dynamic>> teachers = [];
+      try {
+        final teachersResponse = await TeachersService.instance.getTeachers(
+          page: 1,
+          perPage: 10, // Load first 10 teachers for the slider
+          sort: 'rating',
+        );
+        final data = teachersResponse['data'];
+        if (data is Map<String, dynamic> && data['teachers'] != null) {
+          teachers = List<Map<String, dynamic>>.from(data['teachers']);
+        } else if (data is List) {
+          teachers = List<Map<String, dynamic>>.from(data);
+        }
+      } catch (e) {
+        // Fallback to sample teachers if API fails
+        teachers = List<Map<String, dynamic>>.from(kSampleTeachers);
+      }
+
       setState(() {
         _homeData = homeData;
         _featuredCourses = List<Map<String, dynamic>>.from(
@@ -101,6 +119,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         _categories = List<Map<String, dynamic>>.from(
           homeData['categories'] ?? [],
         );
+        _teachers = teachers;
         _isLoading = false;
         _errorMessage = null;
       });
@@ -230,7 +249,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
                                 const SizedBox(height: 24),
 
-                                // Teachers slider (static until API ready)
+                                // Teachers slider
                                 _buildSectionHeader(l10n.teachers, () {
                                   context.push(
                                     RouteNames.teachers,
@@ -238,7 +257,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   );
                                 }),
                                 const SizedBox(height: 16),
-                                _buildTeachersSlider(l10n),
+                                if (_isLoading && _teachers.isEmpty)
+                                  _buildTeachersSliderSkeleton()
+                                else
+                                  _buildTeachersSlider(l10n),
 
                                 const SizedBox(height: 28),
 
@@ -1231,7 +1253,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Widget _buildTeachersSlider(AppLocalizations l10n) {
     return SizedBox(
-      height: 220,
+      height: 150,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
@@ -1344,7 +1366,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           ),
                           child: Text(
                             l10n.coursesCount(
-                              (teacher['courses'] as List?)?.length ?? 0,
+                              (teacher['courses_count'] as int?) ??
+                                  (teacher['courses'] as List?)?.length ??
+                                  0,
                             ),
                             style: GoogleFonts.cairo(
                               fontSize: 11,
@@ -1361,6 +1385,128 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildTeachersSliderSkeleton() {
+    return Skeletonizer(
+      enabled: true,
+      child: SizedBox(
+        height: 150,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: const EdgeInsets.only(left: 20, right: 8),
+          itemCount: 3,
+          itemBuilder: (context, index) {
+            return Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: Container(
+                width: 220,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 26,
+                          backgroundColor: Colors.grey[300],
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                height: 14,
+                                width: 80,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[300],
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Container(
+                                height: 12,
+                                width: 60,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[300],
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      height: 12,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      height: 12,
+                      width: 150,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    const Spacer(),
+                    Row(
+                      children: [
+                        Container(
+                          height: 16,
+                          width: 30,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Container(
+                          height: 16,
+                          width: 50,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                        const Spacer(),
+                        Container(
+                          height: 24,
+                          width: 60,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
       ),
     );
   }

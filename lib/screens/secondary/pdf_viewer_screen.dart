@@ -449,59 +449,6 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(width: 12),
-                                    OutlinedButton(
-                                      onPressed: () async {
-                                        try {
-                                          final uri = Uri.parse(widget.pdfUrl);
-                                          if (await canLaunchUrl(uri)) {
-                                            await launchUrl(
-                                              uri,
-                                              mode: LaunchMode
-                                                  .externalApplication,
-                                            );
-                                          } else {
-                                            if (mounted && kDebugMode) {
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(
-                                                SnackBar(
-                                                  content: Text(
-                                                    'لا يمكن فتح الرابط',
-                                                    style: GoogleFonts.cairo(),
-                                                  ),
-                                                ),
-                                              );
-                                            }
-                                          }
-                                        } catch (e) {
-                                          if (mounted && kDebugMode) {
-                                            print('Error launching URL: $e');
-                                          }
-                                        }
-                                      },
-                                      style: OutlinedButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 24,
-                                          vertical: 12,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        side: const BorderSide(
-                                          color: AppColors.purple,
-                                          width: 2,
-                                        ),
-                                      ),
-                                      child: Text(
-                                        'فتح في المتصفح',
-                                        style: GoogleFonts.cairo(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.purple,
-                                        ),
-                                      ),
-                                    ),
                                   ],
                                 ),
                               ],
